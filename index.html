@@ -100,8 +100,9 @@
 </section>
 <div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-backend-button" type="button" class="secondary-btn">Test Secure Backend</button><div id="backend-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-invitation-validation-button" type="button" class="secondary-btn">Test Invitation Validation</button><div id="invitation-validation-result" class="api-result" role="status" aria-live="polite">Not tested yet. No invitation will be created.</div></div></div>
 <div class="api-check" aria-label="Stage 6U rate limiter test"><h3>Stage 6U · Rate Limiter Verification</h3><p>Send seven validation-only requests to check Cloudflare throttling. No invitations or emails are created.</p><button id="test-rate-limit-button" type="button" class="secondary-btn">Test Rate Limiter</button><div id="rate-limit-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
+<div class="api-check" aria-label="Stage 6W secure token verification"><h3>Stage 6W · Secure Token Verification</h3><p>Verify cryptographically secure invitation tokens and SHA-256 hashing. Tokens and hashes are never displayed; no invitations or emails are created.</p><button id="test-token-button" type="button" class="secondary-btn">Test Secure Tokens</button><div id="token-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
 <div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Employee invitations, time tracking, scheduling, and settings changes are still locked until permissions and data isolation pass testing.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
-</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 6U rate limiter verification (no writes). Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
+</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 6W secure token verification (no writes). Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
 </main>
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -320,8 +321,46 @@
     }
   });
 
+  const tokenButton = document.getElementById('test-token-button');
+  const tokenResult = document.getElementById('token-result');
+  let tokenCheckVersion = 0;
+  const setTokenResult = (message, type = '') => {
+    tokenResult.textContent = message;
+    tokenResult.className = 'api-result ' + type;
+  };
+  tokenButton.addEventListener('click', async () => {
+    const version = ++tokenCheckVersion;
+    tokenButton.disabled = true;
+    setTokenResult('Verifying secure token generation…');
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Please sign in again.');
+      const response = await fetch(API_BASE + '/api/test-token-generation', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== tokenCheckVersion) return;
+      if (response.ok && result.ok === true && result.tokenGenerationVerified === true &&
+          result.tokenLengthBytes === 32 && result.sha256HashVerified === true &&
+          result.uniqueTokensVerified === true && result.invitationCreated === false &&
+          result.invitationSendingEnabled === false) {
+        setTokenResult('PASS — Unique 256-bit tokens and SHA-256 hashing verified. No invitation record or email created.', 'ok');
+      } else {
+        setTokenResult('FAIL (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected token verification response. Invitations remain disabled.'), 'error');
+      }
+    } catch (error) {
+      if (version === tokenCheckVersion) setTokenResult('Token test error: ' +
+        (error?.message || 'Unknown error'), 'error');
+    } finally {
+      if (version === tokenCheckVersion) tokenButton.disabled = false;
+    }
+  });
+
   let checkVersion = 0;
-  const showLogin = () => { ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; rateButton.disabled = false; setRateResult('Not tested yet.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = false; setValidationResult('Not tested yet. No invitation will be created.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = false; setRateResult('Not tested yet.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = false; setValidationResult('Not tested yet. No invitation will be created.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
