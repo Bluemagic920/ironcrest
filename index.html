@@ -98,12 +98,18 @@
 </div>
 <div class="directory-preview"><strong>Employee directory</strong><p>Employee records and invitation status will appear here after secure directory access is implemented. No employee data is being loaded or changed in this preview.</p></div>
 </section>
-<div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-backend-button" type="button" class="secondary-btn">Test Secure Backend</button><div id="backend-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-invitation-validation-button" type="button" class="secondary-btn">Test Invitation Validation</button><div id="invitation-validation-result" class="api-result" role="status" aria-live="polite">Not tested yet. No invitation will be created.</div></div></div>
-<div class="api-check" aria-label="Stage 6U rate limiter test"><h3>Stage 6U · Rate Limiter Verification</h3><p>Send seven validation-only requests to check Cloudflare throttling. No invitations or emails are created.</p><button id="test-rate-limit-button" type="button" class="secondary-btn">Test Rate Limiter</button><div id="rate-limit-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
+<div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-backend-button" type="button" class="secondary-btn">Test Secure Backend</button><div id="backend-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-invitation-validation-button" type="button" class="secondary-btn" disabled title="Retired because Stage 8A now creates database records">Legacy Validation Test — Disabled</button><div id="invitation-validation-result" class="api-result" role="status" aria-live="polite">Disabled for Stage 8A: the endpoint now creates test records.</div></div></div>
+<div class="api-check" aria-label="Stage 6U rate limiter test"><h3>Stage 6U · Rate Limiter Verification</h3><p>Earlier validation-only test retired: the invitation endpoint now performs controlled database writes.</p><button id="test-rate-limit-button" type="button" class="secondary-btn" disabled title="Retired because Stage 8A now creates database records">Legacy Rate Test — Disabled</button><div id="rate-limit-result" class="api-result" role="status" aria-live="polite">Disabled to prevent multiple test invitation writes.</div></div>
 <div class="api-check" aria-label="Stage 6W secure token verification"><h3>Stage 6W · Secure Token Verification</h3><p>Verify cryptographically secure invitation tokens and SHA-256 hashing. Tokens and hashes are never displayed; no invitations or emails are created.</p><button id="test-token-button" type="button" class="secondary-btn">Test Secure Tokens</button><div id="token-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
 <div class="api-check" aria-label="Stage 7K database rollback verification"><h3>Stage 7K · Database Rollback Verification</h3><p>Run one owner-authorized, rollback-only invitation database test. No invitation email or employee account is created.</p><button id="test-rollback-button" type="button" class="secondary-btn">Test Database Rollback</button><div id="rollback-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
-<div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Employee invitations, time tracking, scheduling, and settings changes are still locked until permissions and data isolation pass testing.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
-</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 7K rollback-only invitation database verification. Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
+<div class="api-check" aria-label="Stage 8C controlled invitation creation">
+<h3>Stage 8C · Controlled Invitation Creation</h3>
+<p>Create exactly one test invitation record for a reserved, non-deliverable <code>@example.invalid</code> address. No invitation email or employee account will be created. This is a persistent database write.</p>
+<button id="test-create-button" type="button" class="secondary-btn">Test Invitation Creation</button>
+<div id="test-create-result" class="api-result" role="status" aria-live="polite">Not tested yet. Click once to create a single test record.</div>
+</div>
+<div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Stage 8C permits controlled test invitation records only. Real invitation emails, employee accounts, time tracking, scheduling, and settings changes remain locked.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
+</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 8C controlled test invitation creation is enabled for reserved non-deliverable addresses only. Invitation emails, employee registration, time tracking, and administrative changes remain disabled.</div></section>
 </main>
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -397,8 +403,73 @@
     }
   });
 
+
+  // Stage 8C: one deliberate, persistent, owner-authorized test write.
+  const createTestButton = document.getElementById('test-create-button');
+  const createTestResult = document.getElementById('test-create-result');
+  let createTestVersion = 0;
+  const setCreateTestResult = (message, type = '') => {
+    createTestResult.textContent = message;
+    createTestResult.className = 'api-result ' + type;
+  };
+  createTestButton.addEventListener('click', async () => {
+    const version = ++createTestVersion;
+    createTestButton.disabled = true;
+    setCreateTestResult('Checking owner session and creating one test invitation…');
+    try {
+      const { data: sessionData, error: sessionError } = await client.auth.getSession();
+      if (sessionError || !sessionData?.session?.access_token) throw new Error('Please sign in again.');
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if (userError || !userData?.user?.id) throw new Error('Unable to verify owner session.');
+      const { data: memberships, error: membershipError } = await client.from('ironcrest_memberships')
+        .select('organization_id').eq('user_id', userData.user.id)
+        .eq('role', 'owner').eq('active', true).limit(2);
+      if (membershipError || !memberships || memberships.length !== 1 || !memberships[0].organization_id) {
+        throw new Error('This controlled test requires exactly one active owner organization.');
+      }
+      // Random suffix prevents accidental collisions with earlier tests.
+      const suffix = Array.from(crypto.getRandomValues(new Uint8Array(10)),
+        b => b.toString(16).padStart(2, '0')).join('');
+      const testEmail = 'ironcrest-test-' + suffix + '@example.invalid';
+      const response = await fetch(API_BASE + '/api/create-invitation', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + sessionData.session.access_token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          organizationId: memberships[0].organization_id,
+          email: testEmail,
+          role: 'employee'
+        }),
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== createTestVersion) return;
+      if (response.status === 201 && result.ok === true &&
+          result.invitationCreated === true &&
+          result.invitationSendingEnabled === false &&
+          result.employeeCreationEnabled === false) {
+        setCreateTestResult('PASS — One test invitation stored for ' + testEmail +
+          '. No email sent and no employee account created. Verify the record in Supabase.', 'ok');
+        // Do not permit accidental repeated writes from this page session.
+      } else {
+        setCreateTestResult('NOT VERIFIED (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected response') +
+          '. Check Supabase before retrying; the request may have written a record.', 'error');
+      }
+    } catch (error) {
+      if (version === createTestVersion) {
+        setCreateTestResult('Test outcome uncertain: ' +
+          (error?.message || 'Network error') +
+          '. Check Supabase before retrying to avoid duplicate records.', 'error');
+      }
+    }
+    // Intentionally keep button disabled until page reload, to prevent repeated writes.
+  });
+
   let checkVersion = 0;
-  const showLogin = () => { ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = false; setRateResult('Not tested yet.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = false; setValidationResult('Not tested yet. No invitation will be created.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
