@@ -101,8 +101,9 @@
 <div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-backend-button" type="button" class="secondary-btn">Test Secure Backend</button><div id="backend-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-invitation-validation-button" type="button" class="secondary-btn">Test Invitation Validation</button><div id="invitation-validation-result" class="api-result" role="status" aria-live="polite">Not tested yet. No invitation will be created.</div></div></div>
 <div class="api-check" aria-label="Stage 6U rate limiter test"><h3>Stage 6U · Rate Limiter Verification</h3><p>Send seven validation-only requests to check Cloudflare throttling. No invitations or emails are created.</p><button id="test-rate-limit-button" type="button" class="secondary-btn">Test Rate Limiter</button><div id="rate-limit-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
 <div class="api-check" aria-label="Stage 6W secure token verification"><h3>Stage 6W · Secure Token Verification</h3><p>Verify cryptographically secure invitation tokens and SHA-256 hashing. Tokens and hashes are never displayed; no invitations or emails are created.</p><button id="test-token-button" type="button" class="secondary-btn">Test Secure Tokens</button><div id="token-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
+<div class="api-check" aria-label="Stage 7K database rollback verification"><h3>Stage 7K · Database Rollback Verification</h3><p>Run one owner-authorized, rollback-only invitation database test. No invitation email or employee account is created.</p><button id="test-rollback-button" type="button" class="secondary-btn">Test Database Rollback</button><div id="rollback-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
 <div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Employee invitations, time tracking, scheduling, and settings changes are still locked until permissions and data isolation pass testing.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
-</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 6W secure token verification (no writes). Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
+</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 7K rollback-only invitation database verification. Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
 </main>
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -359,8 +360,45 @@
     }
   });
 
+  const rollbackButton = document.getElementById('test-rollback-button');
+  const rollbackResult = document.getElementById('rollback-result');
+  let rollbackCheckVersion = 0;
+  const setRollbackResult = (message, type = '') => {
+    rollbackResult.textContent = message;
+    rollbackResult.className = 'api-result ' + type;
+  };
+  rollbackButton.addEventListener('click', async () => {
+    const version = ++rollbackCheckVersion;
+    rollbackButton.disabled = true;
+    setRollbackResult('Running owner-authorized database rollback test…');
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Please sign in again.');
+      const response = await fetch(API_BASE + '/api/test-invitation-rollback', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== rollbackCheckVersion) return;
+      if (response.ok && result.ok === true && result.databaseTestPassed === true &&
+          result.rollbackVerified === true && result.invitationCreated === false &&
+          result.invitationSendingEnabled === false && result.employeeCreationEnabled === false) {
+        setRollbackResult('PASS — Backend reports invitation creation and transaction rollback verified. Confirm zero remaining invitations in Supabase.', 'ok');
+      } else {
+        setRollbackResult('NOT VERIFIED (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected response. Invitation creation remains disabled.'), 'error');
+      }
+    } catch (error) {
+      if (version === rollbackCheckVersion) setRollbackResult('Test unavailable: ' +
+        (error?.message || 'Unknown error'), 'error');
+    } finally {
+      if (version === rollbackCheckVersion) rollbackButton.disabled = false;
+    }
+  });
+
   let checkVersion = 0;
-  const showLogin = () => { ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = false; setRateResult('Not tested yet.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = false; setValidationResult('Not tested yet. No invitation will be created.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = false; setRateResult('Not tested yet.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = false; setValidationResult('Not tested yet. No invitation will be created.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
