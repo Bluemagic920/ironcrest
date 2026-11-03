@@ -63,6 +63,15 @@
 .panel .workspace-card button.employee-open:hover{background:#d8aa5c19}
 .panel .employee-close{width:auto;margin:0;padding:9px 14px;font-size:12px;background:transparent;color:#e7c381}
 @media(max-width:650px){.employee-section{padding:17px}.employee-form{grid-template-columns:1fr}.employee-section .invite-button{grid-column:1}}
+
+/* Stage 5C owner API verification */
+.api-check{margin:22px 0;padding:18px;border:1px solid #d8aa5c55;background:#091a2c;border-radius:12px}
+.api-check h3{margin:0 0 7px;font-size:16px;color:#e7c381}
+.api-check p{margin:0 0 10px;font-size:13px}
+.panel .api-check button{width:auto;margin:8px 0 0;padding:11px 18px;cursor:pointer;opacity:1}
+.panel .api-check button:disabled{opacity:.55;cursor:not-allowed}
+.api-result{font-size:13px;margin-top:12px;overflow-wrap:anywhere;line-height:1.5}
+.api-result.ok{color:#a9e5c4}.api-result.error{color:#ffb7b7}
 </style>
 </head>
 <body>
@@ -89,8 +98,9 @@
 </div>
 <div class="directory-preview"><strong>Employee directory</strong><p>Employee records and invitation status will appear here after secure directory access is implemented. No employee data is being loaded or changed in this preview.</p></div>
 </section>
+<div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
 <div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Employee invitations, time tracking, scheduling, and settings changes are still locked until permissions and data isolation pass testing.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
-</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 5A employee management interface preview. Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
+</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 5C owner API verification. Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
 </main>
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -100,6 +110,7 @@
   document.getElementById('year').textContent = new Date().getFullYear();
   const PROJECT_URL = 'https://nhiqbcevcdxfzvrprgck.supabase.co';
   const PUBLISHABLE_KEY = 'sb_publishable_VwM3o7h2Jxq9_2WkkdE4kg_WKU6bvP6';
+  const API_URL = 'https://ironcrest-invitations-api.bluemagic920.workers.dev/api/verify-owner';
   const feedback = document.getElementById('feedback');
   const loginArea = document.getElementById('login-area');
   const ownerArea = document.getElementById('owner-area');
@@ -129,8 +140,39 @@
     employeeOpen.setAttribute('aria-expanded', 'false');
     employeeOpen.focus();
   });
+  const apiButton = document.getElementById('verify-api-button');
+  const apiResult = document.getElementById('api-result');
+  let apiCheckVersion = 0;
+  const setApiResult = (message, type = '') => { apiResult.textContent = message; apiResult.className = 'api-result ' + type; };
+  apiButton.addEventListener('click', async () => {
+    const version = ++apiCheckVersion;
+    apiButton.disabled = true;
+    setApiResult('Checking authenticated owner access…');
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Please sign in again.');
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== apiCheckVersion) return;
+      if (response.ok && result.ok === true && result.ownerVerified === true &&
+          Array.isArray(result.organizationIds) && result.organizationIds.length > 0 &&
+          result.invitationSendingEnabled === false) {
+        setApiResult('PASS — Worker verified active Ironcrest owner access. Invitations remain disabled.', 'ok');
+      } else {
+        setApiResult('Verification failed (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected response. Do not enable invitations.'), 'error');
+      }
+    } catch (error) {
+      if (version === apiCheckVersion) setApiResult('Connection or verification error: ' +
+        (error?.message || 'Unknown error') + '. Check the deployed website origin and Worker URL.', 'error');
+    } finally { if (version === apiCheckVersion) apiButton.disabled = false; }
+  });
   let checkVersion = 0;
-  const showLogin = () => { employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { ++apiCheckVersion; apiButton.disabled = false; setApiResult('Not tested yet.'); employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
