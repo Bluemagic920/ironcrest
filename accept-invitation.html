@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accept Your Invitation | Ironcrest Workforce Operations</title>
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
+<style>
+:root{color-scheme:dark;font-family:Inter,Segoe UI,Arial,sans-serif;background:#071426;color:#f3f6fb}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 75% 15%,#173555 0,transparent 42%),linear-gradient(135deg,#071426,#0d2139);display:flex;flex-direction:column}header,footer{padding:24px max(24px,calc((100vw - 1080px)/2));}header{border-bottom:1px solid #ffffff20;display:flex;align-items:center;gap:12px}.crest{height:38px;width:38px;display:grid;place-items:center;border:1px solid #d9b46e;border-radius:12px;color:#e8c88a;font-weight:900}header strong{font-size:18px;letter-spacing:.07em}header small{display:block;color:#b4c3d4;letter-spacing:.1em;font-size:10px;margin-top:4px}main{width:min(100%,530px);padding:24px;margin:auto}.panel{border:1px solid #58708b65;border-radius:22px;background:#10243bdc;padding:34px;box-shadow:0 24px 80px #0005}.eyebrow{color:#e3c17e;text-transform:uppercase;font-size:12px;font-weight:700;letter-spacing:.15em}h1{font-size:30px;line-height:1.2;margin:12px 0}p{color:#b9c9da;line-height:1.6}label{display:block;margin:19px 0 7px;color:#e3ebf4;font-weight:600;font-size:14px}input{width:100%;border:1px solid #62758c;background:#091b30;color:#fff;border-radius:10px;padding:14px;font-size:16px}input:focus{outline:2px solid #d5b473;outline-offset:2px}button{cursor:pointer;width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:750;margin-top:18px;border:1px solid #d9b875;background:#d9b875;color:#112036}button:disabled{cursor:not-allowed;opacity:.5}.secondary{background:transparent;color:#e9d2a1;border-color:#8f7a52;margin-top:10px}.hidden{display:none!important}.notice{padding:13px;border-radius:10px;background:#1a3650;border:1px solid #48617a;color:#e0eaf3;margin:18px 0;line-height:1.5}.notice.error{border-color:#b76870;background:#47222b;color:#ffe4e7}.notice.success{border-color:#4c927a;background:#153e36;color:#d6fff0}.small{font-size:13px}footer{color:#829ab2;font-size:12px;text-align:center}@media(max-width:600px){.panel{padding:24px}h1{font-size:26px}}
+</style>
+</head>
+<body><header><div class="crest">I</div><div><strong>IRONCREST</strong><small>WORKFORCE OPERATIONS</small></div></header>
+<main><section class="panel"><div class="eyebrow">Secure employee onboarding</div><h1>Join your team</h1><p>Sign in or create your account using the email address that received your Ironcrest invitation.</p>
+<div id="notice" class="notice" role="status" aria-live="polite">Checking your invitation…</div>
+<div id="auth-ui" class="hidden"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@company.com"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="Enter your password"><button id="signin" type="button">Sign in</button><button id="signup" type="button" class="secondary">Create employee account</button><button id="resend" type="button" class="secondary">Resend verification email</button><button id="reset" type="button" class="secondary">Forgot password?</button></div>
+<div id="ready-ui" class="hidden"><p id="account"></p><button id="accept" type="button">Accept invitation</button><button id="signout" class="secondary" type="button">Use a different account</button></div>
+<p class="small">Invitations are private and expire. If your link is no longer valid, ask your employer for a new invitation.</p></section></main>
+<footer>© 2026 Ironcrest Workforce Operations · Powered by ProfitHarbor AI</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(()=>{'use strict';
+const SUPABASE_URL='https://nhiqbcevcdxfzvrprgck.supabase.co';
+const SUPABASE_KEY='sb_publishable_VwM3o7h2Jxq9_2WkkdE4kg_WKU6bvP6';
+const API='https://ironcrest-invitations-api.bluemagic920.workers.dev';
+const $=id=>document.getElementById(id),notice=$('notice'),auth=$('auth-ui'),ready=$('ready-ui');
+const show=(msg,type='')=>{notice.textContent=msg;notice.className='notice '+type};
+const params=new URLSearchParams(location.search);const fragment=new URLSearchParams(location.hash.slice(1));
+// Only tokens delivered in URL fragments are supported. Fragments aren't sent to the web server.
+const token=fragment.get('invite');
+// Remove sensitive token from the address bar immediately after capturing it.
+if(fragment.has('invite')){fragment.delete('invite');history.replaceState(null,'',location.pathname+location.search+(fragment.toString()?'#'+fragment:''));}
+if(!token||!/^[a-f0-9]{64}$/.test(token)){show('This invitation link is missing or invalid. Request a new invitation from your employer.','error');return;}
+if(!window.supabase?.createClient){show('Secure sign-in is temporarily unavailable. Please try again.','error');return;}
+const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce',storageKey:'ironcrest-employee-auth-v1'}});
+const redirect=location.origin+location.pathname;
+let busy=false;
+const setBusy=value=>{busy=value;for(const id of ['signin','signup','resend','reset','accept','signout'])$(id).disabled=value};
+async function refresh(){const {data,error}=await client.auth.getUser();if(error||!data?.user){auth.classList.remove('hidden');ready.classList.add('hidden');show('Sign in or create an account to continue.');return;}
+const u=data.user;if(!u.email_confirmed_at){auth.classList.remove('hidden');ready.classList.add('hidden');$('email').value=u.email||'';show('Check your email to verify your account before accepting the invitation.','error');return;}
+auth.classList.add('hidden');ready.classList.remove('hidden');$('account').textContent='Signed in as '+(u.email||'verified account');show('Your account is verified. Invitation acceptance is available only after Ironcrest activates this feature.');}
+async function action(fn){if(busy)return;setBusy(true);try{await fn()}catch{show('The request could not be completed. Please try again.','error')}finally{setBusy(false)}}
+$('signin').onclick=()=>action(async()=>{const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){show('Sign-in failed. Check your credentials and verification status.','error');return;}await refresh()});
+$('signup').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email||!$('password').value){show('Enter an email and password.','error');return;}const {error}=await client.auth.signUp({email,password:$('password').value,options:{emailRedirectTo:redirect}});if(error){show('Registration could not be completed. Check the email and password.','error');return;}show('Check your email for a verification link. Return to this invitation page after verification.','success')});
+$('resend').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email){show('Enter your email address first.','error');return;}await client.auth.resend({type:'signup',email,options:{emailRedirectTo:redirect}});show('If the account is eligible, a verification email will arrive shortly.','success')});
+$('reset').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email){show('Enter your email address first.','error');return;}await client.auth.resetPasswordForEmail(email,{redirectTo:redirect});show('If the account exists, a password reset email will arrive shortly.','success')});
+$('signout').onclick=()=>action(async()=>{await client.auth.signOut();await refresh()});
+$('accept').onclick=()=>action(async()=>{const {data}=await client.auth.getSession();const access=data?.session?.access_token;if(!access){show('Please sign in again.','error');await refresh();return;}const res=await fetch(API+'/api/accept-invitation',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+access},body:JSON.stringify({token})});const payload=await res.json().catch(()=>({}));if(res.ok&&payload.invitationAccepted){ready.classList.add('hidden');show('Invitation accepted! Your employee membership is active.','success');return;}if(res.status===403&&payload.error==='Invitation acceptance is not enabled'){show('Employee invitation acceptance is not available yet. Please try again after your employer confirms activation.','error');return;}show('This invitation could not be accepted. It may be expired, already used, or assigned to a different email address. Contact your employer.','error')});
+client.auth.onAuthStateChange(()=>{setTimeout(()=>{if(!busy)refresh()},0)});refresh();
+})();
+</script></body></html>
