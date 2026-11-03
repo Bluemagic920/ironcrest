@@ -23,15 +23,28 @@ const SUPABASE_KEY='sb_publishable_VwM3o7h2Jxq9_2WkkdE4kg_WKU6bvP6';
 const API='https://ironcrest-invitations-api.bluemagic920.workers.dev';
 const $=id=>document.getElementById(id),notice=$('notice'),auth=$('auth-ui'),ready=$('ready-ui');
 const show=(msg,type='')=>{notice.textContent=msg;notice.className='notice '+type};
-const params=new URLSearchParams(location.search);const fragment=new URLSearchParams(location.hash.slice(1));
-// Only tokens delivered in URL fragments are supported. Fragments aren't sent to the web server.
-const token=fragment.get('invite');
-// Remove sensitive token from the address bar immediately after capturing it.
-if(fragment.has('invite')){fragment.delete('invite');history.replaceState(null,'',location.pathname+location.search+(fragment.toString()?'#'+fragment:''));}
-if(!token||!/^[a-f0-9]{64}$/.test(token)){show('This invitation link is missing or invalid. Request a new invitation from your employer.','error');return;}
+// Preserve an invitation through email verification in the same browser/tab.
+// Session storage is tab-scoped and never sent in HTTP requests.
+const fragment=new URLSearchParams(location.hash.slice(1));
+const incoming=fragment.get('invite');
+const TOKEN_KEY='ironcrest-pending-invitation-v1';
+if(fragment.has('invite')){
+  fragment.delete('invite');
+  history.replaceState(null,'',location.pathname+location.search+(fragment.toString()?'#'+fragment.toString():''));
+}
+let token=null;
+try {
+  if(incoming!==null){
+    if(/^[a-f0-9]{64}$/.test(incoming)){sessionStorage.setItem(TOKEN_KEY,incoming);token=incoming;}
+    else sessionStorage.removeItem(TOKEN_KEY);
+  } else {token=sessionStorage.getItem(TOKEN_KEY);}
+} catch {token=incoming;}
+if(!token||!/^[a-f0-9]{64}$/.test(token)){
+  show('This invitation link is missing or invalid. Open the original invitation link from your employer. If you verified your email in another browser or device, reopen that invitation link there.','error');return;
+}
 if(!window.supabase?.createClient){show('Secure sign-in is temporarily unavailable. Please try again.','error');return;}
 const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce',storageKey:'ironcrest-employee-auth-v1'}});
-const redirect=location.origin+location.pathname;
+const redirect=location.origin+location.pathname; // Supabase allowlisted redirect; pending token stays in this tab
 let busy=false;
 const setBusy=value=>{busy=value;for(const id of ['signin','signup','resend','reset','accept','signout'])$(id).disabled=value};
 async function refresh(){const {data,error}=await client.auth.getUser();if(error||!data?.user){auth.classList.remove('hidden');ready.classList.add('hidden');show('Sign in or create an account to continue.');return;}
@@ -39,11 +52,11 @@ const u=data.user;if(!u.email_confirmed_at){auth.classList.remove('hidden');read
 auth.classList.add('hidden');ready.classList.remove('hidden');$('account').textContent='Signed in as '+(u.email||'verified account');show('Your account is verified. Invitation acceptance is available only after Ironcrest activates this feature.');}
 async function action(fn){if(busy)return;setBusy(true);try{await fn()}catch{show('The request could not be completed. Please try again.','error')}finally{setBusy(false)}}
 $('signin').onclick=()=>action(async()=>{const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){show('Sign-in failed. Check your credentials and verification status.','error');return;}await refresh()});
-$('signup').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email||!$('password').value){show('Enter an email and password.','error');return;}const {error}=await client.auth.signUp({email,password:$('password').value,options:{emailRedirectTo:redirect}});if(error){show('Registration could not be completed. Check the email and password.','error');return;}show('Check your email for a verification link. Return to this invitation page after verification.','success')});
+$('signup').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email||!$('password').value){show('Enter an email and password.','error');return;}const {error}=await client.auth.signUp({email,password:$('password').value,options:{emailRedirectTo:redirect}});if(error){show('Registration could not be completed. Check the email and password.','error');return;}show('Check your email for a verification link. Complete verification in this browser, then return to this tab. If you switch browsers, reopen your original invitation link.','success')});
 $('resend').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email){show('Enter your email address first.','error');return;}await client.auth.resend({type:'signup',email,options:{emailRedirectTo:redirect}});show('If the account is eligible, a verification email will arrive shortly.','success')});
 $('reset').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email){show('Enter your email address first.','error');return;}await client.auth.resetPasswordForEmail(email,{redirectTo:redirect});show('If the account exists, a password reset email will arrive shortly.','success')});
 $('signout').onclick=()=>action(async()=>{await client.auth.signOut();await refresh()});
-$('accept').onclick=()=>action(async()=>{const {data}=await client.auth.getSession();const access=data?.session?.access_token;if(!access){show('Please sign in again.','error');await refresh();return;}const res=await fetch(API+'/api/accept-invitation',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+access},body:JSON.stringify({token})});const payload=await res.json().catch(()=>({}));if(res.ok&&payload.invitationAccepted){ready.classList.add('hidden');show('Invitation accepted! Your employee membership is active.','success');return;}if(res.status===403&&payload.error==='Invitation acceptance is not enabled'){show('Employee invitation acceptance is not available yet. Please try again after your employer confirms activation.','error');return;}show('This invitation could not be accepted. It may be expired, already used, or assigned to a different email address. Contact your employer.','error')});
+$('accept').onclick=()=>action(async()=>{const {data}=await client.auth.getSession();const access=data?.session?.access_token;if(!access){show('Please sign in again.','error');await refresh();return;}const res=await fetch(API+'/api/accept-invitation',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+access},body:JSON.stringify({token})});const payload=await res.json().catch(()=>({}));if(res.ok&&payload.invitationAccepted){try{sessionStorage.removeItem(TOKEN_KEY)}catch{}ready.classList.add('hidden');show('Invitation accepted! Your employee membership is active.','success');return;}if((res.status===403||res.status===503)&&/not enabled|disabled|unavailable/i.test(String(payload.error||''))){show('Employee invitation acceptance is not available yet. Please try again after your employer confirms activation.','error');return;}show('This invitation could not be accepted. It may be expired, already used, or assigned to a different email address. Contact your employer.','error')});
 client.auth.onAuthStateChange(()=>{setTimeout(()=>{if(!busy)refresh()},0)});refresh();
 })();
 </script></body></html>
