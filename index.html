@@ -98,9 +98,9 @@
 </div>
 <div class="directory-preview"><strong>Employee directory</strong><p>Employee records and invitation status will appear here after secure directory access is implemented. No employee data is being loaded or changed in this preview.</p></div>
 </section>
-<div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-backend-button" type="button" class="secondary-btn">Test Secure Backend</button><div id="backend-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div></div>
+<div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-backend-button" type="button" class="secondary-btn">Test Secure Backend</button><div id="backend-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-invitation-validation-button" type="button" class="secondary-btn">Test Invitation Validation</button><div id="invitation-validation-result" class="api-result" role="status" aria-live="polite">Not tested yet. No invitation will be created.</div></div></div>
 <div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Employee invitations, time tracking, scheduling, and settings changes are still locked until permissions and data isolation pass testing.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
-</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 6B secure backend verification. Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
+</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 6H invitation request validation (no writes). Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
 </main>
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -208,8 +208,57 @@
       if (version === backendCheckVersion) backendButton.disabled = false;
     }
   });
+  const validationButton = document.getElementById('test-invitation-validation-button');
+  const validationResult = document.getElementById('invitation-validation-result');
+  let validationCheckVersion = 0;
+  const setValidationResult = (message, type = '') => {
+    validationResult.textContent = message;
+    validationResult.className = 'api-result ' + type;
+  };
+  validationButton.addEventListener('click', async () => {
+    const version = ++validationCheckVersion;
+    validationButton.disabled = true;
+    setValidationResult('Validating invitation request without creating records…');
+    try {
+      const { data: sessionData, error: sessionError } = await client.auth.getSession();
+      if (sessionError || !sessionData?.session?.access_token) throw new Error('Please sign in again.');
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if (userError || !userData?.user?.id) throw new Error('Unable to verify user session.');
+      const { data: memberships, error: membershipError } = await client.from('ironcrest_memberships')
+        .select('organization_id').eq('user_id', userData.user.id).eq('role', 'owner').eq('active', true).limit(1);
+      if (membershipError || !memberships?.[0]?.organization_id) throw new Error('Active owner organization not found.');
+      const response = await fetch(API_BASE + '/api/create-invitation', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + sessionData.session.access_token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          organizationId: memberships[0].organization_id,
+          email: 'ironcrest-validation@example.invalid',
+          role: 'employee'
+        }),
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== validationCheckVersion) return;
+      if (response.ok && result.ok === true && result.ownerVerified === true &&
+          result.requestValidated === true && result.invitationCreated === false &&
+          result.invitationSendingEnabled === false) {
+        setValidationResult('PASS — Owner and invitation request validated. No invitation record or email created.', 'ok');
+      } else {
+        setValidationResult('FAIL (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected response. Invitation creation remains disabled.'), 'error');
+      }
+    } catch (error) {
+      if (version === validationCheckVersion) setValidationResult('Validation test error: ' +
+        (error?.message || 'Unknown error'), 'error');
+    } finally {
+      if (version === validationCheckVersion) validationButton.disabled = false;
+    }
+  });
   let checkVersion = 0;
-  const showLogin = () => { ++apiCheckVersion; ++backendCheckVersion; apiButton.disabled = false; backendButton.disabled = false; setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = false; setValidationResult('Not tested yet. No invitation will be created.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
