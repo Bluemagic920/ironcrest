@@ -43,6 +43,26 @@
 .dashboard-active .notice{font-size:11px}
 @media(max-width:1080px){.dashboard-active main{grid-template-columns:1fr}.dashboard-active .identity{position:static;padding:0}.dashboard-active .identity img{max-width:240px}.dashboard-active .identity .tagline{margin-top:12px}}
 @media(max-width:650px){.dashboard-active main{padding:26px 16px 45px}.dashboard-active .panel{padding:22px 18px}.owner-details{grid-template-columns:1fr}.workspace-grid{grid-template-columns:1fr}.dashboard-bottom{align-items:stretch}.panel .owner-signout{width:100%}}
+
+/* Stage 5A: Employee management interface; invitations and employee writes remain disabled. */
+.employee-section{display:none;margin-top:25px;padding:24px;border:1px solid #d8aa5c40;border-radius:15px;background:#07152399}
+.employee-section.open{display:block}
+.employee-section h2{margin:0 0 8px;font-size:21px}
+.employee-section .section-description{margin:0 0 20px;font-size:13px}
+.employee-actions{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.employee-actions .preview-tag{display:inline-flex}
+.employee-form{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(150px,.7fr);gap:14px}
+.employee-form label{margin:0 0 8px}
+.employee-form select{width:100%;padding:14px 15px;background:#071321;border:1px solid #71809665;border-radius:9px;color:#dce2e9;font:inherit}
+.employee-form input:disabled,.employee-form select:disabled{opacity:.6;cursor:not-allowed}
+.employee-section .invite-button{grid-column:1/-1;margin-top:3px;cursor:not-allowed;opacity:.5}
+.directory-preview{margin-top:20px;padding:17px;border:1px solid #ffffff1b;border-radius:12px;background:#0b1b2a}
+.directory-preview strong{font-size:13px}
+.directory-preview p{font-size:12px;margin:8px 0 0}
+.panel .workspace-card button.employee-open{opacity:1;cursor:pointer;color:#e9c381;border-color:#d8aa5c66}
+.panel .workspace-card button.employee-open:hover{background:#d8aa5c19}
+.panel .employee-close{width:auto;margin:0;padding:9px 14px;font-size:12px;background:transparent;color:#e7c381}
+@media(max-width:650px){.employee-section{padding:17px}.employee-form{grid-template-columns:1fr}.employee-section .invite-button{grid-column:1}}
 </style>
 </head>
 <body>
@@ -52,15 +72,25 @@
 <section class="panel"><div class="eyebrow">Secure Owner Access</div><div id="login-area"><h1>Welcome to<br>Ironcrest.</h1><p>Sign in with your existing ProfitHarbor AI account to verify your Ironcrest owner access. Employee invitations are not enabled yet.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" placeholder="name@example.com" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required><button id="login-button" type="submit">Owner Sign In</button></form></div><div class="owner-area" id="owner-area">
 <div class="owner-top"><div><div class="eyebrow">Ironcrest · Owner Command Center</div><h1>Workforce overview</h1><p class="owner-subtitle">A secure foundation for managing your team, schedules, and operations.</p></div><div class="owner-chip"><span class="owner-dot"></span>Owner access verified</div></div>
 <div class="owner-details"><div><span>Organization</span><strong id="owner-org"></strong></div><div><span>Signed in as</span><strong id="owner-email"></strong></div><div><span>Access level</span><strong id="owner-role">Owner</strong></div></div>
-<div class="dashboard-heading"><h2>Management workspace</h2><span class="preview-tag">Stage 4 · Preview</span></div>
+<div class="dashboard-heading"><h2>Management workspace</h2><span class="preview-tag">Stage 5A · Preview</span></div>
 <div class="workspace-grid" aria-label="Workforce management modules">
-<article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Coming soon</span></div><p>Invite team members using any email address, manage roles, and review active staff.</p><button type="button" disabled aria-label="Employee management not yet available">Manage employees <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Stage 5A · Preview</span></div><p>Prepare employee invitations using any email address and assign employee or manager roles.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Coming soon</span></div><p>Review shifts and time entries, with location verification and exception controls planned.</p><button type="button" disabled aria-label="Time and attendance not yet available">View time records <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Coming soon</span></div><p>Organize employee schedules, assignments, and future shift coverage.</p><button type="button" disabled aria-label="Scheduling not yet available">Open scheduling <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
+<section class="employee-section" id="employee-section" aria-label="Employee management preview">
+<div class="employee-actions"><div><div class="eyebrow">Stage 5A · Employee Management</div><h2>Invite your team</h2></div><button class="employee-close secondary-btn" id="employee-close" type="button">Close</button></div>
+<p class="section-description">Employees can use any personal or business email address. Invitations will be enabled after server-side authorization and company isolation are tested.</p>
+<div class="employee-form" aria-label="Invitation form preview">
+<div><label for="invite-email">Employee email</label><input id="invite-email" type="email" placeholder="name@example.com" disabled></div>
+<div><label for="invite-role">Role</label><select id="invite-role" disabled><option>Employee</option><option>Manager</option></select></div>
+<button class="invite-button" type="button" disabled title="Invitations are not yet enabled">Send Invitation — Coming Soon</button>
+</div>
+<div class="directory-preview"><strong>Employee directory</strong><p>Employee records and invitation status will appear here after secure directory access is implemented. No employee data is being loaded or changed in this preview.</p></div>
+</section>
 <div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Employee invitations, time tracking, scheduling, and settings changes are still locked until permissions and data isolation pass testing.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
-</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 4 owner dashboard preview. No employee registration, invitations, time tracking, or administrative changes are enabled.</div></section>
+</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 5A employee management interface preview. Invitations, employee registration, time tracking, and administrative changes remain disabled.</div></section>
 </main>
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -84,8 +114,23 @@
   const client = window.supabase.createClient(PROJECT_URL, PUBLISHABLE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'ironcrest-owner-auth-v1' }
   });
+
+  // Preview navigation only; no employee API writes or invitation requests.
+  const employeeOpen = document.getElementById('employee-open');
+  const employeeSection = document.getElementById('employee-section');
+  const employeeClose = document.getElementById('employee-close');
+  employeeOpen.addEventListener('click', () => {
+    employeeSection.classList.add('open');
+    employeeOpen.setAttribute('aria-expanded', 'true');
+    employeeSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  employeeClose.addEventListener('click', () => {
+    employeeSection.classList.remove('open');
+    employeeOpen.setAttribute('aria-expanded', 'false');
+    employeeOpen.focus();
+  });
   let checkVersion = 0;
-  const showLogin = () => { ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
