@@ -23,21 +23,34 @@ const SUPABASE_KEY='sb_publishable_VwM3o7h2Jxq9_2WkkdE4kg_WKU6bvP6';
 const API='https://ironcrest-invitations-api.bluemagic920.workers.dev';
 const $=id=>document.getElementById(id),notice=$('notice'),auth=$('auth-ui'),ready=$('ready-ui');
 const show=(msg,type='')=>{notice.textContent=msg;notice.className='notice '+type};
-// Preserve an invitation through email verification in the same browser/tab.
-// Session storage is tab-scoped and never sent in HTTP requests.
-const fragment=new URLSearchParams(location.hash.slice(1));
-const incoming=fragment.get('invite');
+// Accept the deployed dashboard's ?token= links and legacy #invite= links.
+// Keep the invitation in tab-scoped storage during email verification.
 const TOKEN_KEY='ironcrest-pending-invitation-v1';
-if(fragment.has('invite')){
+const query=new URLSearchParams(location.search);
+const fragment=new URLSearchParams(location.hash.slice(1));
+const queryToken=query.get('token');
+const fragmentToken=fragment.get('invite');
+const incoming=queryToken!==null?queryToken:fragmentToken;
+// Remove only invitation credentials; retain Supabase authentication parameters.
+if(query.has('token')||fragment.has('invite')){
+  query.delete('token');
   fragment.delete('invite');
-  history.replaceState(null,'',location.pathname+location.search+(fragment.toString()?'#'+fragment.toString():''));
+  history.replaceState(null,'',location.pathname+
+    (query.toString()?'?'+query.toString():'')+
+    (fragment.toString()?'#'+fragment.toString():''));
 }
 let token=null;
 try {
   if(incoming!==null){
-    if(/^[a-f0-9]{64}$/.test(incoming)){sessionStorage.setItem(TOKEN_KEY,incoming);token=incoming;}
-    else sessionStorage.removeItem(TOKEN_KEY);
-  } else {token=sessionStorage.getItem(TOKEN_KEY);}
+    if(/^[a-f0-9]{64}$/.test(incoming)){
+      sessionStorage.setItem(TOKEN_KEY,incoming);
+      token=incoming;
+    } else {
+      sessionStorage.removeItem(TOKEN_KEY);
+    }
+  } else {
+    token=sessionStorage.getItem(TOKEN_KEY);
+  }
 } catch {token=incoming;}
 if(!token||!/^[a-f0-9]{64}$/.test(token)){
   show('This invitation link is missing or invalid. Open the original invitation link from your employer. If you verified your email in another browser or device, reopen that invitation link there.','error');return;
