@@ -9,14 +9,89 @@
 <meta name="description" content="Ironcrest Workforce Operations — powered by ProfitHarbor AI.">
 <style>
 :root{color-scheme:dark;--navy:#071321;--gold:#d8aa5c;--silver:#dce2e9;--muted:#9caabb}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 30%,#172c42 0%,#0a1828 45%,#050e19 100%);color:var(--silver);font-family:Inter,Segoe UI,Arial,sans-serif}body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.25;background:linear-gradient(125deg,transparent 40%,#9caabb0b 50%,transparent 60%)}header{display:flex;align-items:center;justify-content:space-between;padding:24px clamp(22px,5vw,80px);border-bottom:1px solid #ffffff16}.brand{font-size:16px;font-weight:800;letter-spacing:.18em}.brand span{color:var(--gold)}.status{font-size:12px;letter-spacing:.08em;color:#acb9c8;border:1px solid #ffffff24;padding:9px 13px;border-radius:99px}main{max-width:1120px;margin:auto;min-height:calc(100vh - 152px);display:grid;grid-template-columns:minmax(0,1.3fr) minmax(310px,.7fr);align-items:center;gap:clamp(24px,5vw,80px);padding:40px 24px 80px}.identity{text-align:center}.identity img{display:block;width:100%;max-width:650px;margin:auto;box-shadow:0 20px 65px #0005;border-radius:10px}.tagline{margin:24px auto 0;color:#c1cbd6;font-size:15px;letter-spacing:.1em;text-transform:uppercase}.panel{border:1px solid #caa2614d;background:linear-gradient(150deg,#14263aef,#091522f5);box-shadow:0 24px 70px #0008;padding:36px;border-radius:18px}.eyebrow{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}h1{font-size:clamp(27px,3vw,36px);line-height:1.14;margin:15px 0}p{color:#aab8c8;line-height:1.6}label{display:block;margin:20px 0 7px;font-size:13px;font-weight:600}input{width:100%;padding:14px 15px;background:#071321;border:1px solid #71809665;border-radius:9px;color:white;font:inherit}input:disabled{opacity:.55;cursor:not-allowed}button{width:100%;padding:15px;margin-top:24px;border:1px solid #e7c381;background:linear-gradient(115deg,#e6c17d,#b88a40);color:#142033;font-weight:800;font-size:15px;border-radius:9px;cursor:not-allowed;opacity:.65}.notice{font-size:12px;border-top:1px solid #ffffff20;margin-top:24px;padding-top:17px;color:#aeb9c6}footer{padding:22px;text-align:center;color:#9ba8b8;font-size:12px;border-top:1px solid #ffffff16}footer a{color:#d9b578;text-decoration:none}@media(max-width:780px){header{padding:18px 20px}main{grid-template-columns:1fr;min-height:auto;padding:34px 20px 60px;gap:26px}.identity img{max-width:510px}.tagline{font-size:12px}.panel{max-width:510px;width:100%;margin:auto;padding:26px}.status{font-size:10px}}
+.panel button{cursor:pointer;opacity:1}.panel button:disabled{cursor:not-allowed;opacity:.55}.feedback{margin-top:14px;font-size:13px;line-height:1.5;min-height:20px}.feedback.error{color:#ffb7b7}.feedback.ok{color:#a9e5c4}.owner-area{display:none}.owner-area dl{margin:20px 0}.owner-area dt{color:#aab8c8;font-size:12px;margin-top:12px}.owner-area dd{margin:5px 0 0;font-weight:700;overflow-wrap:anywhere}.secondary-btn{background:transparent!important;color:#e7c381!important}.spinner{opacity:.7}
 </style>
 </head>
 <body>
 <header><div class="brand">IRON<span>CREST</span></div><div class="status">WORKFORCE OPERATIONS</div></header>
 <main>
 <section class="identity" aria-label="Ironcrest brand"><img src="ironcrest-logo.png" alt="Ironcrest Workforce Operations silver and gold shield emblem, powered by ProfitHarbor AI"><div class="tagline">Built for the people who move business forward</div></section>
-<section class="panel"><div class="eyebrow">Employee Portal</div><h1>Welcome to<br>Ironcrest.</h1><p>Your secure workforce workspace is being prepared. Employee sign-in will become available after account permissions and authentication are verified.</p><form onsubmit="return false"><label for="email">Email</label><input id="email" type="email" placeholder="name@example.com" autocomplete="username" disabled><label for="password">Password</label><input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" disabled><button type="button" disabled>Employee Sign In — Coming Soon</button></form><div class="notice">For your security, employee accounts are not enabled yet. No credentials are collected on this page.</div></section>
+<section class="panel"><div class="eyebrow">Secure Owner Access</div><div id="login-area"><h1>Welcome to<br>Ironcrest.</h1><p>Sign in with your existing ProfitHarbor AI account to verify your Ironcrest owner access. Employee invitations are not enabled yet.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" placeholder="name@example.com" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required><button id="login-button" type="submit">Owner Sign In</button></form></div><div class="owner-area" id="owner-area"><h1>Owner access<br>verified.</h1><p>Your Ironcrest owner membership is active. Employee access and workforce tools remain locked while we finish security testing.</p><dl><dt>Signed in as</dt><dd id="owner-email"></dd><dt>Organization</dt><dd id="owner-org"></dd><dt>Role</dt><dd id="owner-role">Owner</dd></dl><button type="button" id="signout-button" class="secondary-btn">Sign Out</button></div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice">Stage 3 owner-only verification. No employee registration, invitations, time tracking, or administrative changes are enabled.</div></section>
 </main>
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
-<script>document.getElementById('year').textContent=new Date().getFullYear()</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(() => {
+  'use strict';
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const PROJECT_URL = 'https://nhiqbcevcdxfzvrprgck.supabase.co';
+  const PUBLISHABLE_KEY = 'sb_publishable_VwM3o7h2Jxq9_2WkkdE4kg_WKU6bvP6';
+  const feedback = document.getElementById('feedback');
+  const loginArea = document.getElementById('login-area');
+  const ownerArea = document.getElementById('owner-area');
+  const loginButton = document.getElementById('login-button');
+  const signoutButton = document.getElementById('signout-button');
+  const setMessage = (message, type = '') => { feedback.textContent = message; feedback.className = 'feedback ' + type; };
+  if (!window.supabase || !window.supabase.createClient) {
+    setMessage('Unable to load secure sign-in. Check your internet connection and refresh.', 'error');
+    loginButton.disabled = true;
+    return;
+  }
+  const client = window.supabase.createClient(PROJECT_URL, PUBLISHABLE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'ironcrest-owner-auth-v1' }
+  });
+  let checkVersion = 0;
+  const showLogin = () => { ownerArea.style.display = 'none'; loginArea.style.display = 'block'; };
+  const showOwner = (email, name) => {
+    document.getElementById('owner-email').textContent = email || 'Verified account';
+    document.getElementById('owner-org').textContent = name;
+    loginArea.style.display = 'none'; ownerArea.style.display = 'block';
+  };
+  async function verifyOwner() {
+    const version = ++checkVersion;
+    setMessage('Verifying owner permissions…');
+    const { data: userData, error: userError } = await client.auth.getUser();
+    if (version !== checkVersion) return;
+    if (userError || !userData?.user) { showLogin(); setMessage(''); return; }
+    const { data: memberships, error: membershipError } = await client.from('ironcrest_memberships')
+      .select('organization_id,role,active').eq('user_id', userData.user.id).eq('role', 'owner').eq('active', true).limit(2);
+    if (version !== checkVersion) return;
+    if (membershipError) {
+      showLogin(); setMessage('Unable to verify owner permissions: ' + membershipError.message, 'error'); return;
+    }
+    if (!memberships?.length) {
+      await client.auth.signOut(); showLogin();
+      setMessage('This account does not have active Ironcrest owner access. Employee login is not yet available.', 'error'); return;
+    }
+    const { data: org, error: orgError } = await client.from('ironcrest_organizations')
+      .select('name').eq('id', memberships[0].organization_id).maybeSingle();
+    if (version !== checkVersion) return;
+    if (orgError || !org) { showLogin(); setMessage('Your owner membership was found, but the organization could not be verified.', 'error'); return; }
+    showOwner(userData.user.email, org.name);
+    setMessage('Owner access verified. Employee features remain disabled.', 'ok');
+  }
+  document.getElementById('login-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    loginButton.disabled = true;
+    setMessage('Signing in securely…');
+    try {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const { error } = await client.auth.signInWithPassword({ email, password });
+      document.getElementById('password').value = '';
+      if (error) { setMessage('Sign-in failed: ' + error.message, 'error'); return; }
+      await verifyOwner();
+    } catch (error) { setMessage('Unable to connect: ' + (error?.message || 'Please try again.'), 'error'); }
+    finally { loginButton.disabled = false; }
+  });
+  signoutButton.addEventListener('click', async () => {
+    signoutButton.disabled = true;
+    ++checkVersion;
+    try { await client.auth.signOut(); showLogin(); setMessage('Signed out.', 'ok'); }
+    catch { setMessage('Sign-out failed. Please try again.', 'error'); }
+    finally { signoutButton.disabled = false; }
+  });
+  verifyOwner().catch(() => { showLogin(); setMessage('Unable to verify the current session. Please refresh.', 'error'); });
+})();
+</script>
 </body></html>
