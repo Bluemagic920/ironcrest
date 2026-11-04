@@ -75,6 +75,20 @@
 
 /* Public IronCrest coming-soon marketing section; independent of owner operations. */
 .public-launch{max-width:1120px;margin:34px auto 0;padding:0 24px}.launch-shell{position:relative;overflow:hidden;border:1px solid #d8aa5c55;border-radius:20px;background:radial-gradient(ellipse at 85% 0%,#25415a 0%,#102236 40%,#091726 100%);box-shadow:0 22px 65px #0005;padding:clamp(26px,5vw,56px)}.launch-shell:after{content:"";position:absolute;right:-110px;top:-110px;width:340px;height:340px;border-radius:50%;background:#d8aa5c0c;filter:blur(18px);pointer-events:none}.launch-eyebrow{color:#e6bd77;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}.launch-shell h1{font-size:clamp(30px,4.5vw,54px);max-width:760px;margin:17px 0 14px;line-height:1.12;color:#f3f5f8}.launch-lead{font-size:clamp(15px,1.7vw,18px);max-width:700px;color:#c2cfda}.launch-actions{display:flex;gap:12px;flex-wrap:wrap;margin:25px 0 8px}.launch-actions a{display:inline-block;border-radius:9px;padding:12px 19px;text-decoration:none;font-weight:750;font-size:14px}.launch-primary{background:linear-gradient(110deg,#e6c17d,#b88a40);color:#142033}.launch-secondary{border:1px solid #d8aa5c88;color:#efd3a2}.launch-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:32px}.launch-feature{padding:19px 17px;border:1px solid #ffffff21;background:#091522a8;border-radius:12px}.launch-feature strong{display:block;font-size:14px;color:#f1e4cc;margin-bottom:9px}.launch-feature p{font-size:12px;line-height:1.6;margin:0}.launch-disclosure{font-size:12px;color:#aebccc;margin:20px 0 0}.launch-footnote{margin-top:18px;font-size:13px;color:#b7c5d3}.launch-footnote a{color:#e7c381}.public-launch + main{padding-top:35px;min-height:auto}.dashboard-active .public-launch{display:none}@media(max-width:850px){.launch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.public-launch{padding:0 16px;margin-top:20px}.launch-grid{grid-template-columns:1fr}.launch-actions a{width:100%;text-align:center}}
+
+/* Stage 10C: local-only invitation email preview. Never sends or exposes invitation tokens. */
+.email-preview-wrap{margin-top:20px;border:1px solid #d8aa5c55;border-radius:12px;padding:18px;background:#091a2c}
+.email-preview-wrap h3{font-size:16px;color:#e7c381;margin:0 0 8px}
+.email-preview-wrap p{font-size:12px;margin:5px 0 12px}
+.panel .email-preview-wrap>button{width:auto;margin:0;padding:10px 16px;cursor:pointer;opacity:1}
+.email-preview{display:none;margin-top:16px;background:#f5f7fa;color:#1a2938;border-radius:12px;overflow:hidden;border:1px solid #d8e0e8}
+.email-preview.open{display:block}
+.email-preview-head{padding:22px;background:#071321;color:#f2f4f7;text-align:center;border-bottom:4px solid #d8aa5c}
+.email-preview-head strong{font-size:22px;letter-spacing:.14em}.email-preview-head strong span{color:#d8aa5c}
+.email-preview-body{padding:25px;line-height:1.65;font-size:14px}.email-preview-body h4{font-size:22px;margin:0 0 10px;color:#14263a}.email-preview-body p{color:#33465a}
+.email-preview-cta{display:inline-block;background:#d8aa5c;color:#142033;font-weight:800;padding:12px 18px;border-radius:8px;margin:12px 0}
+.email-preview-foot{background:#e7edf2;padding:16px 25px;font-size:11px;color:#536577}
+.email-preview-subject{font-size:12px;color:#9caabb;margin-top:14px;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -117,6 +131,7 @@
 </div>
 <div id="restricted-invite-status" class="api-result" role="status" aria-live="polite">No invitation created from this page yet.</div>
 <div id="restricted-invite-link-box" class="private-link" aria-live="polite"><strong>Private invitation link — copy now</strong><p>Only share this link with the configured test recipient. It will disappear if you leave or reload this page. Do not paste it into this chat.</p><div id="restricted-invite-link" class="link-value"></div><button id="restricted-copy-button" type="button" class="secondary-btn">Copy Private Link</button></div>
+<div class="email-preview-wrap" aria-label="Stage 10C invitation email preview"><h3>Stage 10C · Branded Invitation Email Preview</h3><p>Preview the email employees would receive after invitation delivery is approved. This is a local sample only: no email is sent, no invitation is created, and no private link is displayed.</p><button id="preview-invitation-email" type="button" class="secondary-btn" aria-expanded="false" aria-controls="invitation-email-preview">Preview Invitation Email</button><div class="email-preview-subject">Sample subject: You're invited to join your team on IronCrest</div><div id="invitation-email-preview" class="email-preview" aria-label="Sample invitation email"><div class="email-preview-head"><strong>IRON<span>CREST</span></strong><div style="font-size:11px;letter-spacing:.16em;margin-top:6px">WORKFORCE OPERATIONS</div></div><div class="email-preview-body"><h4>You're invited to IronCrest.</h4><p>Hello,</p><p>Your organization has invited you to join its team on IronCrest Workforce Operations.</p><p>Once invitations are enabled, you'll be able to use a secure, time-limited invitation link to complete your account setup.</p><div class="email-preview-cta">Accept Invitation — Sample Only</div><p style="font-size:12px">This is a non-clickable preview. A real invitation email will include a unique secure link and an expiration notice.</p><p>If you weren't expecting this invitation, you can ignore the email.</p></div><div class="email-preview-foot">IronCrest Workforce Operations · Powered by ProfitHarbor AI<br>This preview is not an email and has not been sent.</div></div></div>
 <div class="directory-preview"><strong>Employee directory</strong><p>Employee records and invitation status will appear here after secure directory access is implemented. No employee data is being loaded or changed in this preview.</p></div>
 </section>
 <div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-backend-button" type="button" class="secondary-btn">Test Secure Backend</button><div id="backend-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-invitation-validation-button" type="button" class="secondary-btn" disabled title="Retired because Stage 8A now creates database records">Legacy Validation Test — Disabled</button><div id="invitation-validation-result" class="api-result" role="status" aria-live="polite">Disabled for Stage 8A: the endpoint now creates test records.</div></div></div>
@@ -214,6 +229,15 @@
     } catch {
       setRestrictedStatus('Automatic copy unavailable. Select the private link text and copy it manually.', 'error');
     }
+  });
+
+  // Stage 10C: preview is entirely local. It never calls the Worker or uses a real token.
+  const previewEmailButton = document.getElementById('preview-invitation-email');
+  const previewEmailPanel = document.getElementById('invitation-email-preview');
+  previewEmailButton.addEventListener('click', () => {
+    const open = previewEmailPanel.classList.toggle('open');
+    previewEmailButton.setAttribute('aria-expanded', String(open));
+    previewEmailButton.textContent = open ? 'Hide Invitation Email Preview' : 'Preview Invitation Email';
   });
 
   // Preview navigation only; no employee API writes or invitation requests.
