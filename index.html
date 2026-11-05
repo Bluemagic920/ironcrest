@@ -105,6 +105,13 @@
  .assignment-record strong{color:#f2d29b}
  .assignment-record p{margin:6px 0}
  .assignment-ids{font-size:11px;overflow-wrap:anywhere;color:#9caabb}
+
+/* Stage 10P-AO employee directory */
+.employee-directory{margin-top:18px;border:1px solid #d8aa5c55;border-radius:12px;padding:18px;background:#091a2c}
+.employee-directory h3{margin:0 0 8px;color:#e7c381}
+.panel .employee-directory button{width:auto;padding:10px 16px;margin:6px 0 12px}
+.directory-person{margin-top:12px;padding:14px;border:1px solid #ffffff25;border-radius:10px;background:#0a1a2b}
+.directory-person strong{color:#f2d29b}.directory-person p{font-size:12px;margin:5px 0}
 </style>
 </head>
 <body>
@@ -165,7 +172,11 @@
 <div id="restricted-invite-status" class="api-result" role="status" aria-live="polite">No test email requested from this page yet.</div>
 <div id="restricted-invite-link-box" class="private-link" aria-live="polite"><strong>Private invitation link — copy now</strong><p>Only share this link with the configured test recipient. It will disappear if you leave or reload this page. Do not paste it into this chat.</p><div id="restricted-invite-link" class="link-value"></div><button id="restricted-copy-button" type="button" class="secondary-btn">Copy Private Link</button></div>
 <div class="email-preview-wrap" aria-label="Stage 10C invitation email preview"><h3>Stage 10C · Branded Invitation Email Preview</h3><p>Preview the email employees would receive after invitation delivery is approved. This is a local sample only: no email is sent, no invitation is created, and no private link is displayed.</p><button id="preview-invitation-email" type="button" class="secondary-btn" aria-expanded="false" aria-controls="invitation-email-preview">Preview Invitation Email</button><div class="email-preview-subject">Sample subject: You're invited to join your team on IronCrest</div><div id="invitation-email-preview" class="email-preview" aria-label="Sample invitation email"><div class="email-preview-head"><img class="email-preview-logo" src="./ironcrest-logo.png" alt="IronCrest Workforce Operations shield logo"></div><div class="email-preview-body"><h4>You're invited to IronCrest.</h4><p>Hello,</p><p>Your organization has invited you to join its team on IronCrest Workforce Operations.</p><p>Once invitations are enabled, you'll be able to use a secure, time-limited invitation link to complete your account setup.</p><div class="email-preview-cta">Accept Invitation — Sample Only</div><p style="font-size:12px">This is a non-clickable preview. A real invitation email will include a unique secure link and an expiration notice.</p><p>If you weren't expecting this invitation, you can ignore the email.</p></div><div class="email-preview-foot">IronCrest Workforce Operations · Powered by ProfitHarbor AI<br>This preview is not an email and has not been sent.</div></div></div>
-<div class="directory-preview"><strong>Employee directory</strong><p>Employee records and invitation status will appear here after secure directory access is implemented. No employee data is being loaded or changed in this preview.</p></div>
+<div class="employee-directory" aria-label="Read-only employee directory">
+<h3>Employee Directory</h3><p>Owner-only directory preview. Names are pending until profiles are completed. No employee records can be edited here.</p>
+<button id="directory-load" type="button" class="secondary-btn">Load Employee Directory</button>
+<div id="directory-status" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
+<div id="directory-list"></div></div>
 </section>
 <div class="api-check" aria-label="Stage 10P-P attendance backend readiness">
 <h3>Stage 10P-P · Attendance Backend Readiness</h3>
@@ -470,10 +481,61 @@
     employeeSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
   employeeClose.addEventListener('click', () => {
+    ++directoryRequestVersion; directoryList.replaceChildren(); directoryMessage('Not loaded yet.');
     employeeSection.classList.remove('open');
     employeeOpen.setAttribute('aria-expanded', 'false');
     employeeOpen.focus();
   });
+
+  // Stage 10P-AO: owner-only directory, no writes or authentication-table access.
+  const directoryLoad = document.getElementById('directory-load');
+  const directoryStatus = document.getElementById('directory-status');
+  const directoryList = document.getElementById('directory-list');
+  let directoryRequestVersion = 0;
+  function directoryMessage(message, kind='') {
+    directoryStatus.textContent = message;
+    directoryStatus.className = 'api-result '+kind;
+  }
+  directoryLoad.addEventListener('click',async()=>{
+    const version = ++directoryRequestVersion;
+    directoryLoad.disabled=true;
+    directoryList.replaceChildren();
+    directoryMessage('Loading secure employee directory…');
+    try {
+      await confirmWorksiteOwner();
+      const {data,error} = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Owner session expired. Sign in again.');
+      const response = await fetch(API_BASE+'/api/employees/directory',{
+        method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},
+        cache:'no-store',referrerPolicy:'no-referrer'
+      });
+      const result = await response.json();
+      if (version!==directoryRequestVersion || !employeeSection.classList.contains('open')) return;
+      if (!response.ok || result.ok!==true || result.readOnly!==true ||
+          result.organizationScoped!==true || result.attendanceEnabled!==false ||
+          result.attendanceWritesEnabled!==false || !Array.isArray(result.employees))
+        throw new Error('Directory authorization or response could not be verified (HTTP '+response.status+').');
+      if (result.employees.length>1000) throw new Error('Directory too large.');
+      for (const person of result.employees) {
+        const card=document.createElement('div');card.className='directory-person';
+        const name=document.createElement('strong');
+        name.textContent=person.firstName && person.lastName
+          ? person.firstName+' '+person.lastName : 'Name pending';
+        const status=document.createElement('p');
+        status.textContent='Membership: '+(person.membershipActive?'Active':'Inactive')+
+          ' · Employment: '+(person.employmentStatus || 'Profile pending');
+        const job=document.createElement('p');job.textContent='Job title: '+(person.jobTitle || 'Not entered');
+        const sites=document.createElement('p');
+        sites.textContent='Assigned worksites: '+(Array.isArray(person.assignedWorksites) && person.assignedWorksites.length
+          ? person.assignedWorksites.map(s=>s.name+(s.active?'':' (inactive)')).join(', '):'None');
+        card.append(name,status,job,sites);directoryList.append(card);
+      }
+      directoryMessage(result.employees.length+' employee(s) loaded. Read-only; attendance locked.','ok');
+    } catch(e) {
+      if(version===directoryRequestVersion){directoryList.replaceChildren();directoryMessage('Unable to load directory: '+(e?.message||'Connection error'),'error');}
+    } finally {if(version===directoryRequestVersion)directoryLoad.disabled=false;}
+  });
+
   // Stage 10P-P: authenticated, owner-only, GET-only readiness check.
   const attendanceReadinessButton = document.getElementById('attendance-readiness-button');
   const attendanceReadinessResult = document.getElementById('attendance-readiness-result');
