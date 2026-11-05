@@ -117,22 +117,22 @@
 <section class="panel"><div class="eyebrow">Secure Owner Access</div><div id="login-area"><h1>Welcome to<br>Ironcrest.</h1><p>Sign in with your existing ProfitHarbor AI account to verify your Ironcrest owner access. Only restricted owner-authorized test invitations are currently available.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" placeholder="name@example.com" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required><button id="login-button" type="submit">Owner Sign In</button></form></div><div class="owner-area" id="owner-area">
 <div class="owner-top"><div><div class="eyebrow">Ironcrest · Owner Command Center</div><h1>Workforce overview</h1><p class="owner-subtitle">A secure foundation for managing your team, schedules, and operations.</p></div><div class="owner-chip"><span class="owner-dot"></span>Owner access verified</div></div>
 <div class="owner-details"><div><span>Organization</span><strong id="owner-org"></strong></div><div><span>Signed in as</span><strong id="owner-email"></strong></div><div><span>Access level</span><strong id="owner-role">Owner</strong></div></div>
-<div class="dashboard-heading"><h2>Management workspace</h2><span class="preview-tag">Stage 5A · Preview</span></div>
+<div class="dashboard-heading"><h2>Management workspace</h2><span class="preview-tag">Stage 10K · Preview</span></div>
 <div class="workspace-grid" aria-label="Workforce management modules">
-<article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Stage 9G · Test</span></div><p>Manage employee invitations. Restricted single-recipient testing is available to verified owners.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Stage 10K · Test</span></div><p>Manage employee invitations. Restricted single-recipient testing is available to verified owners.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Coming soon</span></div><p>Review shifts and time entries, with location verification and exception controls planned.</p><button type="button" disabled aria-label="Time and attendance not yet available">View time records <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Coming soon</span></div><p>Organize employee schedules, assignments, and future shift coverage.</p><button type="button" disabled aria-label="Scheduling not yet available">Open scheduling <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
 <section class="employee-section" id="employee-section" aria-label="Employee management preview">
-<div class="employee-actions"><div><div class="eyebrow">Stage 9G.3 · Restricted Invitation Test</div><h2>Invite your team</h2></div><button class="employee-close secondary-btn" id="employee-close" type="button">Close</button></div>
-<p class="section-description">Create one controlled employee invitation for the test email configured privately in Cloudflare. No automatic email is sent. The test link is shown once for you to copy.</p>
+<div class="employee-actions"><div><div class="eyebrow">Stage 10K · Controlled Invitation Email Test</div><h2>Invite your team</h2></div><button class="employee-close secondary-btn" id="employee-close" type="button">Close</button></div>
+<p class="section-description">Send one controlled invitation email to the approved test recipient configured privately in Cloudflare. This creates an invitation record and submits the branded email through Resend.</p>
 <div class="employee-form" aria-label="Restricted test invitation">
 <div><label for="invite-email">Recipient</label><input id="invite-email" type="text" value="Cloudflare-configured test email only" disabled></div>
 <div><label for="invite-role">Role</label><select id="invite-role" disabled><option>Employee</option></select></div>
-<button id="restricted-invite-button" class="invite-button" type="button">Create Restricted Test Invitation</button>
+<button id="restricted-invite-button" class="invite-button" type="button">Send Test Invitation Email</button>
 </div>
-<div id="restricted-invite-status" class="api-result" role="status" aria-live="polite">No invitation created from this page yet.</div>
+<div id="restricted-invite-status" class="api-result" role="status" aria-live="polite">No test email requested from this page yet.</div>
 <div id="restricted-invite-link-box" class="private-link" aria-live="polite"><strong>Private invitation link — copy now</strong><p>Only share this link with the configured test recipient. It will disappear if you leave or reload this page. Do not paste it into this chat.</p><div id="restricted-invite-link" class="link-value"></div><button id="restricted-copy-button" type="button" class="secondary-btn">Copy Private Link</button></div>
 <div class="email-preview-wrap" aria-label="Stage 10C invitation email preview"><h3>Stage 10C · Branded Invitation Email Preview</h3><p>Preview the email employees would receive after invitation delivery is approved. This is a local sample only: no email is sent, no invitation is created, and no private link is displayed.</p><button id="preview-invitation-email" type="button" class="secondary-btn" aria-expanded="false" aria-controls="invitation-email-preview">Preview Invitation Email</button><div class="email-preview-subject">Sample subject: You're invited to join your team on IronCrest</div><div id="invitation-email-preview" class="email-preview" aria-label="Sample invitation email"><div class="email-preview-head"><img class="email-preview-logo" src="./ironcrest-logo.png" alt="IronCrest Workforce Operations shield logo"></div><div class="email-preview-body"><h4>You're invited to IronCrest.</h4><p>Hello,</p><p>Your organization has invited you to join its team on IronCrest Workforce Operations.</p><p>Once invitations are enabled, you'll be able to use a secure, time-limited invitation link to complete your account setup.</p><div class="email-preview-cta">Accept Invitation — Sample Only</div><p style="font-size:12px">This is a non-clickable preview. A real invitation email will include a unique secure link and an expiration notice.</p><p>If you weren't expecting this invitation, you can ignore the email.</p></div><div class="email-preview-foot">IronCrest Workforce Operations · Powered by ProfitHarbor AI<br>This preview is not an email and has not been sent.</div></div></div>
 <div class="directory-preview"><strong>Employee directory</strong><p>Employee records and invitation status will appear here after secure directory access is implemented. No employee data is being loaded or changed in this preview.</p></div>
@@ -147,8 +147,8 @@
 <button id="test-create-button" type="button" class="secondary-btn" disabled title="Retired during Stage 9G testing">Legacy Stage 8C Test — Disabled</button>
 <div id="test-create-result" class="api-result" role="status" aria-live="polite">Disabled during restricted real-email testing.</div>
 </div>
-<div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Stage 9G allows one owner-authorized, manually shared test link for the configured email only. Automated sending and invitation acceptance remain disabled.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
-</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 9G restricted invitation testing is enabled. No automatic email is sent. Invitation acceptance and other workforce features remain disabled.</div></section>
+<div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Stage 10K allows one owner-authorized email test to the configured recipient only. Public invitation sending remains disabled.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
+</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 10K controlled email testing is available to verified owners when enabled in Cloudflare. Public sending and other workforce features remain disabled.</div></section>
 </main>
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -175,7 +175,7 @@
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'ironcrest-owner-auth-v1' }
   });
 
-  // Stage 9G.3: restricted test invitation, no request body and no client-supplied email.
+  // Stage 10K: restricted real email test; no request body or client-supplied email.
   const restrictedInviteButton = document.getElementById('restricted-invite-button');
   const restrictedInviteStatus = document.getElementById('restricted-invite-status');
   const restrictedInviteLinkBox = document.getElementById('restricted-invite-link-box');
@@ -189,40 +189,33 @@
   };
   restrictedInviteButton.addEventListener('click', async () => {
     if (restrictedInviteAttempted) return;
-    if (!window.confirm('Create one database invitation for the test email configured in Cloudflare? No email will be sent automatically.')) return;
+    if (!window.confirm('Create one invitation and submit a REAL email to the approved Cloudflare test recipient? This cannot be undone.')) return;
     restrictedInviteAttempted = true;
     restrictedInviteButton.disabled = true;
     restrictedInviteLinkBox.classList.remove('open');
     restrictedInvitationUrl = '';
     restrictedInviteLink.textContent = '';
-    setRestrictedStatus('Creating the restricted invitation…');
+    setRestrictedStatus('Submitting one controlled invitation to Resend…');
     try {
       const {data, error} = await client.auth.getSession();
       if (error || !data?.session?.access_token) throw new Error('Owner session expired. Please sign in again.');
-      const response = await fetch(API_BASE + '/api/create-restricted-test-invitation', {
+      const response = await fetch(API_BASE + '/api/send-controlled-test-invitation', {
         method: 'POST',
         headers: {Authorization: 'Bearer ' + data.session.access_token},
         cache: 'no-store',
         referrerPolicy: 'no-referrer'
       });
       const result = await response.json();
-      if (response.status !== 201 || result.ok !== true || result.invitationCreated !== true ||
-          result.invitationSendingEnabled !== false || typeof result.invitationUrl !== 'string') {
-        throw new Error('HTTP ' + response.status + ': ' + (result.error || 'Invitation not confirmed'));
+      if (response.ok && result.ok === true && result.emailAcceptedByProvider === true && result.auditRecorded === true) {
+        setRestrictedStatus('SUCCESS — Resend accepted the invitation email and Supabase recorded the delivery attempt. Check the test inbox; actual delivery is not yet confirmed.', 'ok');
+      } else {
+        const reason = result.message || result.error || 'The result was not confirmed';
+        setRestrictedStatus('NOT CONFIRMED (HTTP ' + response.status + '): ' + reason + ' Do not retry until Resend and Supabase audit are checked.', 'error');
       }
-      const link = new URL(result.invitationUrl);
-      if (link.origin !== 'https://ironcrest.profitharborai.com' ||
-          link.pathname !== '/accept-invitation.html' || !/^[a-f0-9]{64}$/.test(link.searchParams.get('token') || '')) {
-        throw new Error('Unexpected invitation link returned. Check the database before retrying.');
-      }
-      restrictedInvitationUrl = link.href;
-      restrictedInviteLink.textContent = restrictedInvitationUrl;
-      restrictedInviteLinkBox.classList.add('open');
-      setRestrictedStatus('Invitation created for ' + (result.recipientEmail || 'configured test recipient') + '. Copy the private link below. No email was sent.', 'ok');
     } catch (error) {
-      setRestrictedStatus('Invitation not confirmed: ' + (error?.message || 'Connection error') + '. Check Supabase before trying again to avoid duplicate records.', 'error');
+      setRestrictedStatus('OUTCOME UNKNOWN — ' + (error?.message || 'Network error') + '. Do not retry. Check Resend and Supabase audit first.', 'error');
     }
-    // Keep disabled even after an error: network errors may occur after a database write.
+    // Never automatically re-enable: a timeout may still have submitted an email.
   });
   restrictedCopyButton.addEventListener('click', async () => {
     if (!restrictedInvitationUrl) return;
