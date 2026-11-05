@@ -173,7 +173,7 @@
 <div id="restricted-invite-link-box" class="private-link" aria-live="polite"><strong>Private invitation link — copy now</strong><p>Only share this link with the configured test recipient. It will disappear if you leave or reload this page. Do not paste it into this chat.</p><div id="restricted-invite-link" class="link-value"></div><button id="restricted-copy-button" type="button" class="secondary-btn">Copy Private Link</button></div>
 <div class="email-preview-wrap" aria-label="Stage 10C invitation email preview"><h3>Stage 10C · Branded Invitation Email Preview</h3><p>Preview the email employees would receive after invitation delivery is approved. This is a local sample only: no email is sent, no invitation is created, and no private link is displayed.</p><button id="preview-invitation-email" type="button" class="secondary-btn" aria-expanded="false" aria-controls="invitation-email-preview">Preview Invitation Email</button><div class="email-preview-subject">Sample subject: You're invited to join your team on IronCrest</div><div id="invitation-email-preview" class="email-preview" aria-label="Sample invitation email"><div class="email-preview-head"><img class="email-preview-logo" src="./ironcrest-logo.png" alt="IronCrest Workforce Operations shield logo"></div><div class="email-preview-body"><h4>You're invited to IronCrest.</h4><p>Hello,</p><p>Your organization has invited you to join its team on IronCrest Workforce Operations.</p><p>Once invitations are enabled, you'll be able to use a secure, time-limited invitation link to complete your account setup.</p><div class="email-preview-cta">Accept Invitation — Sample Only</div><p style="font-size:12px">This is a non-clickable preview. A real invitation email will include a unique secure link and an expiration notice.</p><p>If you weren't expecting this invitation, you can ignore the email.</p></div><div class="email-preview-foot">IronCrest Workforce Operations · Powered by ProfitHarbor AI<br>This preview is not an email and has not been sent.</div></div></div>
 <div class="employee-directory" aria-label="Read-only employee directory">
-<h3>Employee Directory</h3><p>Owner-only directory preview. Names are pending until profiles are completed. No employee records can be edited here.</p>
+<h3>Employee Directory</h3><p>Owner-only employee directory. Edit employee details below; worksite assignments and attendance are not changed.</p>
 <button id="directory-load" type="button" class="secondary-btn">Load Employee Directory</button>
 <div id="directory-status" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
 <div id="directory-list"></div></div>
@@ -528,9 +528,52 @@
         const sites=document.createElement('p');
         sites.textContent='Assigned worksites: '+(Array.isArray(person.assignedWorksites) && person.assignedWorksites.length
           ? person.assignedWorksites.map(s=>s.name+(s.active?'':' (inactive)')).join(', '):'None');
-        card.append(name,status,job,sites);directoryList.append(card);
+        const phone=document.createElement('p');phone.textContent='Phone: '+(person.phoneNumber || 'Not entered');
+        const edit=document.createElement('button');edit.type='button';edit.className='secondary-btn';edit.textContent='Edit Employee';
+        const form=document.createElement('form');form.hidden=true;form.style.marginTop='12px';
+        const fields=[['First name','firstName',person.firstName||'',100,true],['Last name','lastName',person.lastName||'',100,true],['Job title','jobTitle',person.jobTitle||'',120,false],['Phone number','phoneNumber',person.phoneNumber||'',30,false]];
+        const inputs={};
+        for(const [labelText,key,value,max,required] of fields){
+          const label=document.createElement('label');label.textContent=labelText;label.style.display='block';label.style.marginTop='8px';
+          const input=document.createElement('input');input.type='text';input.value=value;input.maxLength=max;input.required=required;input.style.width='100%';
+          label.append(input);form.append(label);inputs[key]=input;
+        }
+        const statusLabel=document.createElement('label');statusLabel.textContent='Employment status';statusLabel.style.display='block';statusLabel.style.marginTop='8px';
+        const select=document.createElement('select');
+        for(const [value,label] of [['active','Active'],['inactive','Inactive'],['on_leave','On leave']]){
+          const option=document.createElement('option');option.value=value;option.textContent=label;select.append(option);
+        }
+        select.value=person.employmentStatus||'active';statusLabel.append(select);form.append(statusLabel);
+        const save=document.createElement('button');save.type='submit';save.className='secondary-btn';save.textContent='Save Employee';save.style.marginTop='10px';
+        const feedback=document.createElement('p');feedback.setAttribute('role','status');
+        form.append(save,feedback);
+        edit.addEventListener('click',()=>{form.hidden=!form.hidden;edit.textContent=form.hidden?'Edit Employee':'Cancel Editing';});
+        form.addEventListener('submit',async event=>{
+          event.preventDefault();save.disabled=true;feedback.textContent='Saving…';
+          try{
+            await confirmWorksiteOwner();
+            const {data:auth,error:authError}=await client.auth.getSession();
+            if(authError||!auth?.session?.access_token) throw new Error('Owner session expired.');
+            const payload={membershipId:person.membershipId,firstName:inputs.firstName.value,lastName:inputs.lastName.value,
+              jobTitle:inputs.jobTitle.value,phoneNumber:inputs.phoneNumber.value,employmentStatus:select.value};
+            const response=await fetch(API_BASE+'/api/employees/profile',{
+              method:'PATCH',headers:{Authorization:'Bearer '+auth.session.access_token,'Content-Type':'application/json'},
+              body:JSON.stringify(payload),cache:'no-store',referrerPolicy:'no-referrer'
+            });
+            const result=await response.json();
+            if(!response.ok||result.ok!==true||result.updated!==true||result.attendanceEnabled!==false||result.attendanceWritesEnabled!==false)
+              throw new Error(result.error||'Update was not verified.');
+            name.textContent=payload.firstName.trim()+' '+payload.lastName.trim();
+            job.textContent='Job title: '+(payload.jobTitle.trim()||'Not entered');
+            phone.textContent='Phone: '+(payload.phoneNumber.trim()||'Not entered');
+            status.textContent='Membership: '+(person.membershipActive?'Active':'Inactive')+' · Employment: '+payload.employmentStatus;
+            feedback.textContent='Saved successfully.';
+          }catch(e){feedback.textContent='Unable to save: '+(e?.message||'Connection error');}
+          finally{save.disabled=false;}
+        });
+        card.append(name,status,job,phone,sites,edit,form);directoryList.append(card);
       }
-      directoryMessage(result.employees.length+' employee(s) loaded. Read-only; attendance locked.','ok');
+      directoryMessage(result.employees.length+' employee(s) loaded. Owner-only editing available; attendance locked.','ok');
     } catch(e) {
       if(version===directoryRequestVersion){directoryList.replaceChildren();directoryMessage('Unable to load directory: '+(e?.message||'Connection error'),'error');}
     } finally {if(version===directoryRequestVersion)directoryLoad.disabled=false;}
