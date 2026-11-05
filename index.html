@@ -113,6 +113,9 @@
 .panel .employee-directory button{width:auto;padding:10px 16px;margin:6px 0 12px}
 .directory-person{margin-top:12px;padding:14px;border:1px solid #ffffff25;border-radius:10px;background:#0a1a2b}
 .directory-person strong{color:#f2d29b}.directory-person p{font-size:12px;margin:5px 0}
+
+/* Stage 10P-AQ: owner-only read-only security diagnostics */
+.aq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.aq-metric{border:1px solid #ffffff22;border-radius:10px;padding:14px;background:#091827}.aq-metric strong{display:block;font-size:22px;color:#e7c381}.aq-metric span{font-size:12px;color:#b6c4d1}.aq-check{padding:9px 0;border-bottom:1px solid #ffffff18;font-size:13px}.aq-check strong{color:#d6e2ed}.aq-note{font-size:12px;color:#b9c9da}.panel #aq-run{width:auto;margin:8px 0;padding:11px 18px}@media(max-width:650px){.aq-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -184,6 +187,14 @@
 </div><p id="directory-match-count" class="directory-match-count" role="status" aria-live="polite"></p>
 <div id="directory-list"></div></div>
 </section>
+<div class="api-check" id="aq-diagnostics" aria-label="Stage 10P-AQ read-only attendance security diagnostics">
+<h3>Stage 10P-AQ · Attendance Security Diagnostics</h3>
+<p>Owner-only snapshot using existing protected Worker endpoints. Checks assignment eligibility rules, attendance table connectivity, and organization-scoped reporting. No GPS requested, no shifts or assignments changed.</p>
+<button type="button" id="aq-run" class="secondary-btn">Run Read-Only Diagnostics</button>
+<div id="aq-status" class="api-result" role="status" aria-live="polite">Not run. Clock-in and clock-out remain disabled.</div>
+<div id="aq-results" aria-live="polite"></div>
+<p class="aq-note">These checks do not prove live employee authorization, GPS authenticity, transaction concurrency, RLS enforcement, or safe clock-in/out behavior. Attendance must remain locked until those are independently tested.</p>
+</div>
 <div class="api-check" aria-label="Stage 10P-P attendance backend readiness">
 <h3>Stage 10P-P · Attendance Backend Readiness</h3>
 <p>Owner-authorized, read-only connectivity check for the three protected attendance tables. No attendance records are created or modified.</p>
@@ -623,6 +634,53 @@
     } finally {if(version===directoryRequestVersion)directoryLoad.disabled=false;}
   });
 
+
+  // Stage 10P-AQ: existing owner-only GET endpoints. No mutations or GPS.
+  const aqRun=document.getElementById('aq-run');
+  const aqStatus=document.getElementById('aq-status');
+  const aqResults=document.getElementById('aq-results');
+  let aqRequestVersion=0;
+  function aqReset(){++aqRequestVersion;aqRun.disabled=false;aqResults.replaceChildren();aqStatus.textContent='Not run. Clock-in and clock-out remain disabled.';aqStatus.className='api-result';}
+  function aqLine(parent,label,value){const row=document.createElement('div');row.className='aq-check';const strong=document.createElement('strong');strong.textContent=label+': ';row.append(strong,document.createTextNode(String(value)));parent.append(row);}
+  aqRun.addEventListener('click',async()=>{
+    const version=++aqRequestVersion;
+    aqRun.disabled=true;aqResults.replaceChildren();aqStatus.textContent='Checking owner authorization and read-only attendance endpoints…';aqStatus.className='api-result';
+    try{
+      const org=await confirmWorksiteOwner();
+      const {data,error}=await client.auth.getSession();
+      if(error||!data?.session?.access_token)throw new Error('Owner session expired. Sign in again.');
+      const endpoints=[['Assignment rules','/api/attendance/assignment-security'],['Attendance tables','/api/attendance/readiness'],['Reporting counts','/api/attendance/report-summary']];
+      const results=[];
+      for(const [name,path] of endpoints){
+        const response=await fetch(API_BASE+path,{method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store',referrerPolicy:'no-referrer'});
+        const body=await response.json().catch(()=>null);
+        if(version!==aqRequestVersion||verifiedWorksiteOrg!==org)return;
+        if(!response.ok||!body||body.ok!==true||body.attendanceEnabled!==false||body.attendanceWritesEnabled!==false)throw new Error(name+' did not return a verified locked response (HTTP '+response.status+').');
+        results.push({name,body});
+      }
+      if(version!==aqRequestVersion||verifiedWorksiteOrg!==org)return;
+      const a=results[0].body,r=results[1].body,c=results[2].body;
+      const expected=['activeEmployeeActiveWorksite','revokedAssignmentDenied','inactiveEmployeeDenied','inactiveWorksiteDenied','missingAssignmentDenied','ownerRoleDenied'];
+      if(a.readOnly!==true||!expected.every(k=>a.syntheticChecks?.[k]===true)||!Number.isSafeInteger(a.assignmentCount)||!Number.isSafeInteger(a.eligibleAssignmentCount)||!Number.isSafeInteger(a.ineligibleAssignmentCount)||a.assignmentCount!==a.eligibleAssignmentCount+a.ineligibleAssignmentCount)throw new Error('Assignment security checks were incomplete.');
+      const tables=['ironcrest_attendance_entries','ironcrest_attendance_exceptions','ironcrest_attendance_audit'];
+      if(!Array.isArray(r.tables)||!tables.every(name=>r.tables.some(t=>t.table===name&&t.readable===true))||r.exceptionReviewEnabled!==false)throw new Error('Attendance table readiness not verified.');
+      if(c.readOnly!==true||c.organizationScoped!==true||!c.counts||!['totalEntries','openShifts','closedShifts','auditEvents','activeEmployees','activeWorksites'].every(k=>Number.isSafeInteger(c.counts[k])&&c.counts[k]>=0))throw new Error('Reporting counts not verified.');
+      const metrics=document.createElement('div');metrics.className='aq-grid';
+      for(const [label,value] of [['Eligible assignments',a.eligibleAssignmentCount],['Active employees',c.counts.activeEmployees],['Open shifts',c.counts.openShifts]]){const card=document.createElement('div');card.className='aq-metric';const big=document.createElement('strong');big.textContent=String(value);const small=document.createElement('span');small.textContent=label;card.append(big,small);metrics.append(card);}
+      aqResults.append(metrics);
+      const detail=document.createElement('div');
+      aqLine(detail,'Synthetic assignment checks',expected.length+' / '+expected.length+' passed');
+      aqLine(detail,'Assignment records',a.assignmentCount+' total; '+a.ineligibleAssignmentCount+' ineligible');
+      aqLine(detail,'Attendance tables','3 / 3 readable by backend');
+      aqLine(detail,'Attendance records',c.counts.totalEntries+' total; '+c.counts.closedShifts+' closed');
+      aqLine(detail,'Audit events',c.counts.auditEvents);
+      aqLine(detail,'Active worksites',c.counts.activeWorksites);
+      aqResults.append(detail);
+      aqStatus.textContent='PASS — Three read-only backend snapshots verified. Attendance remains LOCKED. This is not authorization to enable attendance.';aqStatus.className='api-result ok';
+    }catch(e){if(version===aqRequestVersion){aqResults.replaceChildren();aqStatus.textContent='NOT VERIFIED — '+(e?.message||'Connection error')+'. Attendance remains locked.';aqStatus.className='api-result error';}}
+    finally{if(version===aqRequestVersion)aqRun.disabled=false;}
+  });
+
   // Stage 10P-P: authenticated, owner-only, GET-only readiness check.
   const attendanceReadinessButton = document.getElementById('attendance-readiness-button');
   const attendanceReadinessResult = document.getElementById('attendance-readiness-result');
@@ -983,7 +1041,7 @@
   });
 
   let checkVersion = 0;
-  const showLogin = () => { ++attendanceReadinessVersion; attendanceReadinessButton.disabled = false; setAttendanceReadiness('Not checked yet. Attendance remains disabled.'); verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); clearAssignmentOverview(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { aqReset(); ++attendanceReadinessVersion; attendanceReadinessButton.disabled = false; setAttendanceReadiness('Not checked yet. Attendance remains disabled.'); verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); clearAssignmentOverview(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
