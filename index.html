@@ -149,6 +149,12 @@
 <div class="email-preview-wrap" aria-label="Stage 10C invitation email preview"><h3>Stage 10C · Branded Invitation Email Preview</h3><p>Preview the email employees would receive after invitation delivery is approved. This is a local sample only: no email is sent, no invitation is created, and no private link is displayed.</p><button id="preview-invitation-email" type="button" class="secondary-btn" aria-expanded="false" aria-controls="invitation-email-preview">Preview Invitation Email</button><div class="email-preview-subject">Sample subject: You're invited to join your team on IronCrest</div><div id="invitation-email-preview" class="email-preview" aria-label="Sample invitation email"><div class="email-preview-head"><img class="email-preview-logo" src="./ironcrest-logo.png" alt="IronCrest Workforce Operations shield logo"></div><div class="email-preview-body"><h4>You're invited to IronCrest.</h4><p>Hello,</p><p>Your organization has invited you to join its team on IronCrest Workforce Operations.</p><p>Once invitations are enabled, you'll be able to use a secure, time-limited invitation link to complete your account setup.</p><div class="email-preview-cta">Accept Invitation — Sample Only</div><p style="font-size:12px">This is a non-clickable preview. A real invitation email will include a unique secure link and an expiration notice.</p><p>If you weren't expecting this invitation, you can ignore the email.</p></div><div class="email-preview-foot">IronCrest Workforce Operations · Powered by ProfitHarbor AI<br>This preview is not an email and has not been sent.</div></div></div>
 <div class="directory-preview"><strong>Employee directory</strong><p>Employee records and invitation status will appear here after secure directory access is implemented. No employee data is being loaded or changed in this preview.</p></div>
 </section>
+<div class="api-check" aria-label="Stage 10P-P attendance backend readiness">
+<h3>Stage 10P-P · Attendance Backend Readiness</h3>
+<p>Owner-authorized, read-only connectivity check for the three protected attendance tables. No attendance records are created or modified.</p>
+<button id="attendance-readiness-button" type="button" class="secondary-btn">Check Attendance Backend</button>
+<div id="attendance-readiness-result" class="api-result" role="status" aria-live="polite">Not checked yet. Attendance remains disabled.</div>
+</div>
 <div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-backend-button" type="button" class="secondary-btn">Test Secure Backend</button><div id="backend-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-invitation-validation-button" type="button" class="secondary-btn" disabled title="Retired because Stage 8A now creates database records">Legacy Validation Test — Disabled</button><div id="invitation-validation-result" class="api-result" role="status" aria-live="polite">Disabled for Stage 8A: the endpoint now creates test records.</div></div></div>
 <div class="api-check" aria-label="Stage 6U rate limiter test"><h3>Stage 6U · Rate Limiter Verification</h3><p>Earlier validation-only test retired: the invitation endpoint now performs controlled database writes.</p><button id="test-rate-limit-button" type="button" class="secondary-btn" disabled title="Retired because Stage 8A now creates database records">Legacy Rate Test — Disabled</button><div id="rate-limit-result" class="api-result" role="status" aria-live="polite">Disabled to prevent multiple test invitation writes.</div></div>
 <div class="api-check" aria-label="Stage 6W secure token verification"><h3>Stage 6W · Secure Token Verification</h3><p>Verify cryptographically secure invitation tokens and SHA-256 hashing. Tokens and hashes are never displayed; no invitations or emails are created.</p><button id="test-token-button" type="button" class="secondary-btn">Test Secure Tokens</button><div id="token-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
@@ -378,6 +384,47 @@
     employeeOpen.setAttribute('aria-expanded', 'false');
     employeeOpen.focus();
   });
+  // Stage 10P-P: authenticated, owner-only, GET-only readiness check.
+  const attendanceReadinessButton = document.getElementById('attendance-readiness-button');
+  const attendanceReadinessResult = document.getElementById('attendance-readiness-result');
+  let attendanceReadinessVersion = 0;
+  const setAttendanceReadiness = (message, kind = '') => {
+    attendanceReadinessResult.textContent = message;
+    attendanceReadinessResult.className = 'api-result ' + kind;
+  };
+  attendanceReadinessButton.addEventListener('click', async () => {
+    const version = ++attendanceReadinessVersion;
+    attendanceReadinessButton.disabled = true;
+    setAttendanceReadiness('Checking protected attendance table connectivity…');
+    try {
+      if (!verifiedWorksiteOrg) throw new Error('Verified owner access required. Sign in again.');
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Owner session expired. Sign in again.');
+      const response = await fetch(API_BASE + '/api/attendance/readiness', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store',
+        referrerPolicy: 'no-referrer'
+      });
+      const result = await response.json();
+      if (version !== attendanceReadinessVersion) return;
+      const required = ['ironcrest_attendance_entries', 'ironcrest_attendance_exceptions', 'ironcrest_attendance_audit'];
+      const tables = Array.isArray(result.tables) ? result.tables : [];
+      const allReadable = required.every(name => tables.some(t => t.table === name && t.readable === true));
+      const safe = result.attendanceEnabled === false && result.attendanceWritesEnabled === false && result.exceptionReviewEnabled === false;
+      if (response.ok && result.ok === true && allReadable && safe) {
+        setAttendanceReadiness('PASS — All three attendance tables are readable by the authorized backend. Attendance writes and exception review remain disabled. This does not validate RLS or transaction security.', 'ok');
+      } else {
+        const reason = typeof result.error === 'string' ? result.error : 'Readiness was not confirmed';
+        setAttendanceReadiness('NOT VERIFIED (HTTP ' + response.status + '): ' + reason + '. Attendance remains disabled.', 'error');
+      }
+    } catch (error) {
+      if (version === attendanceReadinessVersion) setAttendanceReadiness('Check unavailable: ' + (error?.message || 'Connection error') + '. Attendance remains disabled.', 'error');
+    } finally {
+      if (version === attendanceReadinessVersion) attendanceReadinessButton.disabled = false;
+    }
+  });
+
   const apiButton = document.getElementById('verify-api-button');
   const apiResult = document.getElementById('api-result');
   let apiCheckVersion = 0;
@@ -697,7 +744,7 @@
   });
 
   let checkVersion = 0;
-  const showLogin = () => { verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { ++attendanceReadinessVersion; attendanceReadinessButton.disabled = false; setAttendanceReadiness('Not checked yet. Attendance remains disabled.'); verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
