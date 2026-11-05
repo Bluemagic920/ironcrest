@@ -109,6 +109,7 @@
 /* Stage 10P-AO employee directory */
 .employee-directory{margin-top:18px;border:1px solid #d8aa5c55;border-radius:12px;padding:18px;background:#091a2c}
 .employee-directory h3{margin:0 0 8px;color:#e7c381}
+.directory-filters{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.directory-filters label{display:flex;flex-direction:column;gap:5px;flex:1 1 150px;font-size:13px}.directory-filters input,.directory-filters select{width:100%;box-sizing:border-box;min-height:40px;padding:8px;border-radius:7px}.directory-filters[hidden]{display:none!important}.directory-match-count{margin:8px 0;font-size:13px;color:#e7c381}
 .panel .employee-directory button{width:auto;padding:10px 16px;margin:6px 0 12px}
 .directory-person{margin-top:12px;padding:14px;border:1px solid #ffffff25;border-radius:10px;background:#0a1a2b}
 .directory-person strong{color:#f2d29b}.directory-person p{font-size:12px;margin:5px 0}
@@ -176,6 +177,11 @@
 <h3>Employee Directory</h3><p>Owner-only employee directory. Edit employee details below; worksite assignments and attendance are not changed.</p>
 <button id="directory-load" type="button" class="secondary-btn">Load Employee Directory</button>
 <div id="directory-status" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
+<div id="directory-filters" class="directory-filters" hidden>
+<label>Search employees<input id="directory-search" type="search" placeholder="Name or job title" autocomplete="off" maxlength="120"></label>
+<label>Employment status<select id="directory-status-filter"><option value="all">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="on_leave">On leave</option></select></label>
+<label>Assigned worksite<select id="directory-worksite-filter"><option value="all">All worksites</option><option value="none">No worksite assigned</option></select></label>
+</div><p id="directory-match-count" class="directory-match-count" role="status" aria-live="polite"></p>
 <div id="directory-list"></div></div>
 </section>
 <div class="api-check" aria-label="Stage 10P-P attendance backend readiness">
@@ -491,7 +497,30 @@
   const directoryLoad = document.getElementById('directory-load');
   const directoryStatus = document.getElementById('directory-status');
   const directoryList = document.getElementById('directory-list');
+  const directoryFilters = document.getElementById('directory-filters');
+  const directorySearch = document.getElementById('directory-search');
+  const directoryStatusFilter = document.getElementById('directory-status-filter');
+  const directoryWorksiteFilter = document.getElementById('directory-worksite-filter');
+  const directoryMatchCount = document.getElementById('directory-match-count');
+  let directoryPeople = [];
   let directoryRequestVersion = 0;
+  function applyDirectoryFilters(){
+    const query=directorySearch.value.trim().toLocaleLowerCase();
+    const status=directoryStatusFilter.value;
+    const site=directoryWorksiteFilter.value;
+    let matches=0;
+    for(const entry of directoryPeople){
+      const fullName=(entry.person.firstName||'')+' '+(entry.person.lastName||'');
+      const searchText=(fullName+' '+(entry.person.jobTitle||'')).toLocaleLowerCase();
+      const assigned=Array.isArray(entry.person.assignedWorksites)?entry.person.assignedWorksites:[];
+      const siteMatches=site==='all'||(site==='none'&&assigned.length===0)||assigned.some(w=>w.id===site);
+      const visible=searchText.includes(query)&&(status==='all'||entry.person.employmentStatus===status)&&siteMatches;
+      entry.card.hidden=!visible;
+      if(visible)matches++;
+    }
+    directoryMatchCount.textContent=matches+' of '+directoryPeople.length+' employee(s) shown'+(matches===0?' — no matches.':'');
+  }
+  [directorySearch,directoryStatusFilter,directoryWorksiteFilter].forEach(el=>el.addEventListener(el===directorySearch?'input':'change',applyDirectoryFilters));
   function directoryMessage(message, kind='') {
     directoryStatus.textContent = message;
     directoryStatus.className = 'api-result '+kind;
@@ -500,6 +529,7 @@
     const version = ++directoryRequestVersion;
     directoryLoad.disabled=true;
     directoryList.replaceChildren();
+    directoryPeople=[];directoryFilters.hidden=true;directoryMatchCount.textContent='';
     directoryMessage('Loading secure employee directory…');
     try {
       await confirmWorksiteOwner();
@@ -516,6 +546,17 @@
           result.attendanceWritesEnabled!==false || !Array.isArray(result.employees))
         throw new Error('Directory authorization or response could not be verified (HTTP '+response.status+').');
       if (result.employees.length>1000) throw new Error('Directory too large.');
+      const worksiteOptions=new Map();
+      for(const person of result.employees){
+        for(const site of (Array.isArray(person.assignedWorksites)?person.assignedWorksites:[])){
+          if(typeof site.id==='string'&&typeof site.name==='string')worksiteOptions.set(site.id,site.name);
+        }
+      }
+      directoryWorksiteFilter.replaceChildren();
+      for(const [value,label] of [['all','All worksites'],['none','No worksite assigned'],...Array.from(worksiteOptions.entries()).sort((a,b)=>a[1].localeCompare(b[1]))]){
+        const option=document.createElement('option');option.value=value;option.textContent=label;directoryWorksiteFilter.append(option);
+      }
+      directorySearch.value='';directoryStatusFilter.value='all';directoryWorksiteFilter.value='all';
       for (const person of result.employees) {
         const card=document.createElement('div');card.className='directory-person';
         const name=document.createElement('strong');
@@ -564,18 +605,21 @@
             if(!response.ok||result.ok!==true||result.updated!==true||result.attendanceEnabled!==false||result.attendanceWritesEnabled!==false)
               throw new Error(result.error||'Update was not verified.');
             name.textContent=payload.firstName.trim()+' '+payload.lastName.trim();
+            person.firstName=payload.firstName.trim();person.lastName=payload.lastName.trim();
+            person.jobTitle=payload.jobTitle.trim();person.employmentStatus=payload.employmentStatus;
             job.textContent='Job title: '+(payload.jobTitle.trim()||'Not entered');
             phone.textContent='Phone: '+(payload.phoneNumber.trim()||'Not entered');
             status.textContent='Membership: '+(person.membershipActive?'Active':'Inactive')+' · Employment: '+payload.employmentStatus;
-            feedback.textContent='Saved successfully.';
+            feedback.textContent='Saved successfully.';applyDirectoryFilters();
           }catch(e){feedback.textContent='Unable to save: '+(e?.message||'Connection error');}
           finally{save.disabled=false;}
         });
-        card.append(name,status,job,phone,sites,edit,form);directoryList.append(card);
+        card.append(name,status,job,phone,sites,edit,form);directoryList.append(card);directoryPeople.push({person,card});
       }
+      directoryFilters.hidden=false;applyDirectoryFilters();
       directoryMessage(result.employees.length+' employee(s) loaded. Owner-only editing available; attendance locked.','ok');
     } catch(e) {
-      if(version===directoryRequestVersion){directoryList.replaceChildren();directoryMessage('Unable to load directory: '+(e?.message||'Connection error'),'error');}
+      if(version===directoryRequestVersion){directoryList.replaceChildren();directoryPeople=[];directoryFilters.hidden=true;directoryMatchCount.textContent='';directoryMessage('Unable to load directory: '+(e?.message||'Connection error'),'error');}
     } finally {if(version===directoryRequestVersion)directoryLoad.disabled=false;}
   });
 
