@@ -95,7 +95,7 @@
 
 /* Stage 10P-C: owner worksite management, read-only pending membership RLS audit */
 .worksite-section{display:none;margin-top:25px;padding:24px;border:1px solid #d8aa5c55;border-radius:15px;background:#07152399}.worksite-section.open{display:block}.worksite-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.worksite-head h2{margin:6px 0}.worksite-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.worksite-fields label{margin:12px 0 6px}.worksite-fields input{margin:0}.worksite-actions{display:flex;gap:10px;flex-wrap:wrap}.panel .worksite-actions button,.panel #worksite-close{width:auto;margin:15px 0 0;padding:11px 17px}.worksite-record{padding:14px;margin:10px 0;border:1px solid #ffffff24;border-radius:10px;background:#0a1a2b}.worksite-record strong{color:#f2d29b}.worksite-record p{margin:5px 0;font-size:12px}.worksite-warning{font-size:12px;color:#e9c993}.panel .workspace-card button.worksite-open{opacity:1;cursor:pointer;color:#e9c381;border-color:#d8aa5c66}@media(max-width:650px){.worksite-fields{grid-template-columns:1fr}.worksite-section{padding:17px}}
-</style>
+.worksite-row-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.panel .worksite-row-actions button{width:auto;margin:0;padding:8px 14px;font-size:12px;cursor:pointer;opacity:1}.panel .worksite-actions button[hidden]{display:none}</style>
 </head>
 <body>
 <header><div class="brand">IRON<span>CREST</span></div><div class="status">WORKFORCE OPERATIONS</div></header>
@@ -125,15 +125,15 @@
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Stage 10K · Test</span></div><p>Manage employee invitations. Restricted single-recipient testing is available to verified owners.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Coming soon</span></div><p>Review shifts and time entries, with location verification and exception controls planned.</p><button type="button" disabled aria-label="Time and attendance not yet available">View time records <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Coming soon</span></div><p>Organize employee schedules, assignments, and future shift coverage.</p><button type="button" disabled aria-label="Scheduling not yet available">Open scheduling <span aria-hidden="true">→</span></button></article>
-<article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-C · Read only</span></div><p>Review employer-defined worksite boundaries. Saving remains locked until membership security checks are complete.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
 <section class="worksite-section" id="worksite-section" aria-label="Worksite management">
-<div class="worksite-head"><div><div class="eyebrow">Stage 10P-C · Secure worksite management</div><h2>Worksites &amp; Geofencing</h2></div><button id="worksite-close" class="secondary-btn" type="button">Close</button></div>
+<div class="worksite-head"><div><div class="eyebrow">Stage 10P-G · Secure worksite management</div><h2>Worksites &amp; Geofencing</h2></div><button id="worksite-close" class="secondary-btn" type="button">Close</button></div>
 <p>Employer-defined locations only. No employee location is requested, transmitted, or stored by this screen.</p>
-<p class="worksite-warning">Security hold: saving, editing and deactivating are locked until existing membership role permissions are audited. Attendance remains disabled.</p>
+<p class="worksite-warning">Owner-authorized worksite saving is enabled for controlled testing. Attendance remains disabled; worksite GPS is not employee tracking.</p>
 <div class="worksite-fields"><div><label for="worksite-name">Worksite name</label><input id="worksite-name" maxlength="120" placeholder="Main Office"></div><div><label for="worksite-radius">Allowed radius (meters)</label><input id="worksite-radius" type="number" min="50" max="2000" value="150"></div><div><label for="worksite-lat">Latitude</label><input id="worksite-lat" type="number" step="any" min="-90" max="90" placeholder="33.45"></div><div><label for="worksite-lon">Longitude</label><input id="worksite-lon" type="number" step="any" min="-180" max="180" placeholder="-112.07"></div></div>
-<div class="worksite-actions"><button type="button" id="worksite-preview">Preview rules</button><button type="button" id="worksite-save" disabled title="Security verification required">Save worksite — Locked</button><button type="button" id="worksite-refresh" class="secondary-btn">Load saved worksites</button></div>
+<div class="worksite-actions"><button type="button" id="worksite-preview">Preview rules</button><button type="button" id="worksite-save">Save new worksite</button><button type="button" id="worksite-cancel-edit" class="secondary-btn" hidden>Cancel edit</button><button type="button" id="worksite-refresh" class="secondary-btn">Load saved worksites</button></div>
 <div id="worksite-status" class="api-result" role="status" aria-live="polite">Open this panel to review your organization's worksites.</div><div id="worksite-list"></div>
 </section>
 <section class="employee-section" id="employee-section" aria-label="Employee management preview">
@@ -195,6 +195,8 @@
   const worksiteStatus = document.getElementById('worksite-status');
   const worksiteList = document.getElementById('worksite-list');
   let verifiedWorksiteOrg = null;
+  let editingWorksiteId = null;
+  let worksiteBusy = false;
   const worksiteMessage = (message, kind = '') => { worksiteStatus.textContent = message; worksiteStatus.className = 'api-result ' + kind; };
   function finiteCoordinate(id, low, high) {
     const raw = document.getElementById(id).value.trim();
@@ -203,42 +205,103 @@
     if (!Number.isFinite(value) || value < low || value > high) throw new Error('Invalid ' + id + '.');
     return value;
   }
-  document.getElementById('worksite-preview').addEventListener('click', () => {
-    try {
-      const name = document.getElementById('worksite-name').value.trim();
-      if (!name || name.length > 120) throw new Error('Enter a worksite name (1–120 characters).');
-      const radius = finiteCoordinate('worksite-radius', 50, 2000);
-      if (!Number.isInteger(radius)) throw new Error('Radius must be a whole number.');
-      const lat = finiteCoordinate('worksite-lat', -90, 90);
-      const lon = finiteCoordinate('worksite-lon', -180, 180);
-      worksiteMessage('Preview valid: ' + name + ' — ' + radius + ' m radius, center ' + lat + ', ' + lon + '. Not saved. Attendance stays disabled.', 'ok');
-    } catch (e) { worksiteMessage(e.message, 'error'); }
-  });
-  async function loadWorksites() {
-    worksiteList.replaceChildren();
-    if (!verifiedWorksiteOrg) { worksiteMessage('No verified owner organization. Sign in again.', 'error'); return; }
-    worksiteMessage('Loading saved worksites…');
-    const {data: userResult, error: userError} = await client.auth.getUser();
-    if (userError || !userResult?.user) { worksiteMessage('Session expired. Sign in again.', 'error'); return; }
-    const {data: memberships, error: membershipError} = await client.from('ironcrest_memberships')
-      .select('organization_id').eq('user_id',userResult.user.id).eq('role','owner').eq('active',true).eq('organization_id',verifiedWorksiteOrg).limit(1);
-    if (membershipError || !memberships?.length) { worksiteMessage('Owner access could not be reconfirmed.', 'error'); return; }
-    const org = verifiedWorksiteOrg;
-    const {data, error} = await client.from('ironcrest_worksites')
-      .select('id,name,latitude,longitude,radius_m,active').eq('organization_id',org).order('name',{ascending:true}).limit(100);
-    if (verifiedWorksiteOrg !== org || !worksiteSection.classList.contains('open')) return;
-    if (error) { worksiteMessage('Unable to read worksites: ' + error.message, 'error'); return; }
-    worksiteMessage((data?.length || 0) + ' saved worksite(s) found. Read-only until security verification.', 'ok');
-    for (const site of data || []) {
-      const item = document.createElement('div'); item.className = 'worksite-record';
-      const name = document.createElement('strong'); name.textContent = site.name;
-      const details = document.createElement('p'); details.textContent = site.radius_m + ' m radius · ' + site.latitude + ', ' + site.longitude + ' · ' + (site.active ? 'Active' : 'Inactive');
-      item.append(name,details); worksiteList.append(item);
-    }
+  const worksiteSave = document.getElementById('worksite-save');
+  const worksiteCancel = document.getElementById('worksite-cancel-edit');
+  function worksiteInput() {
+    const name = document.getElementById('worksite-name').value.trim();
+    if (!name || name.length > 120) throw new Error('Enter a worksite name (1–120 characters).');
+    const radius_m = finiteCoordinate('worksite-radius', 50, 2000);
+    if (!Number.isInteger(radius_m)) throw new Error('Radius must be a whole number.');
+    return {name, radius_m, latitude: finiteCoordinate('worksite-lat', -90, 90), longitude: finiteCoordinate('worksite-lon', -180, 180)};
   }
-  worksiteOpen.addEventListener('click', () => { worksiteSection.classList.add('open'); worksiteOpen.setAttribute('aria-expanded','true'); worksiteSection.scrollIntoView({behavior:'smooth',block:'start'}); loadWorksites().catch(e => worksiteMessage('Read failed: '+e.message,'error')); });
-  worksiteClose.addEventListener('click', () => { worksiteSection.classList.remove('open'); worksiteOpen.setAttribute('aria-expanded','false'); worksiteOpen.focus(); });
-  document.getElementById('worksite-refresh').addEventListener('click', () => loadWorksites().catch(e => worksiteMessage('Read failed: '+e.message,'error')));
+  function resetWorksiteEditor() {
+    editingWorksiteId = null;
+    for (const id of ['worksite-name','worksite-lat','worksite-lon']) document.getElementById(id).value = '';
+    document.getElementById('worksite-radius').value = '150';
+    worksiteSave.textContent = 'Save new worksite';
+    worksiteCancel.hidden = true;
+  }
+  worksiteCancel.addEventListener('click', () => {resetWorksiteEditor();worksiteMessage('Edit cancelled. No changes saved.');});
+  document.getElementById('worksite-preview').addEventListener('click', () => {
+    try {const site=worksiteInput();worksiteMessage('Preview valid: '+site.name+' — '+site.radius_m+' m radius, center '+site.latitude+', '+site.longitude+'. Not saved. Attendance stays disabled.','ok');}
+    catch(e){worksiteMessage(e.message,'error');}
+  });
+  async function confirmWorksiteOwner() {
+    if (!verifiedWorksiteOrg) throw new Error('No verified owner organization. Sign in again.');
+    const {data:userData,error:userError}=await client.auth.getUser();
+    if(userError || !userData?.user?.id) throw new Error('Session expired. Sign in again.');
+    const {data:memberships,error:membershipError}=await client.from('ironcrest_memberships')
+      .select('organization_id').eq('user_id',userData.user.id).eq('role','owner').eq('active',true).eq('organization_id',verifiedWorksiteOrg).limit(1);
+    if(membershipError || !memberships?.length) throw new Error('Owner access could not be reconfirmed.');
+    return verifiedWorksiteOrg;
+  }
+  async function loadWorksites() {
+    if(worksiteBusy) return;
+    worksiteList.replaceChildren();
+    worksiteMessage('Loading saved worksites…');
+    try {
+      const org=await confirmWorksiteOwner();
+      const {data,error}=await client.from('ironcrest_worksites')
+        .select('id,name,latitude,longitude,radius_m,active').eq('organization_id',org).order('name',{ascending:true}).limit(100);
+      if(error) throw error;
+      if(verifiedWorksiteOrg!==org || !worksiteSection.classList.contains('open')) return;
+      worksiteMessage((data?.length||0)+' saved worksite(s) found. Owner management available; attendance disabled.','ok');
+      for(const site of data||[]) {
+        const item=document.createElement('div');item.className='worksite-record';
+        const name=document.createElement('strong');name.textContent=site.name;
+        const details=document.createElement('p');details.textContent=site.radius_m+' m radius · '+site.latitude+', '+site.longitude+' · '+(site.active?'Active':'Inactive');
+        const actions=document.createElement('div');actions.className='worksite-row-actions';
+        const edit=document.createElement('button');edit.type='button';edit.textContent='Edit';edit.className='secondary-btn';
+        edit.addEventListener('click',()=>{
+          editingWorksiteId=site.id;
+          document.getElementById('worksite-name').value=site.name;
+          document.getElementById('worksite-radius').value=site.radius_m;
+          document.getElementById('worksite-lat').value=site.latitude;
+          document.getElementById('worksite-lon').value=site.longitude;
+          worksiteSave.textContent='Save changes';worksiteCancel.hidden=false;
+          worksiteMessage('Editing '+site.name+'. Changes are not saved yet.');
+          document.getElementById('worksite-name').focus();
+        });
+        const toggle=document.createElement('button');toggle.type='button';toggle.className='secondary-btn';toggle.textContent=site.active?'Deactivate':'Reactivate';
+        toggle.addEventListener('click',async()=>{
+          if(worksiteBusy || !window.confirm((site.active?'Deactivate':'Reactivate')+' worksite "'+site.name+'"?')) return;
+          worksiteBusy=true;toggle.disabled=true;
+          try {
+            const org=await confirmWorksiteOwner();
+            const {data:changed,error}=await client.from('ironcrest_worksites').update({active:!site.active,updated_at:new Date().toISOString()})
+              .eq('id',site.id).eq('organization_id',org).eq('active',site.active).select('id');
+            if(error) throw error;
+            if(changed?.length!==1) throw new Error('No matching worksite was changed. Refresh and verify permissions.');
+            worksiteMessage('Worksite status updated. Attendance remains disabled.','ok');
+          } catch(e){worksiteMessage('Update not confirmed: '+e.message,'error');}
+          finally {worksiteBusy=false;toggle.disabled=false;await loadWorksites();}
+        });
+        actions.append(edit,toggle);item.append(name,details,actions);worksiteList.append(item);
+      }
+    } catch(e){worksiteMessage('Unable to load worksites: '+e.message,'error');}
+  }
+  worksiteSave.addEventListener('click',async()=>{
+    if(worksiteBusy)return;
+    let input;
+    try {input=worksiteInput();}catch(e){worksiteMessage(e.message,'error');return;}
+    if(!window.confirm((editingWorksiteId?'Save changes to':'Create')+' worksite "'+input.name+'"?'))return;
+    worksiteBusy=true;worksiteSave.disabled=true;
+    const editId=editingWorksiteId;
+    try {
+      const org=await confirmWorksiteOwner();
+      let request=editingWorksiteId
+        ? client.from('ironcrest_worksites').update({...input,updated_at:new Date().toISOString()}).eq('id',editingWorksiteId).eq('organization_id',org)
+        : client.from('ironcrest_worksites').insert({...input,organization_id:org});
+      const {data,error}=await request.select('id');
+      if(error) throw error;
+      if(data?.length!==1) throw new Error('Save was not confirmed. Check the saved worksite list before retrying.');
+      resetWorksiteEditor();worksiteMessage(editId?'Worksite changes saved.':'New worksite saved.','ok');
+    }catch(e){worksiteMessage('Save not confirmed: '+e.message+'. Refresh the list before retrying.','error');}
+    finally {worksiteBusy=false;worksiteSave.disabled=false;await loadWorksites();}
+  });
+  worksiteOpen.addEventListener('click',()=>{worksiteSection.classList.add('open');worksiteOpen.setAttribute('aria-expanded','true');worksiteSection.scrollIntoView({behavior:'smooth',block:'start'});loadWorksites();});
+  worksiteClose.addEventListener('click',()=>{worksiteSection.classList.remove('open');worksiteOpen.setAttribute('aria-expanded','false');resetWorksiteEditor();worksiteOpen.focus();});
+  document.getElementById('worksite-refresh').addEventListener('click',loadWorksites);
 
   // Stage 10K: restricted real email test; no request body or client-supplied email.
   const restrictedInviteButton = document.getElementById('restricted-invite-button');
@@ -634,7 +697,7 @@
   });
 
   let checkVersion = 0;
-  const showLogin = () => { verifiedWorksiteOrg = null; worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
