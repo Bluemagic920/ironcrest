@@ -95,7 +95,17 @@
 
 /* Stage 10P-C: owner worksite management, read-only pending membership RLS audit */
 .worksite-section{display:none;margin-top:25px;padding:24px;border:1px solid #d8aa5c55;border-radius:15px;background:#07152399}.worksite-section.open{display:block}.worksite-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.worksite-head h2{margin:6px 0}.worksite-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.worksite-fields label{margin:12px 0 6px}.worksite-fields input{margin:0}.worksite-actions{display:flex;gap:10px;flex-wrap:wrap}.panel .worksite-actions button,.panel #worksite-close{width:auto;margin:15px 0 0;padding:11px 17px}.worksite-record{padding:14px;margin:10px 0;border:1px solid #ffffff24;border-radius:10px;background:#0a1a2b}.worksite-record strong{color:#f2d29b}.worksite-record p{margin:5px 0;font-size:12px}.worksite-warning{font-size:12px;color:#e9c993}.panel .workspace-card button.worksite-open{opacity:1;cursor:pointer;color:#e9c381;border-color:#d8aa5c66}@media(max-width:650px){.worksite-fields{grid-template-columns:1fr}.worksite-section{padding:17px}}
-.worksite-row-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.panel .worksite-row-actions button{width:auto;margin:0;padding:8px 14px;font-size:12px;cursor:pointer;opacity:1}.panel .worksite-actions button[hidden]{display:none}</style>
+.worksite-row-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.panel .worksite-row-actions button{width:auto;margin:0;padding:8px 14px;font-size:12px;cursor:pointer;opacity:1}.panel .worksite-actions button[hidden]{display:none}
+ /* Stage 10P-AN: owner-only, read-only assignment overview */
+ .assignment-overview{margin-top:22px;padding:20px;border:1px solid #d8aa5c55;border-radius:12px;background:#091a2c}
+ .assignment-overview h3{margin:0 0 8px;color:#e7c381;font-size:17px}
+ .assignment-overview p{font-size:12px}
+ .panel .assignment-overview button{width:auto;margin:6px 0 12px;padding:11px 16px}
+ .assignment-record{padding:14px;margin:12px 0;border:1px solid #ffffff25;border-radius:10px;background:#0a1a2b}
+ .assignment-record strong{color:#f2d29b}
+ .assignment-record p{margin:6px 0}
+ .assignment-ids{font-size:11px;overflow-wrap:anywhere;color:#9caabb}
+</style>
 </head>
 <body>
 <header><div class="brand">IRON<span>CREST</span></div><div class="status">WORKFORCE OPERATIONS</div></header>
@@ -135,6 +145,14 @@
 <div class="worksite-fields"><div><label for="worksite-name">Worksite name</label><input id="worksite-name" maxlength="120" placeholder="Main Office"></div><div><label for="worksite-radius">Allowed radius (meters)</label><input id="worksite-radius" type="number" min="50" max="2000" value="150"></div><div><label for="worksite-lat">Latitude</label><input id="worksite-lat" type="number" step="any" min="-90" max="90" placeholder="33.45"></div><div><label for="worksite-lon">Longitude</label><input id="worksite-lon" type="number" step="any" min="-180" max="180" placeholder="-112.07"></div></div>
 <div class="worksite-actions"><button type="button" id="worksite-preview">Preview rules</button><button type="button" id="worksite-save">Save new worksite</button><button type="button" id="worksite-cancel-edit" class="secondary-btn" hidden>Cancel edit</button><button type="button" id="worksite-refresh" class="secondary-btn">Load saved worksites</button></div>
 <div id="worksite-status" class="api-result" role="status" aria-live="polite">Open this panel to review your organization's worksites.</div><div id="worksite-list"></div>
+
+ <div class="assignment-overview" aria-label="Read-only employee worksite assignments">
+   <h3>Employee Worksite Assignments</h3>
+   <p>View active eligible employee assignments for your organization's worksites. Read-only: no assignments or attendance records can be changed here.</p>
+   <button type="button" id="assignment-overview-load" class="secondary-btn">View Worksite Assignments</button>
+   <div id="assignment-overview-status" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
+   <div id="assignment-overview-list" aria-live="polite"></div>
+ </div>
 </section>
 <section class="employee-section" id="employee-section" aria-label="Employee management preview">
 <div class="employee-actions"><div><div class="eyebrow">Stage 10K · Controlled Invitation Email Test</div><h2>Invite your team</h2></div><button class="employee-close secondary-btn" id="employee-close" type="button">Close</button></div>
@@ -306,8 +324,80 @@
     finally {worksiteBusy=false;worksiteSave.disabled=false;await loadWorksites();}
   });
   worksiteOpen.addEventListener('click',()=>{worksiteSection.classList.add('open');worksiteOpen.setAttribute('aria-expanded','true');worksiteSection.scrollIntoView({behavior:'smooth',block:'start'});loadWorksites();});
-  worksiteClose.addEventListener('click',()=>{worksiteSection.classList.remove('open');worksiteOpen.setAttribute('aria-expanded','false');resetWorksiteEditor();worksiteOpen.focus();});
+  worksiteClose.addEventListener('click',()=>{worksiteSection.classList.remove('open');worksiteOpen.setAttribute('aria-expanded','false');clearAssignmentOverview();resetWorksiteEditor();worksiteOpen.focus();});
   document.getElementById('worksite-refresh').addEventListener('click',loadWorksites);
+
+
+  // Stage 10P-AN: owner-authenticated, GET-only, organization-scoped assignment overview.
+  const assignmentLoad = document.getElementById('assignment-overview-load');
+  const assignmentStatus = document.getElementById('assignment-overview-status');
+  const assignmentList = document.getElementById('assignment-overview-list');
+  let assignmentRequestVersion = 0;
+  function assignmentMessage(message, kind = '') {
+    assignmentStatus.textContent = message;
+    assignmentStatus.className = 'api-result ' + kind;
+  }
+  function clearAssignmentOverview() {
+    ++assignmentRequestVersion;
+    assignmentList.replaceChildren();
+    assignmentMessage('Not loaded yet.');
+    assignmentLoad.disabled = false;
+  }
+  assignmentLoad.addEventListener('click', async () => {
+    const version = ++assignmentRequestVersion;
+    assignmentLoad.disabled = true;
+    assignmentList.replaceChildren();
+    assignmentMessage('Loading authorized assignment overview…');
+    try {
+      const org = await confirmWorksiteOwner();
+      const {data,error} = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Owner session expired. Sign in again.');
+      const response = await fetch(API_BASE + '/api/attendance/worksite-assignment-overview', {
+        method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},
+        cache:'no-store',referrerPolicy:'no-referrer'
+      });
+      const result = await response.json();
+      if (version !== assignmentRequestVersion || verifiedWorksiteOrg !== org ||
+          !worksiteSection.classList.contains('open')) return;
+      if (!response.ok || result.ok !== true || result.readOnly !== true ||
+          result.organizationScoped !== true || result.attendanceEnabled !== false ||
+          result.attendanceWritesEnabled !== false || !Array.isArray(result.worksites)) {
+        throw new Error('The secure assignment response could not be verified (HTTP '+response.status+').');
+      }
+      if (result.worksites.length > 1000) throw new Error('Too many worksites to display safely.');
+      const siteResponse = await client.from('ironcrest_worksites')
+        .select('id,name').eq('organization_id',org).limit(1000);
+      if (siteResponse.error) throw new Error('Worksite names unavailable.');
+      if (version !== assignmentRequestVersion || verifiedWorksiteOrg !== org ||
+          !worksiteSection.classList.contains('open')) return;
+      const names = new Map((siteResponse.data || []).map(site=>[site.id,site.name]));
+      assignmentMessage(result.worksiteCount+' worksite(s) · '+result.assignmentRecordCount+
+        ' assignment record(s). Read-only snapshot; attendance remains locked.','ok');
+      for (const site of result.worksites) {
+        if (typeof site.worksiteId !== 'string' || !names.has(site.worksiteId) ||
+            !Number.isInteger(site.activeEligibleEmployees) ||
+            !Array.isArray(site.activeEligibleMembershipIds)) throw new Error('Unexpected worksite assignment data.');
+        const card = document.createElement('div'); card.className = 'assignment-record';
+        const heading = document.createElement('strong'); heading.textContent = names.get(site.worksiteId);
+        const count = document.createElement('p');
+        count.textContent = (site.active ? 'Active' : 'Inactive')+' worksite · '+
+          site.activeEligibleEmployees+' active eligible employee(s)';
+        const details = document.createElement('p'); details.className='assignment-ids';
+        details.textContent = site.activeEligibleMembershipIds.length
+          ? 'Internal membership IDs: '+site.activeEligibleMembershipIds.join(', ')
+          : 'No active eligible employees assigned.';
+        card.append(heading,count,details); assignmentList.append(card);
+      }
+      if (!result.worksites.length) assignmentMessage('No worksites found. Attendance remains locked.','ok');
+    } catch (e) {
+      if (version === assignmentRequestVersion) {
+        assignmentList.replaceChildren();
+        assignmentMessage('Unable to verify assignment overview: '+(e?.message || 'Connection error'),'error');
+      }
+    } finally {
+      if (version === assignmentRequestVersion) assignmentLoad.disabled = false;
+    }
+  });
 
   // Stage 10K: restricted real email test; no request body or client-supplied email.
   const restrictedInviteButton = document.getElementById('restricted-invite-button');
@@ -744,7 +834,7 @@
   });
 
   let checkVersion = 0;
-  const showLogin = () => { ++attendanceReadinessVersion; attendanceReadinessButton.disabled = false; setAttendanceReadiness('Not checked yet. Attendance remains disabled.'); verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { ++attendanceReadinessVersion; attendanceReadinessButton.disabled = false; setAttendanceReadiness('Not checked yet. Attendance remains disabled.'); verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); clearAssignmentOverview(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
