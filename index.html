@@ -310,6 +310,21 @@ window.addEventListener('load', () => {
   const jobsFilter=document.getElementById('jobs-filter');
   let draftJobs=[],draftEmployeeNames=new Map(),jobsRequest=0;
   function jobNotice(message,kind=''){jobsMessage.textContent=message;jobsMessage.className='api-result '+kind;}
+
+  // Stage 11E assignment fix: keep both job forms synchronized with verified directory names.
+  function fillEmployeeSelect(select, selectedId=''){
+    select.replaceChildren();
+    const none=document.createElement('option');none.value='';none.textContent='Unassigned';select.append(none);
+    for(const [id,name] of draftEmployeeNames){
+      const option=document.createElement('option');option.value=id;option.textContent=name;select.append(option);
+    }
+    if(selectedId&&!draftEmployeeNames.has(selectedId)){
+      const existing=document.createElement('option');existing.value=selectedId;
+      existing.textContent='Current assignment (employee name unavailable)';select.append(existing);
+    }
+    select.value=selectedId||'';
+  }
+
   function renderJobs(){
     jobsList.replaceChildren();jobsMetrics.replaceChildren();
     const totals=[['All jobs',draftJobs.length],['Pending',draftJobs.filter(j=>j.status==='pending').length],['In progress',draftJobs.filter(j=>j.status==='in_progress').length],['Completed',draftJobs.filter(j=>j.status==='completed').length]];
@@ -404,10 +419,14 @@ window.addEventListener('load', () => {
         const name=[person.firstName,person.lastName].filter(x=>typeof x==='string'&&x.trim()).join(' ').trim();
         if(name)names.set(person.membershipId,name);
       }
-      draftEmployeeNames=names;jobsAssignee.replaceChildren();
-      const none=document.createElement('option');none.value='';none.textContent='Unassigned';jobsAssignee.append(none);
-      for(const [id,name] of names){const option=document.createElement('option');option.value=id;option.textContent=name;jobsAssignee.append(option);}
-      renderJobs();jobNotice(names.size+' eligible employee name(s) loaded for preview only. No assignments saved.','ok');
+      const previousSelection=jobsAssignee.value;
+      draftEmployeeNames=names;
+      fillEmployeeSelect(jobsAssignee,previousSelection);
+      // Refresh any already-rendered saved-job editor dropdowns without altering job records.
+      for(const select of savedJobsList.querySelectorAll('select[data-job-assignee]')){
+        fillEmployeeSelect(select,select.value);
+      }
+      renderJobs();jobNotice(names.size+' eligible employee name(s) loaded. Assignment options updated; no job records changed.','ok');
     }catch(error){if(request===jobsRequest)jobNotice('Unable to load employees: '+(error?.message||'Connection error'),'error');}
     finally{if(request===jobsRequest)jobsLoad.disabled=false;}
   });
@@ -451,13 +470,11 @@ window.addEventListener('load', () => {
         const priorityInput=document.createElement('select');for(const [v,t] of [['low','Low'],['normal','Normal'],['high','High'],['urgent','Urgent']]){const o=document.createElement('option');o.value=v;o.textContent=t;priorityInput.append(o);}priorityInput.value=job.priority;field('Priority',priorityInput);
         const statusInput=document.createElement('select');for(const [v,t] of [['pending','Pending'],['in_progress','In progress'],['completed','Completed'],['cancelled','Cancelled']]){const o=document.createElement('option');o.value=v;o.textContent=t;statusInput.append(o);}statusInput.value=job.status;field('Status',statusInput);
         const dueInput=document.createElement('input');dueInput.type='date';dueInput.value=job.due_date||'';field('Due date',dueInput);
-        const employeeInput=document.createElement('select');const unassigned=document.createElement('option');unassigned.value='';unassigned.textContent='Unassigned';employeeInput.append(unassigned);
-        for(const [id,name] of draftEmployeeNames){const option=document.createElement('option');option.value=id;option.textContent=name;employeeInput.append(option);}
-        if(job.assigned_membership_id&&!draftEmployeeNames.has(job.assigned_membership_id)){const existing=document.createElement('option');existing.value=job.assigned_membership_id;existing.textContent='Current assignment (load employee names to change)';employeeInput.append(existing);}
-        employeeInput.value=job.assigned_membership_id||'';field('Assign employee',employeeInput);
+        const employeeInput=document.createElement('select');employeeInput.dataset.jobAssignee='true';
+        fillEmployeeSelect(employeeInput,job.assigned_membership_id||'');field('Assign employee',employeeInput);
         const save=document.createElement('button');save.type='submit';save.textContent='Save Changes';const cancel=document.createElement('button');cancel.type='button';cancel.className='secondary-btn';cancel.textContent='Cancel';cancel.addEventListener('click',()=>{editor.hidden=true;edit.hidden=false;});
         const actions=document.createElement('div');actions.className='jobs-wide';actions.append(save,' ',cancel);editor.append(actions);
-        edit.addEventListener('click',()=>{editor.hidden=false;edit.hidden=true;});
+        edit.addEventListener('click',()=>{fillEmployeeSelect(employeeInput,employeeInput.value);editor.hidden=false;edit.hidden=true;});
         editor.addEventListener('submit',async event=>{
           event.preventDefault();if(savedJobEditing)return;
           if(!job.updated_at||!Number.isFinite(Date.parse(job.updated_at))){savedNotice('Job version unavailable. Refresh Saved Jobs before editing.','error');return;}
