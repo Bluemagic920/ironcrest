@@ -177,7 +177,7 @@
 <div id="restricted-invite-link-box" class="private-link" aria-live="polite"><strong>Private invitation link — copy now</strong><p>Only share this link with the configured test recipient. It will disappear if you leave or reload this page. Do not paste it into this chat.</p><div id="restricted-invite-link" class="link-value"></div><button id="restricted-copy-button" type="button" class="secondary-btn">Copy Private Link</button></div>
 <div class="email-preview-wrap" aria-label="Stage 10C invitation email preview"><h3>Stage 10C · Branded Invitation Email Preview</h3><p>Preview the email employees would receive after invitation delivery is approved. This is a local sample only: no email is sent, no invitation is created, and no private link is displayed.</p><button id="preview-invitation-email" type="button" class="secondary-btn" aria-expanded="false" aria-controls="invitation-email-preview">Preview Invitation Email</button><div class="email-preview-subject">Sample subject: You're invited to join your team on IronCrest</div><div id="invitation-email-preview" class="email-preview" aria-label="Sample invitation email"><div class="email-preview-head"><img class="email-preview-logo" src="./ironcrest-logo.png" alt="IronCrest Workforce Operations shield logo"></div><div class="email-preview-body"><h4>You're invited to IronCrest.</h4><p>Hello,</p><p>Your organization has invited you to join its team on IronCrest Workforce Operations.</p><p>Once invitations are enabled, you'll be able to use a secure, time-limited invitation link to complete your account setup.</p><div class="email-preview-cta">Accept Invitation — Sample Only</div><p style="font-size:12px">This is a non-clickable preview. A real invitation email will include a unique secure link and an expiration notice.</p><p>If you weren't expecting this invitation, you can ignore the email.</p></div><div class="email-preview-foot">IronCrest Workforce Operations · Powered by ProfitHarbor AI<br>This preview is not an email and has not been sent.</div></div></div>
 <div class="employee-directory" aria-label="Read-only employee directory">
-<h3>Employee Directory</h3><p>Owner-only employee directory. Edit employee details below; worksite assignments and attendance are not changed.</p>
+<h3>Employee Directory</h3><p>Owner-only employee directory. Edit employee details below. Worksite assignment controls are preview-only until the secure backend is installed; attendance remains locked.</p>
 <button id="directory-load" type="button" class="secondary-btn">Load Employee Directory</button>
 <div id="directory-status" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
 <div id="directory-filters" class="directory-filters" hidden>
@@ -596,6 +596,26 @@
           const option=document.createElement('option');option.value=value;option.textContent=label;select.append(option);
         }
         select.value=person.employmentStatus||'active';statusLabel.append(select);form.append(statusLabel);
+        // Stage 10P-BA: assignment editor preview. No assignment mutations until server-side authorization, atomic replacement, and audit are implemented.
+        const assignmentPanel=document.createElement('fieldset');
+        assignmentPanel.style.cssText='margin-top:18px;padding:14px;border:1px solid #d8aa5c66;border-radius:10px';
+        const assignmentLegend=document.createElement('legend');assignmentLegend.textContent='Assigned Worksites — Preview';
+        assignmentPanel.append(assignmentLegend);
+        const assignmentNote=document.createElement('p');
+        assignmentNote.textContent='Select proposed worksites below. Changes are NOT saved until the secure assignment backend is installed and verified.';
+        assignmentNote.style.fontSize='12px';assignmentPanel.append(assignmentNote);
+        const proposedSites=new Set((person.assignedWorksites||[]).map(site=>site.id));
+        for(const [siteId,siteName] of worksiteOptions){
+          const line=document.createElement('label');line.style.cssText='display:flex;align-items:center;gap:10px;margin:10px 0';
+          const check=document.createElement('input');check.type='checkbox';check.value=siteId;
+          check.checked=proposedSites.has(siteId);check.style.cssText='width:auto;flex:0 0 auto';
+          const label=document.createElement('span');label.textContent=siteName;
+          line.append(check,label);assignmentPanel.append(line);
+        }
+        if(!worksiteOptions.size){const empty=document.createElement('p');empty.textContent='No worksite options in directory response.';assignmentPanel.append(empty);}
+        const assignmentNotice=document.createElement('p');assignmentNotice.style.color='#e7c381';
+        assignmentNotice.textContent='Assignment saving is disabled. Current assignments remain unchanged.';
+        assignmentPanel.append(assignmentNotice);form.append(assignmentPanel);
         const save=document.createElement('button');save.type='submit';save.className='secondary-btn';save.textContent='Save Employee';save.style.marginTop='10px';
         const feedback=document.createElement('p');feedback.setAttribute('role','status');
         form.append(save,feedback);
