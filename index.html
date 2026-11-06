@@ -184,8 +184,8 @@ window.addEventListener('load', () => {
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
 <section class="jobs-section" id="jobs-section" aria-label="Job and task tracking preview">
-<div class="jobs-head"><div><div class="eyebrow">Stage 11A · Owner-only interactive preview</div><h2>Job &amp; Task Tracking</h2></div><button id="jobs-close" type="button" class="secondary-btn">Close</button></div>
-<p class="jobs-note"><strong>Preview mode:</strong> Jobs created here are temporary drafts held in this browser tab. They are not saved to Supabase, do not reach employees, and disappear on refresh. No production job writes are enabled.</p>
+<div class="jobs-head"><div><div class="eyebrow">Stage 11D · Controlled job saving</div><h2>Job &amp; Task Tracking</h2></div><button id="jobs-close" type="button" class="secondary-btn">Close</button></div>
+<p class="jobs-note"><strong>Controlled test:</strong> Add Preview Job keeps a temporary browser draft. Save Job to Supabase makes a permanent job only after the secure Cloudflare job-write switch is enabled. Employee notifications and job editing are not enabled.</p>
 <div class="jobs-metrics" id="jobs-metrics" aria-label="Preview job totals"></div>
 <form id="jobs-form"><div class="jobs-fields">
 <div class="jobs-wide"><label for="jobs-title">Job title</label><input id="jobs-title" maxlength="120" required placeholder="Example: Inspect equipment"></div>
@@ -194,13 +194,13 @@ window.addEventListener('load', () => {
 <div><label for="jobs-due">Due date</label><input id="jobs-due" type="date"></div>
 <div><label for="jobs-priority">Priority</label><select id="jobs-priority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select></div>
 <div><label for="jobs-status-input">Initial status</label><select id="jobs-status-input"><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select></div>
-</div><button type="submit" id="jobs-add">Add Preview Job</button></form>
+</div><button type="submit" id="jobs-add">Add Preview Job</button> <button type="button" id="jobs-save-permanent">Save Job to Supabase</button></form>
 <div id="jobs-message" class="api-result" role="status" aria-live="polite">No jobs created. Load employee names to preview assignments.</div>
 <div class="jobs-toolbar"><button id="jobs-load-employees" type="button" class="secondary-btn">Load Employee Names</button><input id="jobs-search" type="search" maxlength="120" placeholder="Search preview jobs" aria-label="Search preview jobs"><select id="jobs-filter" aria-label="Filter job status"><option value="all">All statuses</option><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select></div>
 <div id="jobs-list" class="jobs-list" aria-live="polite"></div>
 <div class="saved-jobs" aria-label="Saved jobs from Supabase">
-<h3>Saved Jobs · Supabase (Read Only)</h3>
-<p>View jobs stored for your verified organization. Drafts above remain separate. No job creation, editing, or employee notifications are enabled here.</p>
+<h3>Saved Jobs · Supabase</h3>
+<p>View permanently saved jobs for your verified organization. Saved jobs are read-only here; editing, deleting, and employee notifications are not enabled.</p>
 <div class="saved-jobs-actions"><button type="button" id="jobs-load-saved" class="secondary-btn">Load Saved Jobs</button><button type="button" id="jobs-refresh-saved" class="secondary-btn">Refresh Jobs</button></div>
 <div id="jobs-saved-message" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
 <div id="jobs-saved-list" class="jobs-list" aria-live="polite"></div>
@@ -346,6 +346,45 @@ window.addEventListener('load', () => {
       status:document.getElementById('jobs-status-input').value});
     document.getElementById('jobs-form').reset();renderJobs();jobNotice('Preview job added. It is not saved to Supabase or visible to employees.','ok');
   });
+  // Stage 11D: explicit, owner-authorized permanent creation; never auto-submit a draft.
+  const savePermanentJob=document.getElementById('jobs-save-permanent');
+  let permanentJobSaving=false;
+  savePermanentJob.addEventListener('click',async()=>{
+    if(permanentJobSaving)return;
+    if(!verifiedWorksiteOrg||!jobsSection.classList.contains('open')){jobNotice('Owner verification required.','error');return;}
+    const title=document.getElementById('jobs-title').value.trim();
+    const description=document.getElementById('jobs-description').value.trim();
+    const dueDate=document.getElementById('jobs-due').value||null;
+    const priority=document.getElementById('jobs-priority').value;
+    const status=document.getElementById('jobs-status-input').value;
+    const assignedMembershipId=jobsAssignee.value||null;
+    if(!title||title.length>120||description.length>2000){jobNotice('Enter a job title (up to 120 characters) and a valid description.','error');return;}
+    if(!['low','normal','high','urgent'].includes(priority)||!['pending','in_progress','completed'].includes(status)){
+      jobNotice('Invalid priority or status.','error');return;
+    }
+    permanentJobSaving=true;savePermanentJob.disabled=true;
+    jobNotice('Submitting job to the protected backend…');
+    try{
+      const org=await confirmWorksiteOwner();
+      const {data,error}=await client.auth.getSession();
+      if(error||!data?.session?.access_token)throw new Error('Owner session expired. Sign in again.');
+      const response=await fetch(API_BASE+'/api/jobs',{
+        method:'POST',headers:{Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'},
+        body:JSON.stringify({title,description,dueDate,priority,status,assignedMembershipId}),
+        cache:'no-store',referrerPolicy:'no-referrer'
+      });
+      const result=await response.json().catch(()=>null);
+      if(!response.ok||result?.ok!==true||result?.jobCreated!==true||!result.job?.id){
+        if(response.status===403&&result?.error==='Job creation not enabled')throw new Error('Job saving is safely disabled in Cloudflare. No job was created.');
+        throw new Error((result?.error||'Unable to confirm job save')+' (HTTP '+response.status+').');
+      }
+      if(verifiedWorksiteOrg!==org||!jobsSection.classList.contains('open'))return;
+      document.getElementById('jobs-form').reset();
+      jobNotice('Job saved permanently: '+result.job.title+'. Refreshing saved jobs…','ok');
+      await loadSavedJobs();
+    }catch(error){jobNotice((error?.message||'Job save failed')+' If the outcome is uncertain, refresh Saved Jobs before trying again.','error');}
+    finally{permanentJobSaving=false;savePermanentJob.disabled=false;}
+  });
   jobsLoad.addEventListener('click',async()=>{
     const request=++jobsRequest;
     jobsLoad.disabled=true;jobNotice('Loading employee names using the protected owner directory…');
@@ -405,8 +444,8 @@ window.addEventListener('load', () => {
         const due=document.createElement('p');due.textContent='Due: '+(job.due_date||'Not set');
         card.append(heading,badge,desc,assignee,due);savedJobsList.append(card);
       }
-      if(!result.jobs.length){const empty=document.createElement('p');empty.textContent='No saved jobs yet. This is expected until permanent job creation is enabled.';savedJobsList.append(empty);}
-      savedNotice(result.jobs.length+' saved job(s) loaded from Supabase. Read-only; no records changed.','ok');
+      if(!result.jobs.length){const empty=document.createElement('p');empty.textContent='No saved jobs yet. Create a job using Save Job to Supabase when controlled saving is enabled.';savedJobsList.append(empty);}
+      savedNotice(result.jobs.length+' saved job(s) loaded from Supabase. Listing only; no records changed.','ok');
     }catch(error){if(version===savedJobsRequest){savedJobsList.replaceChildren();savedNotice('Unable to load saved jobs: '+(error?.message||'Connection error'),'error');}}
     finally{if(version===savedJobsRequest){savedJobsLoad.disabled=false;savedJobsRefresh.disabled=false;}}
   }
