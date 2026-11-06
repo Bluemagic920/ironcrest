@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>
+// Always start the owner dashboard at the top after a full page refresh.
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.addEventListener('load', () => {
+  if (!location.hash) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+});
+</script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071321">
 <title>IronCrest Workforce Operations | Coming Soon</title>
 <link rel="icon" type="image/x-icon" href="./ironcrest-favicon.ico?v=2">
