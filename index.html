@@ -1,168 +1,1098 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Employee Dashboard | Ironcrest Workforce Operations · Stage 10P-R</title>
-<style>:root{color-scheme:dark;font-family:Inter,Segoe UI,Arial,sans-serif;color:#e9eff7;background:#071426}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 75% 0,#193956,transparent 45%),#071426}header{border-bottom:1px solid #ffffff22;padding:20px max(22px,calc((100vw - 1080px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}header img{width:170px;max-width:55vw}main{max-width:1080px;margin:48px auto;padding:0 22px}.eyebrow{color:#e5bd79;text-transform:uppercase;font-size:12px;font-weight:800;letter-spacing:.15em}h1{font-size:clamp(27px,4vw,40px);margin:10px 0}p{color:#b9c9da;line-height:1.6}.panel,.tile{border:1px solid #57728a66;background:#11263cdd;border-radius:17px;padding:25px}.panel{margin:24px 0}.notice{border:1px solid #56718b;background:#19344d;padding:15px;border-radius:10px;margin-top:20px}.error{border-color:#b76870;background:#47222b;color:#ffe4e7}.ok{border-color:#4c927a;background:#153e36;color:#d6fff0}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:20px}.tile h2{font-size:18px}.tile p{font-size:13px}button{border:1px solid #d9b875;background:#d9b875;color:#112036;border-radius:10px;padding:12px 20px;font-weight:750;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.secondary{background:transparent;color:#e9d2a1}.hidden{display:none!important}label{display:block;margin:16px 0 7px;font-size:14px}input{width:100%;padding:13px;border:1px solid #62758c;border-radius:9px;background:#091b30;color:white;font:inherit}.meta{display:grid;grid-template-columns:1fr 1fr;gap:15px}.meta strong{display:block;overflow-wrap:anywhere}footer{text-align:center;padding:24px;color:#8ea1b4;font-size:12px}@media(max-width:700px){.grid,.meta{grid-template-columns:1fr}main{margin-top:28px}}
-/* Stage 10N presentation-only dashboard; no new API or database writes */
-:root{--gold:#e2ba72;--muted:#a9bbce}main{max-width:1180px}header{padding-left:max(22px,calc((100vw - 1180px)/2));padding-right:max(22px,calc((100vw - 1180px)/2))}.panel,.tile{box-shadow:0 14px 35px #0002}.workspace-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.workspace-head h2{font-size:24px;margin:0}.preview-pill{border:1px solid #b9955b77;color:#eacb94;border-radius:30px;padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.06em}.section-label{color:#e2ba72;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin:30px 0 14px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tile{display:flex;flex-direction:column;min-height:220px;background:linear-gradient(145deg,#142d44,#0d2034);padding:25px}.tile h2{font-size:19px;margin:0 0 9px}.tile p{font-size:14px;margin:0 0 22px;flex:1}.tile button{align-self:flex-start;background:transparent;color:#d6bb89;font-size:12px;padding:9px 13px}.tile-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:19px}.tile-icon{width:43px;height:43px;border-radius:12px;border:1px solid #d9b87555;background:#d9b87514;display:grid;place-items:center;color:#e8c88c;font-size:22px}.tile-status{font-size:11px;color:#d4b783;border:1px solid #d9b87544;padding:5px 9px;border-radius:20px}.security-note{font-size:12px;color:#aebfd0;border-top:1px solid #ffffff20;padding-top:18px;margin-top:26px}.meta p{font-size:12px;margin:0 0 7px}.meta strong{font-size:16px}.welcome{font-size:14px;color:#b6c9da;margin-top:8px}.section-divider{border:0;border-top:1px solid #ffffff20;margin:24px 0 0}@media(max-width:700px){.grid{grid-template-columns:1fr}.tile{min-height:185px}.workspace-head h2{font-size:21px}}
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071321">
+<title>IronCrest Workforce Operations | Coming Soon</title>
+<link rel="icon" type="image/x-icon" href="./ironcrest-favicon.ico?v=2">
+<link rel="icon" type="image/png" sizes="256x256" href="./ironcrest-favicon.png?v=2">
+<link rel="apple-touch-icon" href="./ironcrest-favicon.png?v=2">
+<meta name="description" content="IronCrest Workforce Operations is an upcoming workforce management platform for employee organization, scheduling, attendance and team operations. Powered by ProfitHarbor AI.">
+<style>
+:root{color-scheme:dark;--navy:#071321;--gold:#d8aa5c;--silver:#dce2e9;--muted:#9caabb}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 30%,#172c42 0%,#0a1828 45%,#050e19 100%);color:var(--silver);font-family:Inter,Segoe UI,Arial,sans-serif}body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.25;background:linear-gradient(125deg,transparent 40%,#9caabb0b 50%,transparent 60%)}header{display:flex;align-items:center;justify-content:space-between;padding:24px clamp(22px,5vw,80px);border-bottom:1px solid #ffffff16}.brand{font-size:16px;font-weight:800;letter-spacing:.18em}.brand span{color:var(--gold)}.status{font-size:12px;letter-spacing:.08em;color:#acb9c8;border:1px solid #ffffff24;padding:9px 13px;border-radius:99px}main{max-width:1120px;margin:auto;min-height:calc(100vh - 152px);display:grid;grid-template-columns:minmax(0,1.3fr) minmax(310px,.7fr);align-items:center;gap:clamp(24px,5vw,80px);padding:40px 24px 80px}.identity{text-align:center}.identity img{display:block;width:100%;max-width:650px;margin:auto;box-shadow:0 20px 65px #0005;border-radius:10px}.tagline{margin:24px auto 0;color:#c1cbd6;font-size:15px;letter-spacing:.1em;text-transform:uppercase}.panel{border:1px solid #caa2614d;background:linear-gradient(150deg,#14263aef,#091522f5);box-shadow:0 24px 70px #0008;padding:36px;border-radius:18px}.eyebrow{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}h1{font-size:clamp(27px,3vw,36px);line-height:1.14;margin:15px 0}p{color:#aab8c8;line-height:1.6}label{display:block;margin:20px 0 7px;font-size:13px;font-weight:600}input{width:100%;padding:14px 15px;background:#071321;border:1px solid #71809665;border-radius:9px;color:white;font:inherit}input:disabled{opacity:.55;cursor:not-allowed}button{width:100%;padding:15px;margin-top:24px;border:1px solid #e7c381;background:linear-gradient(115deg,#e6c17d,#b88a40);color:#142033;font-weight:800;font-size:15px;border-radius:9px;cursor:not-allowed;opacity:.65}.notice{font-size:12px;border-top:1px solid #ffffff20;margin-top:24px;padding-top:17px;color:#aeb9c6}footer{padding:22px;text-align:center;color:#9ba8b8;font-size:12px;border-top:1px solid #ffffff16}footer a{color:#d9b578;text-decoration:none}@media(max-width:780px){header{padding:18px 20px}main{grid-template-columns:1fr;min-height:auto;padding:34px 20px 60px;gap:26px}.identity img{max-width:510px}.tagline{font-size:12px}.panel{max-width:510px;width:100%;margin:auto;padding:26px}.status{font-size:10px}}
+.panel button{cursor:pointer;opacity:1}.panel button:disabled{cursor:not-allowed;opacity:.55}.feedback{margin-top:14px;font-size:13px;line-height:1.5;min-height:20px}.feedback.error{color:#ffb7b7}.feedback.ok{color:#a9e5c4}.owner-area{display:none}.owner-area dl{margin:20px 0}.owner-area dt{color:#aab8c8;font-size:12px;margin-top:12px}.owner-area dd{margin:5px 0 0;font-weight:700;overflow-wrap:anywhere}.secondary-btn{background:transparent!important;color:#e7c381!important}.spinner{opacity:.7}
 
-/* Stage 10O: permission-based, local-only GPS diagnostic. No clock-in, network submission, or location retention. */
-.attendance-preview{margin-top:24px;border:1px solid #d9b87555;background:linear-gradient(140deg,#152c42,#0b1b2d);border-radius:17px;padding:25px}
-.attendance-preview h2{margin:8px 0;font-size:21px}.attendance-preview .state{color:#e7c58c;font-size:12px;font-weight:750}
-.attendance-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}.attendance-actions button{min-width:150px}.attendance-actions button:disabled{opacity:.45}
-#gps-result{font-size:13px;color:#bfd0e0;margin-top:15px;line-height:1.6;overflow-wrap:anywhere}
-.attendance-preview ul{padding-left:22px;color:#bdccda;font-size:13px;line-height:1.8}
-@media(max-width:650px){.attendance-actions button{width:100%}}
-</style></head>
-<body><header><a href="./index.html"><img src="./ironcrest-logo.png" alt="Ironcrest Workforce Operations"></a><span class="eyebrow">Employee Portal · Preview</span></header><main><div class="eyebrow">Secure workforce access</div><h1>Employee Portal</h1><p>View your verified organization membership. Additional workforce tools are coming soon.</p><div id="notice" class="notice" role="status" aria-live="polite">Verifying your employee access…</div>
-<section id="login" class="panel hidden"><h2>Employee sign in</h2><p>Use the account that accepted your employee invitation.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required><button id="signin" type="submit" style="margin-top:18px">Sign in</button></form></section>
-<section id="workspace" class="hidden"><div class="panel"><div class="workspace-head"><div><div class="eyebrow">Verified employee access</div><h2>My workspace</h2><p class="welcome">Your secure home for workforce information.</p></div><span class="preview-pill">STAGE 10P-AZ · ATTENDANCE ENGINE LOCKED</span></div><hr class="section-divider"><div class="meta" style="margin-top:24px"><div><p>Signed in as</p><strong id="member-email"></strong></div><div><p>Organization</p><strong id="org-name"></strong></div></div><button id="signout" class="secondary" style="margin-top:24px">Sign out</button></div><section class="attendance-preview" aria-labelledby="attendance-title"><div class="eyebrow">Stage 10P-R · Time &amp; Attendance</div><h2 id="attendance-title">Secure attendance setup</h2><p class="state">TEST MODE — Clock-in and clock-out are disabled</p><p>Before recording shifts, Ironcrest will require employer-defined worksites, server-side location checks, permission rules, and a manager exception process.</p><div class="attendance-actions"><button type="button" disabled title="Not enabled until backend security is ready">Clock in — Awaiting security approval</button><button type="button" disabled title="Not enabled until backend security is ready">Clock out — Awaiting security approval</button><button id="gps-check" type="button" class="secondary">Test GPS permission</button></div><div id="gps-result" role="status" aria-live="polite">Optional device check. Location is not sent to Ironcrest or saved by this page.</div><ul><li>Worksite boundaries: active employer worksites loaded below</li><li>Server-side attendance records: not activated</li><li>Manager exceptions and suspicious activity review: planned</li><li>GPS alone cannot reliably prevent spoofing; additional controls will be required</li></ul></section>
-<section class="attendance-preview" aria-labelledby="geofence-title">
- <div class="eyebrow">Stage 10P-R · Worksite verification</div>
- <h2 id="geofence-title">My approved worksites</h2>
- <p>View active worksites assigned to your organization. An optional one-time GPS reading is sent to the Ironcrest verification server when you press Verify. This does not authorize attendance.</p>
- <div id="worksite-list" role="status" aria-live="polite">Loading employer worksites…</div>
- <div class="attendance-actions"><button id="reload-worksites" type="button" class="secondary">Refresh worksites</button><button id="boundary-check" type="button" class="secondary" disabled>Verify worksite location</button><button id="attendance-preflight" type="button" class="secondary" disabled>Check Clock-In Eligibility</button></div>
- <div id="boundary-result" class="notice" role="status" aria-live="polite">No verification requested. Location is sent only if you press Verify; it is not saved by this page.</div>
-<div id="attendance-preflight-result" role="status" aria-live="polite">Attendance eligibility has not been checked. This is a preview only; no shift will be recorded.</div>
-<div class="attendance-actions"><button id="dry-run-in" type="button" class="secondary" disabled>Clock In — Dry Run</button><button id="dry-run-out" type="button" class="secondary" disabled>Clock Out — Dry Run</button></div><div id="dry-run-result" class="notice" role="status" aria-live="polite">Dry-run tests only. No shift will be recorded.</div>
- <p style="font-size:12px">GPS accuracy is uncertain and location can be spoofed. A local boundary match is not proof of presence. Final checks must happen server-side, with manager exception safeguards, before attendance is enabled.</p>
+/* Stage 4: Owner dashboard preview — no workforce write operations */
+.dashboard-active main{max-width:1450px;grid-template-columns:220px minmax(0,1fr);align-items:start;gap:32px;padding-top:48px}
+.dashboard-active .identity{position:sticky;top:34px;padding-top:30px}
+.dashboard-active .identity img{max-width:220px;box-shadow:0 12px 38px #0005}
+.dashboard-active .identity .tagline{font-size:10px;letter-spacing:.075em;line-height:1.6}
+.dashboard-active .panel{padding:36px 38px}
+.owner-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.owner-top h1{margin:12px 0 4px;font-size:clamp(29px,3vw,40px)}
+.owner-subtitle{margin:0 0 22px;font-size:14px}
+.owner-chip{border:1px solid #6dbf9b6b;background:#10352870;border-radius:999px;padding:9px 13px;font-size:12px;font-weight:700;color:#a9e5c4;white-space:nowrap}
+.owner-dot{display:inline-block;width:7px;height:7px;background:#7cdbab;border-radius:50%;margin-right:8px}
+.owner-details{display:grid;grid-template-columns:1.1fr 1.3fr .65fr;gap:12px;margin:5px 0 32px}
+.owner-details>div{background:#07152399;border:1px solid #ffffff19;border-radius:12px;padding:16px;min-width:0}
+.owner-details span{display:block;color:#9caabb;font-size:11px;letter-spacing:.035em;margin-bottom:9px}
+.owner-details strong{display:block;font-size:13px;overflow-wrap:anywhere}
+.dashboard-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.dashboard-heading h2{font-size:18px;margin:0}
+.preview-tag{color:#dfb66d;font-size:11px;border:1px solid #d8aa5c50;border-radius:20px;padding:6px 10px;white-space:nowrap}
+.workspace-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.workspace-card{background:linear-gradient(150deg,#172c40,#0b1928);border:1px solid #ffffff20;border-radius:15px;padding:21px;min-width:0;display:flex;flex-direction:column}
+.module-icon{height:35px;width:35px;display:grid;place-items:center;border-radius:10px;background:#d8aa5c1b;border:1px solid #d8aa5c44;color:#eac27b;font-size:22px;margin-bottom:16px}
+.module-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.module-top h3{font-size:16px;margin:0}
+.module-state{font-size:10px;color:#b6c2d0;border:1px solid #ffffff2a;border-radius:20px;padding:4px 8px;white-space:nowrap}
+.workspace-card p{font-size:13px;line-height:1.65;margin:10px 0 17px;flex:1}
+.panel .workspace-card button{width:100%;margin-top:auto;padding:11px 12px;background:#ffffff09;color:#c3cedb;border:1px solid #ffffff26;font-size:12px;text-align:left;display:flex;justify-content:space-between;opacity:.55;cursor:not-allowed}
+.dashboard-bottom{display:flex;align-items:end;gap:20px;justify-content:space-between;margin-top:24px;flex-wrap:wrap}
+.safety-note{max-width:600px}.safety-note strong{font-size:13px;color:#e5bd79}.safety-note p{font-size:12px;margin:5px 0 0}
+.panel .owner-signout{width:auto;min-width:145px;margin:0;padding:12px 20px}
+.dashboard-active .notice{font-size:11px}
+@media(max-width:1080px){.dashboard-active main{grid-template-columns:1fr}.dashboard-active .identity{position:static;padding:0}.dashboard-active .identity img{max-width:240px}.dashboard-active .identity .tagline{margin-top:12px}}
+@media(max-width:650px){.dashboard-active main{padding:26px 16px 45px}.dashboard-active .panel{padding:22px 18px}.owner-details{grid-template-columns:1fr}.workspace-grid{grid-template-columns:1fr}.dashboard-bottom{align-items:stretch}.panel .owner-signout{width:100%}}
+
+/* Stage 9G.3: restricted owner-only test invitation; no automatic email delivery. */
+.employee-section{display:none;margin-top:25px;padding:24px;border:1px solid #d8aa5c40;border-radius:15px;background:#07152399}
+.employee-section.open{display:block}
+.employee-section h2{margin:0 0 8px;font-size:21px}
+.employee-section .section-description{margin:0 0 20px;font-size:13px}
+.employee-actions{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.employee-actions .preview-tag{display:inline-flex}
+.employee-form{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(150px,.7fr);gap:14px}
+.employee-form label{margin:0 0 8px}
+.employee-form select{width:100%;padding:14px 15px;background:#071321;border:1px solid #71809665;border-radius:9px;color:#dce2e9;font:inherit}
+.employee-form input:disabled,.employee-form select:disabled{opacity:.6;cursor:not-allowed}
+.employee-section .invite-button{grid-column:1/-1;margin-top:3px;cursor:pointer;opacity:1}.employee-section .invite-button:disabled{cursor:not-allowed;opacity:.5}.private-link{display:none;margin-top:18px;padding:16px;border:1px solid #d8aa5c70;border-radius:12px;background:#0b1b2a}.private-link.open{display:block}.private-link a{color:#e7c381;overflow-wrap:anywhere}.private-link button{width:auto;margin-top:12px}.private-link p{font-size:12px}.private-link .link-value{font-size:12px;overflow-wrap:anywhere;user-select:all}
+.directory-preview{margin-top:20px;padding:17px;border:1px solid #ffffff1b;border-radius:12px;background:#0b1b2a}
+.directory-preview strong{font-size:13px}
+.directory-preview p{font-size:12px;margin:8px 0 0}
+.panel .workspace-card button.employee-open{opacity:1;cursor:pointer;color:#e9c381;border-color:#d8aa5c66}
+.panel .workspace-card button.employee-open:hover{background:#d8aa5c19}
+.panel .employee-close{width:auto;margin:0;padding:9px 14px;font-size:12px;background:transparent;color:#e7c381}
+@media(max-width:650px){.employee-section{padding:17px}.employee-form{grid-template-columns:1fr}.employee-section .invite-button{grid-column:1}}
+
+/* Stage 5C owner API verification */
+.api-check{margin:22px 0;padding:18px;border:1px solid #d8aa5c55;background:#091a2c;border-radius:12px}
+.api-check h3{margin:0 0 7px;font-size:16px;color:#e7c381}
+.api-check p{margin:0 0 10px;font-size:13px}
+.panel .api-check button{width:auto;margin:8px 0 0;padding:11px 18px;cursor:pointer;opacity:1}
+.panel .api-check button:disabled{opacity:.55;cursor:not-allowed}
+.api-result{font-size:13px;margin-top:12px;overflow-wrap:anywhere;line-height:1.5}
+.api-result.ok{color:#a9e5c4}.api-result.error{color:#ffb7b7}.backend-check{border-top:1px solid #ffffff20;margin-top:16px;padding-top:10px}
+
+/* Public IronCrest coming-soon marketing section; independent of owner operations. */
+.public-launch{max-width:1120px;margin:34px auto 0;padding:0 24px}.launch-shell{position:relative;overflow:hidden;border:1px solid #d8aa5c55;border-radius:20px;background:radial-gradient(ellipse at 85% 0%,#25415a 0%,#102236 40%,#091726 100%);box-shadow:0 22px 65px #0005;padding:clamp(26px,5vw,56px)}.launch-shell:after{content:"";position:absolute;right:-110px;top:-110px;width:340px;height:340px;border-radius:50%;background:#d8aa5c0c;filter:blur(18px);pointer-events:none}.launch-eyebrow{color:#e6bd77;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}.launch-shell h1{font-size:clamp(30px,4.5vw,54px);max-width:760px;margin:17px 0 14px;line-height:1.12;color:#f3f5f8}.launch-lead{font-size:clamp(15px,1.7vw,18px);max-width:700px;color:#c2cfda}.launch-actions{display:flex;gap:12px;flex-wrap:wrap;margin:25px 0 8px}.launch-actions a{display:inline-block;border-radius:9px;padding:12px 19px;text-decoration:none;font-weight:750;font-size:14px}.launch-primary{background:linear-gradient(110deg,#e6c17d,#b88a40);color:#142033}.launch-secondary{border:1px solid #d8aa5c88;color:#efd3a2}.launch-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:32px}.launch-feature{padding:19px 17px;border:1px solid #ffffff21;background:#091522a8;border-radius:12px}.launch-feature strong{display:block;font-size:14px;color:#f1e4cc;margin-bottom:9px}.launch-feature p{font-size:12px;line-height:1.6;margin:0}.launch-disclosure{font-size:12px;color:#aebccc;margin:20px 0 0}.launch-footnote{margin-top:18px;font-size:13px;color:#b7c5d3}.launch-footnote a{color:#e7c381}.public-launch + main{padding-top:35px;min-height:auto}.dashboard-active .public-launch{display:none}@media(max-width:850px){.launch-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.public-launch{padding:0 16px;margin-top:20px}.launch-grid{grid-template-columns:1fr}.launch-actions a{width:100%;text-align:center}}
+
+/* Stage 10C: local-only invitation email preview. Never sends or exposes invitation tokens. */
+.email-preview-wrap{margin-top:20px;border:1px solid #d8aa5c55;border-radius:12px;padding:18px;background:#091a2c}
+.email-preview-wrap h3{font-size:16px;color:#e7c381;margin:0 0 8px}
+.email-preview-wrap p{font-size:12px;margin:5px 0 12px}
+.panel .email-preview-wrap>button{width:auto;margin:0;padding:10px 16px;cursor:pointer;opacity:1}
+.email-preview{display:none;margin-top:16px;background:#081625;color:#e4ebf3;border-radius:12px;overflow:hidden;border:1px solid #b990526e;box-shadow:0 16px 45px #0006}
+.email-preview.open{display:block}
+.email-preview-head{padding:28px 24px 23px;background:radial-gradient(ellipse at 50% 0%,#20354b 0%,#071321 75%);color:#f2f4f7;text-align:center;border-bottom:3px solid #d8aa5c}
+.email-preview-logo{display:block;width:min(100%,350px);max-height:235px;object-fit:contain;margin:0 auto}
+.email-preview-body{padding:32px 34px;line-height:1.7;font-size:14px;background:linear-gradient(145deg,#102439,#081625)}
+.email-preview-body h4{font-size:24px;margin:0 0 18px;color:#f3f5f8}
+.email-preview-body p{color:#c4d0dc;font-size:14px;line-height:1.7}
+.email-preview-cta{display:inline-block;background:linear-gradient(110deg,#e6c17d,#bd9049);color:#102033;font-weight:800;padding:13px 20px;border-radius:8px;margin:16px 0}
+.email-preview-foot{background:#06111e;border-top:1px solid #d8aa5c38;padding:19px 34px;font-size:12px;color:#aebdcb}
+@media(max-width:550px){.email-preview-body{padding:24px 20px}.email-preview-head{padding:20px}.email-preview-foot{padding:17px 20px}}
+.email-preview-subject{font-size:12px;color:#9caabb;margin-top:14px;overflow-wrap:anywhere}
+
+/* Stage 10P-C: owner worksite management, read-only pending membership RLS audit */
+.worksite-section{display:none;margin-top:25px;padding:24px;border:1px solid #d8aa5c55;border-radius:15px;background:#07152399}.worksite-section.open{display:block}.worksite-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.worksite-head h2{margin:6px 0}.worksite-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.worksite-fields label{margin:12px 0 6px}.worksite-fields input{margin:0}.worksite-actions{display:flex;gap:10px;flex-wrap:wrap}.panel .worksite-actions button,.panel #worksite-close{width:auto;margin:15px 0 0;padding:11px 17px}.worksite-record{padding:14px;margin:10px 0;border:1px solid #ffffff24;border-radius:10px;background:#0a1a2b}.worksite-record strong{color:#f2d29b}.worksite-record p{margin:5px 0;font-size:12px}.worksite-warning{font-size:12px;color:#e9c993}.panel .workspace-card button.worksite-open{opacity:1;cursor:pointer;color:#e9c381;border-color:#d8aa5c66}@media(max-width:650px){.worksite-fields{grid-template-columns:1fr}.worksite-section{padding:17px}}
+.worksite-row-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.panel .worksite-row-actions button{width:auto;margin:0;padding:8px 14px;font-size:12px;cursor:pointer;opacity:1}.panel .worksite-actions button[hidden]{display:none}
+ /* Stage 10P-AN: owner-only, read-only assignment overview */
+ .assignment-overview{margin-top:22px;padding:20px;border:1px solid #d8aa5c55;border-radius:12px;background:#091a2c}
+ .assignment-overview h3{margin:0 0 8px;color:#e7c381;font-size:17px}
+ .assignment-overview p{font-size:12px}
+ .panel .assignment-overview button{width:auto;margin:6px 0 12px;padding:11px 16px}
+ .assignment-record{padding:14px;margin:12px 0;border:1px solid #ffffff25;border-radius:10px;background:#0a1a2b}
+ .assignment-record strong{color:#f2d29b}
+ .assignment-record p{margin:6px 0}
+ .assignment-ids{font-size:11px;overflow-wrap:anywhere;color:#9caabb}
+
+/* Stage 10P-AO employee directory */
+.employee-directory{margin-top:18px;border:1px solid #d8aa5c55;border-radius:12px;padding:18px;background:#091a2c}
+.employee-directory h3{margin:0 0 8px;color:#e7c381}
+.directory-filters{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.directory-filters label{display:flex;flex-direction:column;gap:5px;flex:1 1 150px;font-size:13px}.directory-filters input,.directory-filters select{width:100%;box-sizing:border-box;min-height:40px;padding:8px;border-radius:7px}.directory-filters[hidden]{display:none!important}.directory-match-count{margin:8px 0;font-size:13px;color:#e7c381}
+.panel .employee-directory button{width:auto;padding:10px 16px;margin:6px 0 12px}
+.directory-person{margin-top:12px;padding:14px;border:1px solid #ffffff25;border-radius:10px;background:#0a1a2b}
+.directory-person strong{color:#f2d29b}.directory-person p{font-size:12px;margin:5px 0}
+
+/* Stage 10P-AQ: owner-only read-only security diagnostics */
+.aq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.aq-metric{border:1px solid #ffffff22;border-radius:10px;padding:14px;background:#091827}.aq-metric strong{display:block;font-size:22px;color:#e7c381}.aq-metric span{font-size:12px;color:#b6c4d1}.aq-check{padding:9px 0;border-bottom:1px solid #ffffff18;font-size:13px}.aq-check strong{color:#d6e2ed}.aq-note{font-size:12px;color:#b9c9da}.panel #aq-run{width:auto;margin:8px 0;padding:11px 18px}@media(max-width:650px){.aq-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="brand">IRON<span>CREST</span></div><div class="status">WORKFORCE OPERATIONS</div></header>
+<section class="public-launch" aria-labelledby="launch-title">
+  <div class="launch-shell">
+    <div class="launch-eyebrow">IronCrest Workforce Operations · In development</div>
+    <h1 id="launch-title">A stronger foundation for the people who move your business forward.</h1>
+    <p class="launch-lead">Meet IronCrest: an upcoming workforce operations platform being developed to help businesses organize teams, manage schedules, and bring everyday workforce activity into one professional workspace.</p>
+    <div class="launch-actions"><a class="launch-primary" href="#launch-features">Explore what's planned</a><a class="launch-secondary" href="https://profitharborai.com/">Discover ProfitHarbor AI</a></div>
+    <div id="launch-features" class="launch-grid" aria-label="Planned workforce capabilities">
+      <article class="launch-feature"><strong>Employee management</strong><p>Team records, employee access, and invitation workflows are in development. Owner-only invitation testing is restricted.</p></article>
+      <article class="launch-feature"><strong>Time &amp; attendance</strong><p>Planned tools for reviewing shifts, time entries, and exceptions.</p></article>
+      <article class="launch-feature"><strong>Workforce scheduling</strong><p>Planned scheduling tools to organize assignments and shift coverage.</p></article>
+      <article class="launch-feature"><strong>Company settings</strong><p>Planned controls for organization preferences and workforce permissions.</p></article>
+    </div>
+    <p class="launch-disclosure">Coming soon: the workforce features above are planned or in restricted testing and are not yet generally available. No public employee registration or launch-notification signup is active.</p>
+    <p class="launch-footnote">Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a> · Navigate Growth. Build Wealth.</p>
+  </div>
 </section>
-<div class="section-label">Employee tools</div><div class="grid" aria-label="Employee tools preview">
-<article class="tile"><div class="tile-top"><span class="tile-icon" aria-hidden="true">◷</span><span class="tile-status">Coming soon</span></div><h2>Time &amp; Attendance</h2><p>Clock in and out securely after employer-configured worksite verification, attendance rules, and approved exceptions are enabled.</p><button type="button" disabled aria-label="Time and attendance coming soon">Not yet available</button></article>
-<article class="tile"><div class="tile-top"><span class="tile-icon" aria-hidden="true">▦</span><span class="tile-status">Coming soon</span></div><h2>My Schedule</h2><p>View assigned shifts, upcoming workdays, and schedule updates once your employer enables scheduling.</p><button type="button" disabled aria-label="My schedule coming soon">Not yet available</button></article>
-<article class="tile"><div class="tile-top"><span class="tile-icon" aria-hidden="true">♙</span><span class="tile-status">Coming soon</span></div><h2>My Profile</h2><p>Review your employee details and manage permitted personal information when self-service features are released.</p><button type="button" disabled aria-label="My profile coming soon">Not yet available</button></article>
-<article class="tile"><div class="tile-top"><span class="tile-icon" aria-hidden="true">✧</span><span class="tile-status">Coming soon</span></div><h2>Company Announcements</h2><p>Read employer-published announcements and important workforce updates when secure announcements are available.</p><button type="button" disabled aria-label="Company announcements coming soon">Not yet available</button></article>
-</div><p class="security-note">This dashboard is a preview. The GPS permission test is local. Worksite verification sends a one-time GPS reading to the server; no attendance records are created. No schedules, time entries, announcements, or profile records are loaded or changed. Employee access is verified against your active organization membership.</p></section></main><footer>© 2026 Ironcrest Workforce Operations · Powered by ProfitHarbor AI</footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script>(()=>{'use strict';const $=id=>document.getElementById(id),notice=$('notice'),login=$('login'),workspace=$('workspace');const show=(m,c='')=>{notice.textContent=m;notice.className='notice '+c};if(!window.supabase?.createClient){show('Secure sign-in is temporarily unavailable.','error');return;}let verifiedOrgId=null, activeWorksites=[];const client=window.supabase.createClient('https://nhiqbcevcdxfzvrprgck.supabase.co','sb_publishable_VwM3o7h2Jxq9_2WkkdE4kg_WKU6bvP6',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:'ironcrest-employee-auth-v1'}});// Location permission is optional and must only run after an explicit button click.
-$('gps-check').addEventListener('click',()=>{
-  const output=$('gps-result');
-  if(!navigator.geolocation){output.textContent='Geolocation is unavailable in this browser.';return;}
-  const button=$('gps-check');button.disabled=true;output.textContent='Requesting device location permission…';
-  navigator.geolocation.getCurrentPosition(
-    position=>{const accuracy=Math.round(position.coords.accuracy);output.textContent='GPS responded. Reported accuracy: approximately '+accuracy+' meters. No coordinates were displayed, transmitted, or stored. This does not authorize clock-in.';button.disabled=false;},
-    error=>{const reasons={1:'Location permission denied.',2:'Device location unavailable.',3:'Location request timed out.'};output.textContent=(reasons[error.code]||'Unable to read location.')+' Clock-in remains disabled.';button.disabled=false;},
-    {enableHighAccuracy:true,timeout:12000,maximumAge:0}
-  );
-});
+<main>
+<section class="identity" aria-label="Ironcrest brand"><img src="ironcrest-logo.png" alt="Ironcrest Workforce Operations silver and gold shield emblem, powered by ProfitHarbor AI"><div class="tagline">Built for the people who move business forward</div></section>
+<section class="panel"><div class="eyebrow">Secure Owner Access</div><div id="login-area"><h1>Welcome to<br>Ironcrest.</h1><p>Sign in with your existing ProfitHarbor AI account to verify your Ironcrest owner access. Only restricted owner-authorized test invitations are currently available.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" placeholder="name@example.com" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required><button id="login-button" type="submit">Owner Sign In</button></form></div><div class="owner-area" id="owner-area">
+<div class="owner-top"><div><div class="eyebrow">Ironcrest · Owner Command Center</div><h1>Workforce overview</h1><p class="owner-subtitle">A secure foundation for managing your team, schedules, and operations.</p></div><div class="owner-chip"><span class="owner-dot"></span>Owner access verified</div></div>
+<div class="owner-details"><div><span>Organization</span><strong id="owner-org"></strong></div><div><span>Signed in as</span><strong id="owner-email"></strong></div><div><span>Access level</span><strong id="owner-role">Owner</strong></div></div>
+<div class="dashboard-heading"><h2>Management workspace</h2><span class="preview-tag">Stage 10K · Preview</span></div>
+<div class="workspace-grid" aria-label="Workforce management modules">
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Stage 10K · Test</span></div><p>Manage employee invitations. Restricted single-recipient testing is available to verified owners.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Coming soon</span></div><p>Review shifts and time entries, with location verification and exception controls planned.</p><button type="button" disabled aria-label="Time and attendance not yet available">View time records <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Coming soon</span></div><p>Organize employee schedules, assignments, and future shift coverage.</p><button type="button" disabled aria-label="Scheduling not yet available">Open scheduling <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
+</div>
+<section class="worksite-section" id="worksite-section" aria-label="Worksite management">
+<div class="worksite-head"><div><div class="eyebrow">Stage 10P-G · Secure worksite management</div><h2>Worksites &amp; Geofencing</h2></div><button id="worksite-close" class="secondary-btn" type="button">Close</button></div>
+<p>Employer-defined locations only. No employee location is requested, transmitted, or stored by this screen.</p>
+<p class="worksite-warning">Owner-authorized worksite saving is enabled for controlled testing. Attendance remains disabled; worksite GPS is not employee tracking.</p>
+<div class="worksite-fields"><div><label for="worksite-name">Worksite name</label><input id="worksite-name" maxlength="120" placeholder="Main Office"></div><div><label for="worksite-radius">Allowed radius (meters)</label><input id="worksite-radius" type="number" min="50" max="2000" value="150"></div><div><label for="worksite-lat">Latitude</label><input id="worksite-lat" type="number" step="any" min="-90" max="90" placeholder="33.45"></div><div><label for="worksite-lon">Longitude</label><input id="worksite-lon" type="number" step="any" min="-180" max="180" placeholder="-112.07"></div></div>
+<div class="worksite-actions"><button type="button" id="worksite-preview">Preview rules</button><button type="button" id="worksite-save">Save new worksite</button><button type="button" id="worksite-cancel-edit" class="secondary-btn" hidden>Cancel edit</button><button type="button" id="worksite-refresh" class="secondary-btn">Load saved worksites</button></div>
+<div id="worksite-status" class="api-result" role="status" aria-live="polite">Open this panel to review your organization's worksites.</div><div id="worksite-list"></div>
 
-function clearWorksites(){verifiedOrgId=null;activeWorksites=[];$('worksite-list').textContent='No employer worksites loaded.';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;$('dry-run-in').disabled=true;$('dry-run-out').disabled=true;$('boundary-result').textContent='No verification requested. Location is sent only if you press Verify; it is not saved by this page.';}
-async function loadWorksites(){
- const orgId=verifiedOrgId;
- if(!orgId){clearWorksites();return;}
- $('worksite-list').textContent='Loading active worksites…';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;$('dry-run-in').disabled=true;$('dry-run-out').disabled=true;activeWorksites=[];
- const {data,error}=await client.from('ironcrest_worksites').select('id,name,latitude,longitude,radius_m,active').eq('organization_id',orgId).eq('active',true).order('name').limit(50);
- if(orgId!==verifiedOrgId)return;
- if(error){$('worksite-list').textContent='Unable to load worksites: '+error.message+' (Ask your employer to verify Stage 10P-H database policy.)';return;}
- activeWorksites=Array.isArray(data)?data:[];
- if(!activeWorksites.length){$('worksite-list').textContent='Your employer has no active worksites available.';return;}
- const list=document.createElement('ul');list.style.paddingLeft='22px';
- for(const w of activeWorksites){const item=document.createElement('li');item.textContent=w.name+' — '+w.radius_m+' m allowed radius';list.appendChild(item);}
- $('worksite-list').replaceChildren(list);$('boundary-check').disabled=false;$('attendance-preflight').disabled=false;$('dry-run-in').disabled=false;$('dry-run-out').disabled=false;
-}
-$('reload-worksites').addEventListener('click',loadWorksites);
- const GEOFENCE_API='https://ironcrest-invitations-api.bluemagic920.workers.dev/api/verify-worksite-boundary';
- let checkingBoundary=false;
- $('boundary-check').addEventListener('click',async()=>{
-  const result=$('boundary-result'),button=$('boundary-check');
-  if(checkingBoundary)return;
-  if(!verifiedOrgId||!activeWorksites.length){result.textContent='No active employer worksites available.';return;}
-  if(!navigator.geolocation){result.textContent='Geolocation unavailable. Attendance remains locked.';return;}
-  checkingBoundary=true;button.disabled=true;
-  result.textContent='Requesting one-time GPS permission. This reading will be sent securely to Ironcrest for verification…';
-  const orgAtStart=verifiedOrgId;
-  try{
-       const {data:{session},error:sessionError}=await client.auth.getSession();
-    if(sessionError||!session?.access_token){result.textContent='Employee session expired. Sign in again.';return;}
-    if(orgAtStart!==verifiedOrgId){result.textContent='Session changed. Verification cancelled.';return;}
-    const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:0}));
-    if(orgAtStart!==verifiedOrgId||!verifiedOrgId){result.textContent='Session changed. Verification cancelled.';return;}
-    const {latitude,longitude,accuracy}=position.coords;
-    if(![latitude,longitude,accuracy].every(Number.isFinite)||accuracy<0||!Number.isFinite(position.timestamp)){result.textContent='Invalid GPS response. Attendance remains locked.';return;}
-    if(Date.now()-position.timestamp>25000||position.timestamp>Date.now()+5000){result.textContent='Location reading is stale. Please try again. Attendance remains locked.';return;}
-const response=await fetch(GEOFENCE_API,{
-    method:'POST',cache:'no-store',referrerPolicy:'no-referrer',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
-    body:JSON.stringify({latitude,longitude,accuracyMeters:accuracy,sampleTimestamp:position.timestamp})
-   });
-   const payload=await response.json().catch(()=>null);
-   if(orgAtStart!==verifiedOrgId){result.textContent='Session changed. Verification result discarded.';return;}
-   if(!response.ok||!payload?.ok){result.textContent=(payload?.error||'Server verification unavailable')+'. Attendance remains locked.';return;}
-   const labels={inside_preview:'Within the approved worksite boundary (preview only).',outside_preview:'Outside the approved worksite boundary.',boundary_uncertain:'Worksite boundary uncertain due to GPS accuracy.',accuracy_insufficient:'GPS accuracy insufficient for verification.'};
-   const name=activeWorksites.find(w=>w.id===payload.worksiteId)?.name||'Approved worksite';
-   result.textContent=(labels[payload.status]||'Verification completed.')+' Worksite: '+name+'. Distance: '+payload.distanceMeters+' m; GPS accuracy: ±'+payload.accuracyMeters+' m; radius: '+payload.allowedRadiusMeters+' m. Server-side preview only. No attendance authorized. No location history saved by this page.';
-  }catch(error){
-   const reasons={1:'Location permission denied.',2:'Device location unavailable.',3:'Location request timed out.'};
-   result.textContent=(reasons[error?.code]||'Verification request failed.')+' Attendance remains locked.';
-  }finally{checkingBoundary=false;button.disabled=!verifiedOrgId||!activeWorksites.length;}
- });
+ <div class="assignment-overview" aria-label="Read-only employee worksite assignments">
+   <h3>Employee Worksite Assignments</h3>
+   <p>View active eligible employee assignments for your organization's worksites. Read-only: no assignments or attendance records can be changed here.</p>
+   <button type="button" id="assignment-overview-load" class="secondary-btn">View Worksite Assignments</button>
+   <div id="assignment-overview-status" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
+   <div id="assignment-overview-list" aria-live="polite"></div>
+ </div>
+</section>
+<section class="employee-section" id="employee-section" aria-label="Employee management preview">
+<div class="employee-actions"><div><div class="eyebrow">Stage 10K · Controlled Invitation Email Test</div><h2>Invite your team</h2></div><button class="employee-close secondary-btn" id="employee-close" type="button">Close</button></div>
+<p class="section-description">Send one controlled invitation email to the approved test recipient configured privately in Cloudflare. This creates an invitation record and submits the branded email through Resend.</p>
+<div class="employee-form" aria-label="Restricted test invitation">
+<div><label for="invite-email">Recipient</label><input id="invite-email" type="text" value="Cloudflare-configured test email only" disabled></div>
+<div><label for="invite-role">Role</label><select id="invite-role" disabled><option>Employee</option></select></div>
+<button id="restricted-invite-button" class="invite-button" type="button">Send Test Invitation Email</button>
+</div>
+<div id="restricted-invite-status" class="api-result" role="status" aria-live="polite">No test email requested from this page yet.</div>
+<div id="restricted-invite-link-box" class="private-link" aria-live="polite"><strong>Private invitation link — copy now</strong><p>Only share this link with the configured test recipient. It will disappear if you leave or reload this page. Do not paste it into this chat.</p><div id="restricted-invite-link" class="link-value"></div><button id="restricted-copy-button" type="button" class="secondary-btn">Copy Private Link</button></div>
+<div class="email-preview-wrap" aria-label="Stage 10C invitation email preview"><h3>Stage 10C · Branded Invitation Email Preview</h3><p>Preview the email employees would receive after invitation delivery is approved. This is a local sample only: no email is sent, no invitation is created, and no private link is displayed.</p><button id="preview-invitation-email" type="button" class="secondary-btn" aria-expanded="false" aria-controls="invitation-email-preview">Preview Invitation Email</button><div class="email-preview-subject">Sample subject: You're invited to join your team on IronCrest</div><div id="invitation-email-preview" class="email-preview" aria-label="Sample invitation email"><div class="email-preview-head"><img class="email-preview-logo" src="./ironcrest-logo.png" alt="IronCrest Workforce Operations shield logo"></div><div class="email-preview-body"><h4>You're invited to IronCrest.</h4><p>Hello,</p><p>Your organization has invited you to join its team on IronCrest Workforce Operations.</p><p>Once invitations are enabled, you'll be able to use a secure, time-limited invitation link to complete your account setup.</p><div class="email-preview-cta">Accept Invitation — Sample Only</div><p style="font-size:12px">This is a non-clickable preview. A real invitation email will include a unique secure link and an expiration notice.</p><p>If you weren't expecting this invitation, you can ignore the email.</p></div><div class="email-preview-foot">IronCrest Workforce Operations · Powered by ProfitHarbor AI<br>This preview is not an email and has not been sent.</div></div></div>
+<div class="employee-directory" aria-label="Read-only employee directory">
+<h3>Employee Directory</h3><p>Owner-only employee directory. Edit employee details below; worksite assignments and attendance are not changed.</p>
+<button id="directory-load" type="button" class="secondary-btn">Load Employee Directory</button>
+<div id="directory-status" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
+<div id="directory-filters" class="directory-filters" hidden>
+<label>Search employees<input id="directory-search" type="search" placeholder="Name or job title" autocomplete="off" maxlength="120"></label>
+<label>Employment status<select id="directory-status-filter"><option value="all">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="on_leave">On leave</option></select></label>
+<label>Assigned worksite<select id="directory-worksite-filter"><option value="all">All worksites</option><option value="none">No worksite assigned</option></select></label>
+</div><p id="directory-match-count" class="directory-match-count" role="status" aria-live="polite"></p>
+<div id="directory-list"></div></div>
+</section>
+<div class="api-check" id="aq-diagnostics" aria-label="Stage 10P-AQ read-only attendance security diagnostics">
+<h3>Stage 10P-AQ · Attendance Security Diagnostics</h3>
+<p>Owner-only snapshot using existing protected Worker endpoints. Checks assignment eligibility rules, attendance table connectivity, and organization-scoped reporting. No GPS requested, no shifts or assignments changed.</p>
+<button type="button" id="aq-run" class="secondary-btn">Run Read-Only Diagnostics</button>
+<div id="aq-status" class="api-result" role="status" aria-live="polite">Not run. Clock-in and clock-out remain disabled.</div>
+<div id="aq-results" aria-live="polite"></div>
+<p class="aq-note">These checks do not prove live employee authorization, GPS authenticity, transaction concurrency, RLS enforcement, or safe clock-in/out behavior. Attendance must remain locked until those are independently tested.</p>
+</div>
+<div class="api-check" aria-label="Stage 10P-P attendance backend readiness">
+<h3>Stage 10P-P · Attendance Backend Readiness</h3>
+<p>Owner-authorized, read-only connectivity check for the three protected attendance tables. No attendance records are created or modified.</p>
+<button id="attendance-readiness-button" type="button" class="secondary-btn">Check Attendance Backend</button>
+<div id="attendance-readiness-result" class="api-result" role="status" aria-live="polite">Not checked yet. Attendance remains disabled.</div>
+</div>
+<div class="api-check" aria-label="Invitation API security verification"><h3>Stage 5C · Invitation API Verification</h3><p>Test secure owner authorization. This will not send invitations or create employees.</p><button id="verify-api-button" type="button" class="secondary-btn">Verify Invitation API</button><div id="api-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-backend-button" type="button" class="secondary-btn">Test Secure Backend</button><div id="backend-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div><div class="backend-check"><button id="test-invitation-validation-button" type="button" class="secondary-btn" disabled title="Retired because Stage 8A now creates database records">Legacy Validation Test — Disabled</button><div id="invitation-validation-result" class="api-result" role="status" aria-live="polite">Disabled for Stage 8A: the endpoint now creates test records.</div></div></div>
+<div class="api-check" aria-label="Stage 6U rate limiter test"><h3>Stage 6U · Rate Limiter Verification</h3><p>Earlier validation-only test retired: the invitation endpoint now performs controlled database writes.</p><button id="test-rate-limit-button" type="button" class="secondary-btn" disabled title="Retired because Stage 8A now creates database records">Legacy Rate Test — Disabled</button><div id="rate-limit-result" class="api-result" role="status" aria-live="polite">Disabled to prevent multiple test invitation writes.</div></div>
+<div class="api-check" aria-label="Stage 6W secure token verification"><h3>Stage 6W · Secure Token Verification</h3><p>Verify cryptographically secure invitation tokens and SHA-256 hashing. Tokens and hashes are never displayed; no invitations or emails are created.</p><button id="test-token-button" type="button" class="secondary-btn">Test Secure Tokens</button><div id="token-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
+<div class="api-check" aria-label="Stage 7K database rollback verification"><h3>Stage 7K · Database Rollback Verification</h3><p>Run one owner-authorized, rollback-only invitation database test. No invitation email or employee account is created.</p><button id="test-rollback-button" type="button" class="secondary-btn">Test Database Rollback</button><div id="rollback-result" class="api-result" role="status" aria-live="polite">Not tested yet.</div></div>
+<div class="api-check" aria-label="Stage 8C controlled invitation creation">
+<h3>Stage 8C · Controlled Invitation Creation</h3>
+<p>Create exactly one test invitation record for a reserved, non-deliverable <code>@example.invalid</code> address. No invitation email or employee account will be created. This is a persistent database write.</p>
+<button id="test-create-button" type="button" class="secondary-btn" disabled title="Retired during Stage 9G testing">Legacy Stage 8C Test — Disabled</button>
+<div id="test-create-result" class="api-result" role="status" aria-live="polite">Disabled during restricted real-email testing.</div>
+</div>
+<div class="dashboard-bottom"><div class="safety-note"><strong>Security-first rollout</strong><p>Owner authentication is live. Stage 10K allows one owner-authorized email test to the configured recipient only. Public invitation sending remains disabled.</p></div><button type="button" id="signout-button" class="secondary-btn owner-signout">Sign Out</button></div>
+</div><div class="feedback" id="feedback" role="status" aria-live="polite"></div><div class="notice" id="stage-notice">Stage 10K controlled email testing is available to verified owners when enabled in Cloudflare. Public sending and other workforce features remain disabled.</div></section>
+</main>
+<footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(() => {
+  'use strict';
+  document.getElementById('year').textContent = new Date().getFullYear();
+  const PROJECT_URL = 'https://nhiqbcevcdxfzvrprgck.supabase.co';
+  const PUBLISHABLE_KEY = 'sb_publishable_VwM3o7h2Jxq9_2WkkdE4kg_WKU6bvP6';
+  const API_BASE = 'https://ironcrest-invitations-api.bluemagic920.workers.dev';
+  const API_URL = API_BASE + '/api/verify-owner';
+  const feedback = document.getElementById('feedback');
+  const loginArea = document.getElementById('login-area');
+  const ownerArea = document.getElementById('owner-area');
+  const loginButton = document.getElementById('login-button');
+  const signoutButton = document.getElementById('signout-button');
+  const setMessage = (message, type = '') => { feedback.textContent = message; feedback.className = 'feedback ' + type; };
+  if (!window.supabase || !window.supabase.createClient) {
+    setMessage('Unable to load secure sign-in. Check your internet connection and refresh.', 'error');
+    loginButton.disabled = true;
+    return;
+  }
+  const client = window.supabase.createClient(PROJECT_URL, PUBLISHABLE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'ironcrest-owner-auth-v1' }
+  });
 
- let checkingPreflight=false;
- $('attendance-preflight').addEventListener('click',async()=>{
-  const output=$('attendance-preflight-result'),button=$('attendance-preflight');
-  if(checkingPreflight)return;
-  if(!verifiedOrgId||!activeWorksites.length){output.textContent='No approved worksite is available. Attendance remains locked.';return;}
-  if(!navigator.geolocation){output.textContent='Device location unavailable. Attendance remains locked.';return;}
-  checkingPreflight=true;button.disabled=true;
-  const originalOrg=verifiedOrgId;
-  output.textContent='Requesting a one-time GPS reading for server-side eligibility preflight…';
-  try{
-       const {data:{session},error}=await client.auth.getSession();
-    if(error||!session?.access_token){output.textContent='Session expired. Please sign in again.';return;}
-    if(originalOrg!==verifiedOrgId){output.textContent='Session changed; preflight cancelled.';return;}
-    const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:0}));
-    if(originalOrg!==verifiedOrgId||!verifiedOrgId){output.textContent='Session changed; preflight cancelled.';return;}
-    const {latitude,longitude,accuracy}=position.coords;
-    if(![latitude,longitude,accuracy].every(Number.isFinite)||accuracy<0||!Number.isFinite(position.timestamp)){output.textContent='Invalid device location. Attendance remains locked.';return;}
-    if(Date.now()-position.timestamp>25000||position.timestamp>Date.now()+5000){output.textContent='Location reading is stale. Please retry. Attendance remains locked.';return;}
-const response=await fetch('https://ironcrest-invitations-api.bluemagic920.workers.dev/api/attendance/preflight',{
-    method:'POST',cache:'no-store',referrerPolicy:'no-referrer',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
-    body:JSON.stringify({latitude,longitude,accuracyMeters:accuracy,sampleTimestamp:position.timestamp})
-   });
-   const data=await response.json().catch(()=>null);
-   if(originalOrg!==verifiedOrgId){output.textContent='Session changed; result discarded.';return;}
-   if(!response.ok||!data?.ok){output.textContent=(data?.error||'Preflight service unavailable')+'. Attendance remains locked.';return;}
-   const labels={inside_preview:'Within approved worksite boundary',outside_preview:'Outside approved worksite boundary',boundary_uncertain:'Boundary uncertain',accuracy_insufficient:'GPS accuracy insufficient'};
-   const name=activeWorksites.find(w=>w.id===data.worksiteId)?.name||'Approved worksite';
-   output.textContent=(labels[data.geofenceStatus]||'Location evaluated')+'. Worksite: '+name+'. Distance: '+data.distanceMeters+' m; accuracy: ±'+data.accuracyMeters+' m; radius: '+data.allowedRadiusMeters+' m. Location eligible for future review: '+(data.locationEligibleForFutureReview?'Yes':'No')+'. Clock-in and clock-out remain DISABLED. No attendance recorded.';
-  }catch(error){
-   const reasons={1:'Location permission denied',2:'Device location unavailable',3:'Location request timed out'};
-   output.textContent=(reasons[error?.code]||'Preflight request failed')+'. Attendance remains locked.';
-  }finally{checkingPreflight=false;button.disabled=!verifiedOrgId||!activeWorksites.length;}
- });
-let dryRunBusy=false;
- async function runAttendanceDryRun(action){
-  const output=$('dry-run-result'), inBtn=$('dry-run-in'), outBtn=$('dry-run-out');
-  if(dryRunBusy)return;
-  if(!verifiedOrgId||!activeWorksites.length){output.textContent='No approved worksite loaded. Attendance remains locked.';return;}
-  if(!navigator.geolocation){output.textContent='Device location unavailable. Attendance remains locked.';return;}
-  dryRunBusy=true;inBtn.disabled=true;outBtn.disabled=true;
-  const org=verifiedOrgId;
-  output.textContent='Requesting a fresh, one-time GPS reading for '+(action==='clock-in'?'clock-in':'clock-out')+' dry run…';
-  try{
-   const {data:{session},error}=await client.auth.getSession();
-   if(error||!session?.access_token){output.textContent='Session expired. Please sign in again.';return;}
-   const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:0}));
-   if(org!==verifiedOrgId){output.textContent='Session changed. Test cancelled.';return;}
-   const {latitude,longitude,accuracy}=position.coords;
-   if(![latitude,longitude,accuracy,position.timestamp].every(Number.isFinite)||accuracy<0){output.textContent='Invalid location reading. Attendance remains locked.';return;}
-   const age=Date.now()-position.timestamp;
-   if(age>25000||age< -5000){output.textContent='Location reading is stale. Please retry. Attendance remains locked.';return;}
-   const response=await fetch('https://ironcrest-invitations-api.bluemagic920.workers.dev/api/attendance/dry-run/'+action,{
-    method:'POST',cache:'no-store',referrerPolicy:'no-referrer',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
-    body:JSON.stringify({latitude,longitude,accuracyMeters:accuracy,sampleTimestamp:position.timestamp})
-   });
-   const data=await response.json().catch(()=>null);
-   if(org!==verifiedOrgId){output.textContent='Session changed. Result discarded.';return;}
-   if(!response.ok||data?.ok!==true){output.textContent=(data?.error||'Dry-run verification unavailable')+'. Attendance remains locked.';return;}
-   const labels={inside_preview:'Inside assigned worksite boundary',outside_preview:'Outside approved worksite boundary',boundary_uncertain:'Boundary uncertain',accuracy_insufficient:'GPS accuracy insufficient'};
-   const name=activeWorksites.find(w=>w.id===data.worksiteId)?.name||'Assigned worksite';
-   output.textContent=(action==='clock-in'?'Clock-in':'Clock-out')+' dry run: '+(labels[data.geofenceStatus]||data.geofenceStatus||'Location checked')+'. Worksite: '+name+'. Eligible for future review: '+(data.locationEligibleForFutureReview?'Yes':'No')+'. NO attendance recorded. Clock-in/out remain disabled.';
-  }catch(error){
-   const reasons={1:'Location permission denied',2:'Device location unavailable',3:'Location request timed out'};
-   output.textContent=(reasons[error?.code]||'Dry-run request failed')+'. Attendance remains locked.';
-  }finally{dryRunBusy=false;inBtn.disabled=!verifiedOrgId||!activeWorksites.length;outBtn.disabled=!verifiedOrgId||!activeWorksites.length;}
- }
- $('dry-run-in').addEventListener('click',()=>runAttendanceDryRun('clock-in'));
- $('dry-run-out').addEventListener('click',()=>runAttendanceDryRun('clock-out'));
- let seq=0;async function refresh(){const current=++seq;clearWorksites();workspace.classList.add('hidden');show('Verifying your employee access…');const {data,error}=await client.auth.getUser();if(current!==seq)return;if(error||!data?.user){login.classList.remove('hidden');show('Sign in with your invited employee account.');return;}if(!data.user.email_confirmed_at){login.classList.remove('hidden');show('Verify your email address before entering the portal.','error');return;}const {data:memberships,error:membershipError}=await client.from('ironcrest_memberships').select('organization_id,role,active').eq('user_id',data.user.id).eq('active',true).eq('role','employee').limit(2);if(current!==seq)return;if(membershipError){login.classList.add('hidden');show('Unable to verify employee membership. Please contact your employer or try again later.','error');return;}if(!memberships?.length){login.classList.add('hidden');show('No active employee membership was found for this account. If you have an invitation, accept it first.','error');return;}if(memberships.length!==1){login.classList.add('hidden');show('Multiple employee organizations found. Organization selection is not available yet.','error');return;}const {data:org,error:orgError}=await client.from('ironcrest_organizations').select('name').eq('id',memberships[0].organization_id).maybeSingle();if(current!==seq)return;if(orgError||!org){login.classList.add('hidden');show('Membership verified, but organization details are not available. Contact your employer.','error');return;}$('member-email').textContent=data.user.email||'Verified employee';$('org-name').textContent=org.name;verifiedOrgId=memberships[0].organization_id;login.classList.add('hidden');workspace.classList.remove('hidden');show('Employee membership verified. Welcome to your portal.','ok');loadWorksites();}let busy=false;$('login-form').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;busy=true;$('signin').disabled=true;show('Signing in…');try{const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});$('password').value='';if(error){show('Sign-in failed. Check your credentials.','error');return;}await refresh();}catch{show('Unable to complete sign-in. Try again.','error')}finally{busy=false;$('signin').disabled=false}});$('signout').addEventListener('click',async()=>{$('signout').disabled=true;await client.auth.signOut();$('signout').disabled=false;await refresh()});client.auth.onAuthStateChange(()=>{setTimeout(()=>{if(!busy)refresh()},0)});refresh()})();</script></body></html>
+
+  // Stage 10P-C: read-only database integration; do not enable writes before RLS audit.
+  const worksiteSection = document.getElementById('worksite-section');
+  const worksiteOpen = document.getElementById('worksite-open');
+  const worksiteClose = document.getElementById('worksite-close');
+  const worksiteStatus = document.getElementById('worksite-status');
+  const worksiteList = document.getElementById('worksite-list');
+  let verifiedWorksiteOrg = null;
+  let editingWorksiteId = null;
+  let worksiteBusy = false;
+  const worksiteMessage = (message, kind = '') => { worksiteStatus.textContent = message; worksiteStatus.className = 'api-result ' + kind; };
+  function finiteCoordinate(id, low, high) {
+    const raw = document.getElementById(id).value.trim();
+    if (!raw) throw new Error('Enter all required coordinates.');
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < low || value > high) throw new Error('Invalid ' + id + '.');
+    return value;
+  }
+  const worksiteSave = document.getElementById('worksite-save');
+  const worksiteCancel = document.getElementById('worksite-cancel-edit');
+  function worksiteInput() {
+    const name = document.getElementById('worksite-name').value.trim();
+    if (!name || name.length > 120) throw new Error('Enter a worksite name (1–120 characters).');
+    const radius_m = finiteCoordinate('worksite-radius', 50, 2000);
+    if (!Number.isInteger(radius_m)) throw new Error('Radius must be a whole number.');
+    return {name, radius_m, latitude: finiteCoordinate('worksite-lat', -90, 90), longitude: finiteCoordinate('worksite-lon', -180, 180)};
+  }
+  function resetWorksiteEditor() {
+    editingWorksiteId = null;
+    for (const id of ['worksite-name','worksite-lat','worksite-lon']) document.getElementById(id).value = '';
+    document.getElementById('worksite-radius').value = '150';
+    worksiteSave.textContent = 'Save new worksite';
+    worksiteCancel.hidden = true;
+  }
+  worksiteCancel.addEventListener('click', () => {resetWorksiteEditor();worksiteMessage('Edit cancelled. No changes saved.');});
+  document.getElementById('worksite-preview').addEventListener('click', () => {
+    try {const site=worksiteInput();worksiteMessage('Preview valid: '+site.name+' — '+site.radius_m+' m radius, center '+site.latitude+', '+site.longitude+'. Not saved. Attendance stays disabled.','ok');}
+    catch(e){worksiteMessage(e.message,'error');}
+  });
+  async function confirmWorksiteOwner() {
+    if (!verifiedWorksiteOrg) throw new Error('No verified owner organization. Sign in again.');
+    const {data:userData,error:userError}=await client.auth.getUser();
+    if(userError || !userData?.user?.id) throw new Error('Session expired. Sign in again.');
+    const {data:memberships,error:membershipError}=await client.from('ironcrest_memberships')
+      .select('organization_id').eq('user_id',userData.user.id).eq('role','owner').eq('active',true).eq('organization_id',verifiedWorksiteOrg).limit(1);
+    if(membershipError || !memberships?.length) throw new Error('Owner access could not be reconfirmed.');
+    return verifiedWorksiteOrg;
+  }
+  async function loadWorksites() {
+    if(worksiteBusy) return;
+    worksiteList.replaceChildren();
+    worksiteMessage('Loading saved worksites…');
+    try {
+      const org=await confirmWorksiteOwner();
+      const {data,error}=await client.from('ironcrest_worksites')
+        .select('id,name,latitude,longitude,radius_m,active').eq('organization_id',org).order('name',{ascending:true}).limit(100);
+      if(error) throw error;
+      if(verifiedWorksiteOrg!==org || !worksiteSection.classList.contains('open')) return;
+      worksiteMessage((data?.length||0)+' saved worksite(s) found. Owner management available; attendance disabled.','ok');
+      for(const site of data||[]) {
+        const item=document.createElement('div');item.className='worksite-record';
+        const name=document.createElement('strong');name.textContent=site.name;
+        const details=document.createElement('p');details.textContent=site.radius_m+' m radius · '+site.latitude+', '+site.longitude+' · '+(site.active?'Active':'Inactive');
+        const actions=document.createElement('div');actions.className='worksite-row-actions';
+        const edit=document.createElement('button');edit.type='button';edit.textContent='Edit';edit.className='secondary-btn';
+        edit.addEventListener('click',()=>{
+          editingWorksiteId=site.id;
+          document.getElementById('worksite-name').value=site.name;
+          document.getElementById('worksite-radius').value=site.radius_m;
+          document.getElementById('worksite-lat').value=site.latitude;
+          document.getElementById('worksite-lon').value=site.longitude;
+          worksiteSave.textContent='Save changes';worksiteCancel.hidden=false;
+          worksiteMessage('Editing '+site.name+'. Changes are not saved yet.');
+          document.getElementById('worksite-name').focus();
+        });
+        const toggle=document.createElement('button');toggle.type='button';toggle.className='secondary-btn';toggle.textContent=site.active?'Deactivate':'Reactivate';
+        toggle.addEventListener('click',async()=>{
+          if(worksiteBusy || !window.confirm((site.active?'Deactivate':'Reactivate')+' worksite "'+site.name+'"?')) return;
+          worksiteBusy=true;toggle.disabled=true;
+          try {
+            const org=await confirmWorksiteOwner();
+            const {data:changed,error}=await client.from('ironcrest_worksites').update({active:!site.active,updated_at:new Date().toISOString()})
+              .eq('id',site.id).eq('organization_id',org).eq('active',site.active).select('id');
+            if(error) throw error;
+            if(changed?.length!==1) throw new Error('No matching worksite was changed. Refresh and verify permissions.');
+            worksiteMessage('Worksite status updated. Attendance remains disabled.','ok');
+          } catch(e){worksiteMessage('Update not confirmed: '+e.message,'error');}
+          finally {worksiteBusy=false;toggle.disabled=false;await loadWorksites();}
+        });
+        actions.append(edit,toggle);item.append(name,details,actions);worksiteList.append(item);
+      }
+    } catch(e){worksiteMessage('Unable to load worksites: '+e.message,'error');}
+  }
+  worksiteSave.addEventListener('click',async()=>{
+    if(worksiteBusy)return;
+    let input;
+    try {input=worksiteInput();}catch(e){worksiteMessage(e.message,'error');return;}
+    if(!window.confirm((editingWorksiteId?'Save changes to':'Create')+' worksite "'+input.name+'"?'))return;
+    worksiteBusy=true;worksiteSave.disabled=true;
+    const editId=editingWorksiteId;
+    try {
+      const org=await confirmWorksiteOwner();
+      let request=editingWorksiteId
+        ? client.from('ironcrest_worksites').update({...input,updated_at:new Date().toISOString()}).eq('id',editingWorksiteId).eq('organization_id',org)
+        : client.from('ironcrest_worksites').insert({...input,organization_id:org});
+      const {data,error}=await request.select('id');
+      if(error) throw error;
+      if(data?.length!==1) throw new Error('Save was not confirmed. Check the saved worksite list before retrying.');
+      resetWorksiteEditor();worksiteMessage(editId?'Worksite changes saved.':'New worksite saved.','ok');
+    }catch(e){worksiteMessage('Save not confirmed: '+e.message+'. Refresh the list before retrying.','error');}
+    finally {worksiteBusy=false;worksiteSave.disabled=false;await loadWorksites();}
+  });
+  worksiteOpen.addEventListener('click',()=>{worksiteSection.classList.add('open');worksiteOpen.setAttribute('aria-expanded','true');worksiteSection.scrollIntoView({behavior:'smooth',block:'start'});loadWorksites();});
+  worksiteClose.addEventListener('click',()=>{worksiteSection.classList.remove('open');worksiteOpen.setAttribute('aria-expanded','false');clearAssignmentOverview();resetWorksiteEditor();worksiteOpen.focus();});
+  document.getElementById('worksite-refresh').addEventListener('click',loadWorksites);
+
+
+  // Stage 10P-AN: owner-authenticated, GET-only, organization-scoped assignment overview.
+  const assignmentLoad = document.getElementById('assignment-overview-load');
+  const assignmentStatus = document.getElementById('assignment-overview-status');
+  const assignmentList = document.getElementById('assignment-overview-list');
+  let assignmentRequestVersion = 0;
+  function assignmentMessage(message, kind = '') {
+    assignmentStatus.textContent = message;
+    assignmentStatus.className = 'api-result ' + kind;
+  }
+  function clearAssignmentOverview() {
+    ++assignmentRequestVersion;
+    assignmentList.replaceChildren();
+    assignmentMessage('Not loaded yet.');
+    assignmentLoad.disabled = false;
+  }
+  assignmentLoad.addEventListener('click', async () => {
+    const version = ++assignmentRequestVersion;
+    assignmentLoad.disabled = true;
+    assignmentList.replaceChildren();
+    assignmentMessage('Loading authorized assignment overview…');
+    try {
+      const org = await confirmWorksiteOwner();
+      const {data,error} = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Owner session expired. Sign in again.');
+      const response = await fetch(API_BASE + '/api/attendance/worksite-assignment-overview', {
+        method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},
+        cache:'no-store',referrerPolicy:'no-referrer'
+      });
+      const result = await response.json();
+      if (version !== assignmentRequestVersion || verifiedWorksiteOrg !== org ||
+          !worksiteSection.classList.contains('open')) return;
+      if (!response.ok || result.ok !== true || result.readOnly !== true ||
+          result.organizationScoped !== true || result.attendanceEnabled !== false ||
+          result.attendanceWritesEnabled !== false || !Array.isArray(result.worksites)) {
+        throw new Error('The secure assignment response could not be verified (HTTP '+response.status+').');
+      }
+      if (result.worksites.length > 1000) throw new Error('Too many worksites to display safely.');
+      const siteResponse = await client.from('ironcrest_worksites')
+        .select('id,name').eq('organization_id',org).limit(1000);
+      if (siteResponse.error) throw new Error('Worksite names unavailable.');
+      if (version !== assignmentRequestVersion || verifiedWorksiteOrg !== org ||
+          !worksiteSection.classList.contains('open')) return;
+      const names = new Map((siteResponse.data || []).map(site=>[site.id,site.name]));
+      assignmentMessage(result.worksiteCount+' worksite(s) · '+result.assignmentRecordCount+
+        ' assignment record(s). Read-only snapshot; attendance remains locked.','ok');
+      for (const site of result.worksites) {
+        if (typeof site.worksiteId !== 'string' || !names.has(site.worksiteId) ||
+            !Number.isInteger(site.activeEligibleEmployees) ||
+            !Array.isArray(site.activeEligibleMembershipIds)) throw new Error('Unexpected worksite assignment data.');
+        const card = document.createElement('div'); card.className = 'assignment-record';
+        const heading = document.createElement('strong'); heading.textContent = names.get(site.worksiteId);
+        const count = document.createElement('p');
+        count.textContent = (site.active ? 'Active' : 'Inactive')+' worksite · '+
+          site.activeEligibleEmployees+' active eligible employee(s)';
+        const details = document.createElement('p'); details.className='assignment-ids';
+        details.textContent = site.activeEligibleMembershipIds.length
+          ? 'Internal membership IDs: '+site.activeEligibleMembershipIds.join(', ')
+          : 'No active eligible employees assigned.';
+        card.append(heading,count,details); assignmentList.append(card);
+      }
+      if (!result.worksites.length) assignmentMessage('No worksites found. Attendance remains locked.','ok');
+    } catch (e) {
+      if (version === assignmentRequestVersion) {
+        assignmentList.replaceChildren();
+        assignmentMessage('Unable to verify assignment overview: '+(e?.message || 'Connection error'),'error');
+      }
+    } finally {
+      if (version === assignmentRequestVersion) assignmentLoad.disabled = false;
+    }
+  });
+
+  // Stage 10K: restricted real email test; no request body or client-supplied email.
+  const restrictedInviteButton = document.getElementById('restricted-invite-button');
+  const restrictedInviteStatus = document.getElementById('restricted-invite-status');
+  const restrictedInviteLinkBox = document.getElementById('restricted-invite-link-box');
+  const restrictedInviteLink = document.getElementById('restricted-invite-link');
+  const restrictedCopyButton = document.getElementById('restricted-copy-button');
+  let restrictedInvitationUrl = '';
+  let restrictedInviteAttempted = false;
+  const setRestrictedStatus = (message, type = '') => {
+    restrictedInviteStatus.textContent = message;
+    restrictedInviteStatus.className = 'api-result ' + type;
+  };
+  restrictedInviteButton.addEventListener('click', async () => {
+    if (restrictedInviteAttempted) return;
+    if (!window.confirm('Create one invitation and submit a REAL email to the approved Cloudflare test recipient? This cannot be undone.')) return;
+    restrictedInviteAttempted = true;
+    restrictedInviteButton.disabled = true;
+    restrictedInviteLinkBox.classList.remove('open');
+    restrictedInvitationUrl = '';
+    restrictedInviteLink.textContent = '';
+    setRestrictedStatus('Submitting one controlled invitation to Resend…');
+    try {
+      const {data, error} = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Owner session expired. Please sign in again.');
+      const response = await fetch(API_BASE + '/api/send-controlled-test-invitation', {
+        method: 'POST',
+        headers: {Authorization: 'Bearer ' + data.session.access_token},
+        cache: 'no-store',
+        referrerPolicy: 'no-referrer'
+      });
+      const result = await response.json();
+      if (response.ok && result.ok === true && result.emailAcceptedByProvider === true && result.auditRecorded === true) {
+        setRestrictedStatus('SUCCESS — Resend accepted the invitation email and Supabase recorded the delivery attempt. Check the test inbox; actual delivery is not yet confirmed.', 'ok');
+      } else {
+        const reason = result.message || result.error || 'The result was not confirmed';
+        setRestrictedStatus('NOT CONFIRMED (HTTP ' + response.status + '): ' + reason + ' Do not retry until Resend and Supabase audit are checked.', 'error');
+      }
+    } catch (error) {
+      setRestrictedStatus('OUTCOME UNKNOWN — ' + (error?.message || 'Network error') + '. Do not retry. Check Resend and Supabase audit first.', 'error');
+    }
+    // Never automatically re-enable: a timeout may still have submitted an email.
+  });
+  restrictedCopyButton.addEventListener('click', async () => {
+    if (!restrictedInvitationUrl) return;
+    try {
+      await navigator.clipboard.writeText(restrictedInvitationUrl);
+      restrictedCopyButton.textContent = 'Copied — share privately';
+    } catch {
+      setRestrictedStatus('Automatic copy unavailable. Select the private link text and copy it manually.', 'error');
+    }
+  });
+
+  // Stage 10C: preview is entirely local. It never calls the Worker or uses a real token.
+  const previewEmailButton = document.getElementById('preview-invitation-email');
+  const previewEmailPanel = document.getElementById('invitation-email-preview');
+  previewEmailButton.addEventListener('click', () => {
+    const open = previewEmailPanel.classList.toggle('open');
+    previewEmailButton.setAttribute('aria-expanded', String(open));
+    previewEmailButton.textContent = open ? 'Hide Invitation Email Preview' : 'Preview Invitation Email';
+  });
+
+  // Preview navigation only; no employee API writes or invitation requests.
+  const employeeOpen = document.getElementById('employee-open');
+  const employeeSection = document.getElementById('employee-section');
+  const employeeClose = document.getElementById('employee-close');
+  employeeOpen.addEventListener('click', () => {
+    employeeSection.classList.add('open');
+    employeeOpen.setAttribute('aria-expanded', 'true');
+    employeeSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  employeeClose.addEventListener('click', () => {
+    ++directoryRequestVersion; directoryList.replaceChildren(); directoryMessage('Not loaded yet.');
+    employeeSection.classList.remove('open');
+    employeeOpen.setAttribute('aria-expanded', 'false');
+    employeeOpen.focus();
+  });
+
+  // Stage 10P-AO: owner-only directory, no writes or authentication-table access.
+  const directoryLoad = document.getElementById('directory-load');
+  const directoryStatus = document.getElementById('directory-status');
+  const directoryList = document.getElementById('directory-list');
+  const directoryFilters = document.getElementById('directory-filters');
+  const directorySearch = document.getElementById('directory-search');
+  const directoryStatusFilter = document.getElementById('directory-status-filter');
+  const directoryWorksiteFilter = document.getElementById('directory-worksite-filter');
+  const directoryMatchCount = document.getElementById('directory-match-count');
+  let directoryPeople = [];
+  let directoryRequestVersion = 0;
+  function applyDirectoryFilters(){
+    const query=directorySearch.value.trim().toLocaleLowerCase();
+    const status=directoryStatusFilter.value;
+    const site=directoryWorksiteFilter.value;
+    let matches=0;
+    for(const entry of directoryPeople){
+      const fullName=(entry.person.firstName||'')+' '+(entry.person.lastName||'');
+      const searchText=(fullName+' '+(entry.person.jobTitle||'')).toLocaleLowerCase();
+      const assigned=Array.isArray(entry.person.assignedWorksites)?entry.person.assignedWorksites:[];
+      const siteMatches=site==='all'||(site==='none'&&assigned.length===0)||assigned.some(w=>w.id===site);
+      const visible=searchText.includes(query)&&(status==='all'||entry.person.employmentStatus===status)&&siteMatches;
+      entry.card.hidden=!visible;
+      if(visible)matches++;
+    }
+    directoryMatchCount.textContent=matches+' of '+directoryPeople.length+' employee(s) shown'+(matches===0?' — no matches.':'');
+  }
+  [directorySearch,directoryStatusFilter,directoryWorksiteFilter].forEach(el=>el.addEventListener(el===directorySearch?'input':'change',applyDirectoryFilters));
+  function directoryMessage(message, kind='') {
+    directoryStatus.textContent = message;
+    directoryStatus.className = 'api-result '+kind;
+  }
+  directoryLoad.addEventListener('click',async()=>{
+    const version = ++directoryRequestVersion;
+    directoryLoad.disabled=true;
+    directoryList.replaceChildren();
+    directoryPeople=[];directoryFilters.hidden=true;directoryMatchCount.textContent='';
+    directoryMessage('Loading secure employee directory…');
+    try {
+      await confirmWorksiteOwner();
+      const {data,error} = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Owner session expired. Sign in again.');
+      const response = await fetch(API_BASE+'/api/employees/directory',{
+        method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},
+        cache:'no-store',referrerPolicy:'no-referrer'
+      });
+      const result = await response.json();
+      if (version!==directoryRequestVersion || !employeeSection.classList.contains('open')) return;
+      if (!response.ok || result.ok!==true || result.readOnly!==true ||
+          result.organizationScoped!==true || result.attendanceEnabled!==false ||
+          result.attendanceWritesEnabled!==false || !Array.isArray(result.employees))
+        throw new Error('Directory authorization or response could not be verified (HTTP '+response.status+').');
+      if (result.employees.length>1000) throw new Error('Directory too large.');
+      const worksiteOptions=new Map();
+      for(const person of result.employees){
+        for(const site of (Array.isArray(person.assignedWorksites)?person.assignedWorksites:[])){
+          if(typeof site.id==='string'&&typeof site.name==='string')worksiteOptions.set(site.id,site.name);
+        }
+      }
+      directoryWorksiteFilter.replaceChildren();
+      for(const [value,label] of [['all','All worksites'],['none','No worksite assigned'],...Array.from(worksiteOptions.entries()).sort((a,b)=>a[1].localeCompare(b[1]))]){
+        const option=document.createElement('option');option.value=value;option.textContent=label;directoryWorksiteFilter.append(option);
+      }
+      directorySearch.value='';directoryStatusFilter.value='all';directoryWorksiteFilter.value='all';
+      for (const person of result.employees) {
+        const card=document.createElement('div');card.className='directory-person';
+        const name=document.createElement('strong');
+        name.textContent=person.firstName && person.lastName
+          ? person.firstName+' '+person.lastName : 'Name pending';
+        const status=document.createElement('p');
+        status.textContent='Membership: '+(person.membershipActive?'Active':'Inactive')+
+          ' · Employment: '+(person.employmentStatus || 'Profile pending');
+        const job=document.createElement('p');job.textContent='Job title: '+(person.jobTitle || 'Not entered');
+        const sites=document.createElement('p');
+        sites.textContent='Assigned worksites: '+(Array.isArray(person.assignedWorksites) && person.assignedWorksites.length
+          ? person.assignedWorksites.map(s=>s.name+(s.active?'':' (inactive)')).join(', '):'None');
+        const phone=document.createElement('p');phone.textContent='Phone: '+(person.phoneNumber || 'Not entered');
+        const edit=document.createElement('button');edit.type='button';edit.className='secondary-btn';edit.textContent='Edit Employee';
+        const form=document.createElement('form');form.hidden=true;form.style.marginTop='12px';
+        const fields=[['First name','firstName',person.firstName||'',100,true],['Last name','lastName',person.lastName||'',100,true],['Job title','jobTitle',person.jobTitle||'',120,false],['Phone number','phoneNumber',person.phoneNumber||'',30,false]];
+        const inputs={};
+        for(const [labelText,key,value,max,required] of fields){
+          const label=document.createElement('label');label.textContent=labelText;label.style.display='block';label.style.marginTop='8px';
+          const input=document.createElement('input');input.type='text';input.value=value;input.maxLength=max;input.required=required;input.style.width='100%';
+          label.append(input);form.append(label);inputs[key]=input;
+        }
+        const statusLabel=document.createElement('label');statusLabel.textContent='Employment status';statusLabel.style.display='block';statusLabel.style.marginTop='8px';
+        const select=document.createElement('select');
+        for(const [value,label] of [['active','Active'],['inactive','Inactive'],['on_leave','On leave']]){
+          const option=document.createElement('option');option.value=value;option.textContent=label;select.append(option);
+        }
+        select.value=person.employmentStatus||'active';statusLabel.append(select);form.append(statusLabel);
+        const save=document.createElement('button');save.type='submit';save.className='secondary-btn';save.textContent='Save Employee';save.style.marginTop='10px';
+        const feedback=document.createElement('p');feedback.setAttribute('role','status');
+        form.append(save,feedback);
+        edit.addEventListener('click',()=>{form.hidden=!form.hidden;edit.textContent=form.hidden?'Edit Employee':'Cancel Editing';});
+        form.addEventListener('submit',async event=>{
+          event.preventDefault();save.disabled=true;feedback.textContent='Saving…';
+          try{
+            await confirmWorksiteOwner();
+            const {data:auth,error:authError}=await client.auth.getSession();
+            if(authError||!auth?.session?.access_token) throw new Error('Owner session expired.');
+            const payload={membershipId:person.membershipId,firstName:inputs.firstName.value,lastName:inputs.lastName.value,
+              jobTitle:inputs.jobTitle.value,phoneNumber:inputs.phoneNumber.value,employmentStatus:select.value};
+            const response=await fetch(API_BASE+'/api/employees/profile',{
+              method:'PATCH',headers:{Authorization:'Bearer '+auth.session.access_token,'Content-Type':'application/json'},
+              body:JSON.stringify(payload),cache:'no-store',referrerPolicy:'no-referrer'
+            });
+            const result=await response.json();
+            if(!response.ok||result.ok!==true||result.updated!==true||result.attendanceEnabled!==false||result.attendanceWritesEnabled!==false)
+              throw new Error(result.error||'Update was not verified.');
+            name.textContent=payload.firstName.trim()+' '+payload.lastName.trim();
+            person.firstName=payload.firstName.trim();person.lastName=payload.lastName.trim();
+            person.jobTitle=payload.jobTitle.trim();person.employmentStatus=payload.employmentStatus;
+            job.textContent='Job title: '+(payload.jobTitle.trim()||'Not entered');
+            phone.textContent='Phone: '+(payload.phoneNumber.trim()||'Not entered');
+            status.textContent='Membership: '+(person.membershipActive?'Active':'Inactive')+' · Employment: '+payload.employmentStatus;
+            feedback.textContent='Saved successfully.';applyDirectoryFilters();
+          }catch(e){feedback.textContent='Unable to save: '+(e?.message||'Connection error');}
+          finally{save.disabled=false;}
+        });
+        card.append(name,status,job,phone,sites,edit,form);directoryList.append(card);directoryPeople.push({person,card});
+      }
+      directoryFilters.hidden=false;applyDirectoryFilters();
+      directoryMessage(result.employees.length+' employee(s) loaded. Owner-only editing available; attendance locked.','ok');
+    } catch(e) {
+      if(version===directoryRequestVersion){directoryList.replaceChildren();directoryPeople=[];directoryFilters.hidden=true;directoryMatchCount.textContent='';directoryMessage('Unable to load directory: '+(e?.message||'Connection error'),'error');}
+    } finally {if(version===directoryRequestVersion)directoryLoad.disabled=false;}
+  });
+
+
+  // Stage 10P-AQ: existing owner-only GET endpoints. No mutations or GPS.
+  const aqRun=document.getElementById('aq-run');
+  const aqStatus=document.getElementById('aq-status');
+  const aqResults=document.getElementById('aq-results');
+  let aqRequestVersion=0;
+  function aqReset(){++aqRequestVersion;aqRun.disabled=false;aqResults.replaceChildren();aqStatus.textContent='Not run. Clock-in and clock-out remain disabled.';aqStatus.className='api-result';}
+  function aqLine(parent,label,value){const row=document.createElement('div');row.className='aq-check';const strong=document.createElement('strong');strong.textContent=label+': ';row.append(strong,document.createTextNode(String(value)));parent.append(row);}
+  aqRun.addEventListener('click',async()=>{
+    const version=++aqRequestVersion;
+    aqRun.disabled=true;aqResults.replaceChildren();aqStatus.textContent='Checking owner authorization and read-only attendance endpoints…';aqStatus.className='api-result';
+    try{
+      const org=await confirmWorksiteOwner();
+      const {data,error}=await client.auth.getSession();
+      if(error||!data?.session?.access_token)throw new Error('Owner session expired. Sign in again.');
+      const endpoints=[['Assignment rules','/api/attendance/assignment-security'],['Attendance tables','/api/attendance/readiness'],['Reporting counts','/api/attendance/report-summary']];
+      const results=[];
+      for(const [name,path] of endpoints){
+        const response=await fetch(API_BASE+path,{method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store',referrerPolicy:'no-referrer'});
+        const body=await response.json().catch(()=>null);
+        if(version!==aqRequestVersion||verifiedWorksiteOrg!==org)return;
+        if(!response.ok||!body||body.ok!==true||body.attendanceEnabled!==false||body.attendanceWritesEnabled!==false)throw new Error(name+' did not return a verified locked response (HTTP '+response.status+').');
+        results.push({name,body});
+      }
+      if(version!==aqRequestVersion||verifiedWorksiteOrg!==org)return;
+      const a=results[0].body,r=results[1].body,c=results[2].body;
+      const expected=['activeEmployeeActiveWorksite','revokedAssignmentDenied','inactiveEmployeeDenied','inactiveWorksiteDenied','missingAssignmentDenied','ownerRoleDenied'];
+      if(a.readOnly!==true||!expected.every(k=>a.syntheticChecks?.[k]===true)||!Number.isSafeInteger(a.assignmentCount)||!Number.isSafeInteger(a.eligibleAssignmentCount)||!Number.isSafeInteger(a.ineligibleAssignmentCount)||a.assignmentCount!==a.eligibleAssignmentCount+a.ineligibleAssignmentCount)throw new Error('Assignment security checks were incomplete.');
+      const tables=['ironcrest_attendance_entries','ironcrest_attendance_exceptions','ironcrest_attendance_audit'];
+      if(!Array.isArray(r.tables)||!tables.every(name=>r.tables.some(t=>t.table===name&&t.readable===true))||r.exceptionReviewEnabled!==false)throw new Error('Attendance table readiness not verified.');
+      if(c.readOnly!==true||c.organizationScoped!==true||!c.counts||!['totalEntries','openShifts','closedShifts','auditEvents','activeEmployees','activeWorksites'].every(k=>Number.isSafeInteger(c.counts[k])&&c.counts[k]>=0))throw new Error('Reporting counts not verified.');
+      const metrics=document.createElement('div');metrics.className='aq-grid';
+      for(const [label,value] of [['Eligible assignments',a.eligibleAssignmentCount],['Active employees',c.counts.activeEmployees],['Open shifts',c.counts.openShifts]]){const card=document.createElement('div');card.className='aq-metric';const big=document.createElement('strong');big.textContent=String(value);const small=document.createElement('span');small.textContent=label;card.append(big,small);metrics.append(card);}
+      aqResults.append(metrics);
+      const detail=document.createElement('div');
+      aqLine(detail,'Synthetic assignment checks',expected.length+' / '+expected.length+' passed');
+      aqLine(detail,'Assignment records',a.assignmentCount+' total; '+a.ineligibleAssignmentCount+' ineligible');
+      aqLine(detail,'Attendance tables','3 / 3 readable by backend');
+      aqLine(detail,'Attendance records',c.counts.totalEntries+' total; '+c.counts.closedShifts+' closed');
+      aqLine(detail,'Audit events',c.counts.auditEvents);
+      aqLine(detail,'Active worksites',c.counts.activeWorksites);
+      aqResults.append(detail);
+      aqStatus.textContent='PASS — Three read-only backend snapshots verified. Attendance remains LOCKED. This is not authorization to enable attendance.';aqStatus.className='api-result ok';
+    }catch(e){if(version===aqRequestVersion){aqResults.replaceChildren();aqStatus.textContent='NOT VERIFIED — '+(e?.message||'Connection error')+'. Attendance remains locked.';aqStatus.className='api-result error';}}
+    finally{if(version===aqRequestVersion)aqRun.disabled=false;}
+  });
+
+  // Stage 10P-P: authenticated, owner-only, GET-only readiness check.
+  const attendanceReadinessButton = document.getElementById('attendance-readiness-button');
+  const attendanceReadinessResult = document.getElementById('attendance-readiness-result');
+  let attendanceReadinessVersion = 0;
+  const setAttendanceReadiness = (message, kind = '') => {
+    attendanceReadinessResult.textContent = message;
+    attendanceReadinessResult.className = 'api-result ' + kind;
+  };
+  attendanceReadinessButton.addEventListener('click', async () => {
+    const version = ++attendanceReadinessVersion;
+    attendanceReadinessButton.disabled = true;
+    setAttendanceReadiness('Checking protected attendance table connectivity…');
+    try {
+      if (!verifiedWorksiteOrg) throw new Error('Verified owner access required. Sign in again.');
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Owner session expired. Sign in again.');
+      const response = await fetch(API_BASE + '/api/attendance/readiness', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store',
+        referrerPolicy: 'no-referrer'
+      });
+      const result = await response.json();
+      if (version !== attendanceReadinessVersion) return;
+      const required = ['ironcrest_attendance_entries', 'ironcrest_attendance_exceptions', 'ironcrest_attendance_audit'];
+      const tables = Array.isArray(result.tables) ? result.tables : [];
+      const allReadable = required.every(name => tables.some(t => t.table === name && t.readable === true));
+      const safe = result.attendanceEnabled === false && result.attendanceWritesEnabled === false && result.exceptionReviewEnabled === false;
+      if (response.ok && result.ok === true && allReadable && safe) {
+        setAttendanceReadiness('PASS — All three attendance tables are readable by the authorized backend. Attendance writes and exception review remain disabled. This does not validate RLS or transaction security.', 'ok');
+      } else {
+        const reason = typeof result.error === 'string' ? result.error : 'Readiness was not confirmed';
+        setAttendanceReadiness('NOT VERIFIED (HTTP ' + response.status + '): ' + reason + '. Attendance remains disabled.', 'error');
+      }
+    } catch (error) {
+      if (version === attendanceReadinessVersion) setAttendanceReadiness('Check unavailable: ' + (error?.message || 'Connection error') + '. Attendance remains disabled.', 'error');
+    } finally {
+      if (version === attendanceReadinessVersion) attendanceReadinessButton.disabled = false;
+    }
+  });
+
+  const apiButton = document.getElementById('verify-api-button');
+  const apiResult = document.getElementById('api-result');
+  let apiCheckVersion = 0;
+  const setApiResult = (message, type = '') => { apiResult.textContent = message; apiResult.className = 'api-result ' + type; };
+  apiButton.addEventListener('click', async () => {
+    const version = ++apiCheckVersion;
+    apiButton.disabled = true;
+    setApiResult('Checking authenticated owner access…');
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Please sign in again.');
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== apiCheckVersion) return;
+      if (response.ok && result.ok === true && result.ownerVerified === true &&
+          Array.isArray(result.organizationIds) && result.organizationIds.length > 0 &&
+          result.invitationSendingEnabled === false) {
+        setApiResult('PASS — Worker verified active Ironcrest owner access. Invitations remain disabled.', 'ok');
+      } else {
+        setApiResult('Verification failed (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected response. Do not enable invitations.'), 'error');
+      }
+    } catch (error) {
+      if (version === apiCheckVersion) setApiResult('Connection or verification error: ' +
+        (error?.message || 'Unknown error') + '. Check the deployed website origin and Worker URL.', 'error');
+    } finally { if (version === apiCheckVersion) apiButton.disabled = false; }
+  });
+  const backendButton = document.getElementById('test-backend-button');
+  const backendResult = document.getElementById('backend-result');
+  let backendCheckVersion = 0;
+  const setBackendResult = (message, type = '') => {
+    backendResult.textContent = message;
+    backendResult.className = 'api-result ' + type;
+  };
+  backendButton.addEventListener('click', async () => {
+    const version = ++backendCheckVersion;
+    backendButton.disabled = true;
+    setBackendResult('Verifying owner and secure database connection…');
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Please sign in again.');
+      const response = await fetch(API_BASE + '/api/test-backend', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== backendCheckVersion) return;
+      if (response.ok && result.ok === true && result.ownerVerified === true &&
+          result.backendConnected === true && result.invitationCreationEnabled === false &&
+          result.invitationSendingEnabled === false) {
+        setBackendResult('PASS — Owner verified and secure Supabase backend connected. Invitations remain disabled.', 'ok');
+      } else {
+        setBackendResult('FAIL (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected backend response. Invitations remain disabled.'), 'error');
+      }
+    } catch (error) {
+      if (version === backendCheckVersion) setBackendResult('Connection or verification error: ' +
+        (error?.message || 'Unknown error'), 'error');
+    } finally {
+      if (version === backendCheckVersion) backendButton.disabled = false;
+    }
+  });
+  const validationButton = document.getElementById('test-invitation-validation-button');
+  const validationResult = document.getElementById('invitation-validation-result');
+  let validationCheckVersion = 0;
+  const setValidationResult = (message, type = '') => {
+    validationResult.textContent = message;
+    validationResult.className = 'api-result ' + type;
+  };
+  validationButton.addEventListener('click', async () => {
+    const version = ++validationCheckVersion;
+    validationButton.disabled = true;
+    setValidationResult('Validating invitation request without creating records…');
+    try {
+      const { data: sessionData, error: sessionError } = await client.auth.getSession();
+      if (sessionError || !sessionData?.session?.access_token) throw new Error('Please sign in again.');
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if (userError || !userData?.user?.id) throw new Error('Unable to verify user session.');
+      const { data: memberships, error: membershipError } = await client.from('ironcrest_memberships')
+        .select('organization_id').eq('user_id', userData.user.id).eq('role', 'owner').eq('active', true).limit(1);
+      if (membershipError || !memberships?.[0]?.organization_id) throw new Error('Active owner organization not found.');
+      const response = await fetch(API_BASE + '/api/create-invitation', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + sessionData.session.access_token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          organizationId: memberships[0].organization_id,
+          email: 'ironcrest-validation@example.invalid',
+          role: 'employee'
+        }),
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== validationCheckVersion) return;
+      if (response.ok && result.ok === true && result.ownerVerified === true &&
+          result.requestValidated === true && result.invitationCreated === false &&
+          result.invitationSendingEnabled === false) {
+        setValidationResult('PASS — Owner and invitation request validated. No invitation record or email created.', 'ok');
+      } else {
+        setValidationResult('FAIL (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected response. Invitation creation remains disabled.'), 'error');
+      }
+    } catch (error) {
+      if (version === validationCheckVersion) setValidationResult('Validation test error: ' +
+        (error?.message || 'Unknown error'), 'error');
+    } finally {
+      if (version === validationCheckVersion) validationButton.disabled = false;
+    }
+  });
+  const rateButton = document.getElementById('test-rate-limit-button');
+  const rateResult = document.getElementById('rate-limit-result');
+  let rateCheckVersion = 0;
+  const setRateResult = (message, type = '') => {
+    rateResult.textContent = message;
+    rateResult.className = 'api-result ' + type;
+    rateResult.style.whiteSpace = 'pre-line';
+  };
+  rateButton.addEventListener('click', async () => {
+    const version = ++rateCheckVersion;
+    rateButton.disabled = true;
+    setRateResult('Checking owner session and organization…');
+    try {
+      const { data: sessionData, error: sessionError } = await client.auth.getSession();
+      if (sessionError || !sessionData?.session?.access_token) throw new Error('Please sign in again.');
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if (userError || !userData?.user?.id) throw new Error('Unable to verify user session.');
+      const { data: memberships, error: membershipError } = await client.from('ironcrest_memberships')
+        .select('organization_id').eq('user_id', userData.user.id).eq('role', 'owner').eq('active', true).limit(1);
+      if (membershipError || !memberships?.[0]?.organization_id) throw new Error('Active owner organization not found.');
+      const organizationId = memberships[0].organization_id;
+      const lines = [];
+      let accepted = 0, limited = 0, unexpected = 0;
+      for (let i = 1; i <= 7; i++) {
+        if (version !== rateCheckVersion) return;
+        const response = await fetch(API_BASE + '/api/create-invitation', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer ' + sessionData.session.access_token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ organizationId, email: 'ironcrest-rate-test@example.invalid', role: 'employee' }),
+          cache: 'no-store'
+        });
+        const result = await response.json();
+        let label;
+        if (response.status === 429 && result.rateLimited === true) {
+          limited++; label = 'RATE LIMITED';
+        } else if (response.ok && result.requestValidated === true &&
+                   result.invitationCreated === false && result.invitationSendingEnabled === false) {
+          accepted++; label = 'VALIDATED (no write)';
+        } else {
+          unexpected++; label = 'UNEXPECTED: ' + (result.error || 'Unexpected response');
+        }
+        lines.push('Request ' + i + ': HTTP ' + response.status + ' — ' + label);
+        setRateResult(lines.join('\n'));
+        if (unexpected) break;
+      }
+      if (version !== rateCheckVersion) return;
+      const passed = limited > 0 && unexpected === 0;
+      lines.push('');
+      lines.push(passed
+        ? 'PASS — Cloudflare returned HTTP 429; no invitations created.'
+        : 'NOT CONFIRMED — No HTTP 429 observed or unexpected response. Do not enable invitations.');
+      setRateResult(lines.join('\n'), passed ? 'ok' : 'error');
+    } catch (error) {
+      if (version === rateCheckVersion) setRateResult('Test stopped: ' + (error?.message || 'Unknown error'), 'error');
+    } finally {
+      if (version === rateCheckVersion) rateButton.disabled = false;
+    }
+  });
+
+  const tokenButton = document.getElementById('test-token-button');
+  const tokenResult = document.getElementById('token-result');
+  let tokenCheckVersion = 0;
+  const setTokenResult = (message, type = '') => {
+    tokenResult.textContent = message;
+    tokenResult.className = 'api-result ' + type;
+  };
+  tokenButton.addEventListener('click', async () => {
+    const version = ++tokenCheckVersion;
+    tokenButton.disabled = true;
+    setTokenResult('Verifying secure token generation…');
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Please sign in again.');
+      const response = await fetch(API_BASE + '/api/test-token-generation', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== tokenCheckVersion) return;
+      if (response.ok && result.ok === true && result.tokenGenerationVerified === true &&
+          result.tokenLengthBytes === 32 && result.sha256HashVerified === true &&
+          result.uniqueTokensVerified === true && result.invitationCreated === false &&
+          result.invitationSendingEnabled === false) {
+        setTokenResult('PASS — Unique 256-bit tokens and SHA-256 hashing verified. No invitation record or email created.', 'ok');
+      } else {
+        setTokenResult('FAIL (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected token verification response. Invitations remain disabled.'), 'error');
+      }
+    } catch (error) {
+      if (version === tokenCheckVersion) setTokenResult('Token test error: ' +
+        (error?.message || 'Unknown error'), 'error');
+    } finally {
+      if (version === tokenCheckVersion) tokenButton.disabled = false;
+    }
+  });
+
+  const rollbackButton = document.getElementById('test-rollback-button');
+  const rollbackResult = document.getElementById('rollback-result');
+  let rollbackCheckVersion = 0;
+  const setRollbackResult = (message, type = '') => {
+    rollbackResult.textContent = message;
+    rollbackResult.className = 'api-result ' + type;
+  };
+  rollbackButton.addEventListener('click', async () => {
+    const version = ++rollbackCheckVersion;
+    rollbackButton.disabled = true;
+    setRollbackResult('Running owner-authorized database rollback test…');
+    try {
+      const { data, error } = await client.auth.getSession();
+      if (error || !data?.session?.access_token) throw new Error('Please sign in again.');
+      const response = await fetch(API_BASE + '/api/test-invitation-rollback', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + data.session.access_token },
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== rollbackCheckVersion) return;
+      if (response.ok && result.ok === true && result.databaseTestPassed === true &&
+          result.rollbackVerified === true && result.invitationCreated === false &&
+          result.invitationSendingEnabled === false && result.employeeCreationEnabled === false) {
+        setRollbackResult('PASS — Backend reports invitation creation and transaction rollback verified. Confirm zero remaining invitations in Supabase.', 'ok');
+      } else {
+        setRollbackResult('NOT VERIFIED (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected response. Invitation creation remains disabled.'), 'error');
+      }
+    } catch (error) {
+      if (version === rollbackCheckVersion) setRollbackResult('Test unavailable: ' +
+        (error?.message || 'Unknown error'), 'error');
+    } finally {
+      if (version === rollbackCheckVersion) rollbackButton.disabled = false;
+    }
+  });
+
+
+  // Stage 8C: one deliberate, persistent, owner-authorized test write.
+  const createTestButton = document.getElementById('test-create-button');
+  const createTestResult = document.getElementById('test-create-result');
+  let createTestVersion = 0;
+  const setCreateTestResult = (message, type = '') => {
+    createTestResult.textContent = message;
+    createTestResult.className = 'api-result ' + type;
+  };
+  createTestButton.addEventListener('click', async () => {
+    const version = ++createTestVersion;
+    createTestButton.disabled = true;
+    setCreateTestResult('Checking owner session and creating one test invitation…');
+    try {
+      const { data: sessionData, error: sessionError } = await client.auth.getSession();
+      if (sessionError || !sessionData?.session?.access_token) throw new Error('Please sign in again.');
+      const { data: userData, error: userError } = await client.auth.getUser();
+      if (userError || !userData?.user?.id) throw new Error('Unable to verify owner session.');
+      const { data: memberships, error: membershipError } = await client.from('ironcrest_memberships')
+        .select('organization_id').eq('user_id', userData.user.id)
+        .eq('role', 'owner').eq('active', true).limit(2);
+      if (membershipError || !memberships || memberships.length !== 1 || !memberships[0].organization_id) {
+        throw new Error('This controlled test requires exactly one active owner organization.');
+      }
+      // Random suffix prevents accidental collisions with earlier tests.
+      const suffix = Array.from(crypto.getRandomValues(new Uint8Array(10)),
+        b => b.toString(16).padStart(2, '0')).join('');
+      const testEmail = 'ironcrest-test-' + suffix + '@example.invalid';
+      const response = await fetch(API_BASE + '/api/create-invitation', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer ' + sessionData.session.access_token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          organizationId: memberships[0].organization_id,
+          email: testEmail,
+          role: 'employee'
+        }),
+        cache: 'no-store'
+      });
+      const result = await response.json();
+      if (version !== createTestVersion) return;
+      if (response.status === 201 && result.ok === true &&
+          result.invitationCreated === true &&
+          result.invitationSendingEnabled === false &&
+          result.employeeCreationEnabled === false) {
+        setCreateTestResult('PASS — One test invitation stored for ' + testEmail +
+          '. No email sent and no employee account created. Verify the record in Supabase.', 'ok');
+        // Do not permit accidental repeated writes from this page session.
+      } else {
+        setCreateTestResult('NOT VERIFIED (HTTP ' + response.status + '): ' +
+          (result.error || 'Unexpected response') +
+          '. Check Supabase before retrying; the request may have written a record.', 'error');
+      }
+    } catch (error) {
+      if (version === createTestVersion) {
+        setCreateTestResult('Test outcome uncertain: ' +
+          (error?.message || 'Network error') +
+          '. Check Supabase before retrying to avoid duplicate records.', 'error');
+      }
+    }
+    // Intentionally keep button disabled until page reload, to prevent repeated writes.
+  });
+
+  let checkVersion = 0;
+  const showLogin = () => { aqReset(); ++attendanceReadinessVersion; attendanceReadinessButton.disabled = false; setAttendanceReadiness('Not checked yet. Attendance remains disabled.'); verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); clearAssignmentOverview(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showOwner = (email, name) => {
+    document.getElementById('owner-email').textContent = email || 'Verified account';
+    document.getElementById('owner-org').textContent = name;
+    loginArea.style.display = 'none'; ownerArea.style.display = 'block'; document.body.classList.add('dashboard-active');
+  };
+  async function verifyOwner() {
+    const version = ++checkVersion;
+    setMessage('Verifying owner permissions…');
+    const { data: userData, error: userError } = await client.auth.getUser();
+    if (version !== checkVersion) return;
+    if (userError || !userData?.user) { showLogin(); setMessage(''); return; }
+    const { data: memberships, error: membershipError } = await client.from('ironcrest_memberships')
+      .select('organization_id,role,active').eq('user_id', userData.user.id).eq('role', 'owner').eq('active', true).limit(2);
+    if (version !== checkVersion) return;
+    if (membershipError) {
+      showLogin(); setMessage('Unable to verify owner permissions: ' + membershipError.message, 'error'); return;
+    }
+    if (!memberships?.length) {
+      await client.auth.signOut(); showLogin();
+      setMessage('This account does not have active Ironcrest owner access. Employee login is not yet available.', 'error'); return;
+    }
+    const { data: org, error: orgError } = await client.from('ironcrest_organizations')
+      .select('name').eq('id', memberships[0].organization_id).maybeSingle();
+    if (version !== checkVersion) return;
+    if (orgError || !org) { showLogin(); setMessage('Your owner membership was found, but the organization could not be verified.', 'error'); return; }
+    verifiedWorksiteOrg = memberships[0].organization_id;
+    showOwner(userData.user.email, org.name);
+    setMessage('Secure owner session active. Workforce features are not yet enabled.', 'ok');
+  }
+  document.getElementById('login-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    loginButton.disabled = true;
+    setMessage('Signing in securely…');
+    try {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const { error } = await client.auth.signInWithPassword({ email, password });
+      document.getElementById('password').value = '';
+      if (error) { setMessage('Sign-in failed: ' + error.message, 'error'); return; }
+      await verifyOwner();
+    } catch (error) { setMessage('Unable to connect: ' + (error?.message || 'Please try again.'), 'error'); }
+    finally { loginButton.disabled = false; }
+  });
+  signoutButton.addEventListener('click', async () => {
+    signoutButton.disabled = true;
+    ++checkVersion;
+    try { await client.auth.signOut(); showLogin(); setMessage('Signed out.', 'ok'); }
+    catch { setMessage('Sign-out failed. Please try again.', 'error'); }
+    finally { signoutButton.disabled = false; }
+  });
+  verifyOwner().catch(() => { showLogin(); setMessage('Unable to verify the current session. Please refresh.', 'error'); });
+})();
+</script>
+</body></html>
