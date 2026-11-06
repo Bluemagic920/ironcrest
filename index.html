@@ -581,13 +581,14 @@
         sites.textContent='Assigned worksites: '+(Array.isArray(person.assignedWorksites) && person.assignedWorksites.length
           ? person.assignedWorksites.map(s=>s.name+(s.active?'':' (inactive)')).join(', '):'None');
         const phone=document.createElement('p');phone.textContent='Phone: '+(person.phoneNumber || 'Not entered');
+        const emailLine=document.createElement('p');emailLine.textContent='Email: '+(person.email || 'Not entered');
         const edit=document.createElement('button');edit.type='button';edit.className='secondary-btn';edit.textContent='Edit Employee';
         const form=document.createElement('form');form.hidden=true;form.style.marginTop='12px';
-        const fields=[['First name','firstName',person.firstName||'',100,true],['Last name','lastName',person.lastName||'',100,true],['Job title','jobTitle',person.jobTitle||'',120,false],['Phone number','phoneNumber',person.phoneNumber||'',30,false]];
+        const fields=[['First name','firstName',person.firstName||'',100,true],['Last name','lastName',person.lastName||'',100,true],['Job title','jobTitle',person.jobTitle||'',120,false],['Phone number','phoneNumber',person.phoneNumber||'',30,false],['Email address','email',person.email||'',254,false]];
         const inputs={};
         for(const [labelText,key,value,max,required] of fields){
           const label=document.createElement('label');label.textContent=labelText;label.style.display='block';label.style.marginTop='8px';
-          const input=document.createElement('input');input.type='text';input.value=value;input.maxLength=max;input.required=required;input.style.width='100%';
+          const input=document.createElement('input');input.type=key==='email'?'email':'text';input.value=value;input.maxLength=max;input.required=required;input.style.width='100%';
           label.append(input);form.append(label);inputs[key]=input;
         }
         const statusLabel=document.createElement('label');statusLabel.textContent='Employment status';statusLabel.style.display='block';statusLabel.style.marginTop='8px';
@@ -607,7 +608,7 @@
             const {data:auth,error:authError}=await client.auth.getSession();
             if(authError||!auth?.session?.access_token) throw new Error('Owner session expired.');
             const payload={membershipId:person.membershipId,firstName:inputs.firstName.value,lastName:inputs.lastName.value,
-              jobTitle:inputs.jobTitle.value,phoneNumber:inputs.phoneNumber.value,employmentStatus:select.value};
+              jobTitle:inputs.jobTitle.value,phoneNumber:inputs.phoneNumber.value,email:inputs.email.value,employmentStatus:select.value};
             const response=await fetch(API_BASE+'/api/employees/profile',{
               method:'PATCH',headers:{Authorization:'Bearer '+auth.session.access_token,'Content-Type':'application/json'},
               body:JSON.stringify(payload),cache:'no-store',referrerPolicy:'no-referrer'
@@ -617,15 +618,16 @@
               throw new Error(result.error||'Update was not verified.');
             name.textContent=payload.firstName.trim()+' '+payload.lastName.trim();
             person.firstName=payload.firstName.trim();person.lastName=payload.lastName.trim();
-            person.jobTitle=payload.jobTitle.trim();person.employmentStatus=payload.employmentStatus;
+            person.jobTitle=payload.jobTitle.trim();person.email=payload.email.trim();person.phoneNumber=payload.phoneNumber.trim();person.employmentStatus=payload.employmentStatus;
             job.textContent='Job title: '+(payload.jobTitle.trim()||'Not entered');
             phone.textContent='Phone: '+(payload.phoneNumber.trim()||'Not entered');
+            emailLine.textContent='Email: '+(payload.email.trim()||'Not entered');
             status.textContent='Membership: '+(person.membershipActive?'Active':'Inactive')+' · Employment: '+payload.employmentStatus;
             feedback.textContent='Saved successfully.';applyDirectoryFilters();
           }catch(e){feedback.textContent='Unable to save: '+(e?.message||'Connection error');}
           finally{save.disabled=false;}
         });
-        card.append(name,status,job,phone,sites,edit,form);directoryList.append(card);directoryPeople.push({person,card});
+        card.append(name,status,job,phone,emailLine,sites,edit,form);directoryList.append(card);directoryPeople.push({person,card});
       }
       directoryFilters.hidden=false;applyDirectoryFilters();
       directoryMessage(result.employees.length+' employee(s) loaded. Owner-only editing available; attendance locked.','ok');
