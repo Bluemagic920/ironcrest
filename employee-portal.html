@@ -14,7 +14,7 @@
 </style></head>
 <body><header><a href="./index.html"><img src="./ironcrest-logo.png" alt="Ironcrest Workforce Operations"></a><span class="eyebrow">Employee Portal · Preview</span></header><main><div class="eyebrow">Secure workforce access</div><h1>Employee Portal</h1><p>View your verified organization membership. Additional workforce tools are coming soon.</p><div id="notice" class="notice" role="status" aria-live="polite">Verifying your employee access…</div>
 <section id="login" class="panel hidden"><h2>Employee sign in</h2><p>Use the account that accepted your employee invitation.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required><button id="signin" type="submit" style="margin-top:18px">Sign in</button></form></section>
-<section id="workspace" class="hidden"><div class="panel"><div class="workspace-head"><div><div class="eyebrow">Verified employee access</div><h2>My workspace</h2><p class="welcome">Your secure home for workforce information.</p></div><span class="preview-pill">STAGE 10P-BC · CONTROLLED LIVE ATTENDANCE TEST</span></div><hr class="section-divider"><div class="meta" style="margin-top:24px"><div><p>Signed in as</p><strong id="member-email"></strong></div><div><p>Organization</p><strong id="org-name"></strong></div></div><button id="signout" class="secondary" style="margin-top:24px">Sign out</button></div><section class="attendance-preview" aria-labelledby="attendance-title"><div class="eyebrow">Stage 10P-R · Time &amp; Attendance</div><h2 id="attendance-title">Secure attendance setup</h2><p class="state">TEST MODE — Clock-in and clock-out are disabled</p><p>Before recording shifts, Ironcrest will require employer-defined worksites, server-side location checks, permission rules, and a manager exception process.</p><div class="attendance-actions"><button type="button" disabled title="Not enabled until backend security is ready">Clock in — Awaiting security approval</button><button type="button" disabled title="Not enabled until backend security is ready">Clock out — Awaiting security approval</button><button id="gps-check" type="button" class="secondary">Test GPS permission</button></div><div id="gps-result" role="status" aria-live="polite">Optional device check. Location is not sent to Ironcrest or saved by this page.</div><ul><li>Worksite boundaries: active employer worksites loaded below</li><li>Server-side attendance records: not activated</li><li>Manager exceptions and suspicious activity review: planned</li><li>GPS alone cannot reliably prevent spoofing; additional controls will be required</li></ul></section>
+<section id="workspace" class="hidden"><div class="panel"><div class="workspace-head"><div><div class="eyebrow">Verified employee access</div><h2>My workspace</h2><p class="welcome">Your secure home for workforce information.</p></div><span class="preview-pill">STAGE 10P-BD · GPS DIAGNOSTICS</span></div><hr class="section-divider"><div class="meta" style="margin-top:24px"><div><p>Signed in as</p><strong id="member-email"></strong></div><div><p>Organization</p><strong id="org-name"></strong></div></div><button id="signout" class="secondary" style="margin-top:24px">Sign out</button></div><section class="attendance-preview" aria-labelledby="attendance-title"><div class="eyebrow">Stage 10P-R · Time &amp; Attendance</div><h2 id="attendance-title">Secure attendance setup</h2><p class="state">TEST MODE — Clock-in and clock-out are disabled</p><p>Before recording shifts, Ironcrest will require employer-defined worksites, server-side location checks, permission rules, and a manager exception process.</p><div class="attendance-actions"><button type="button" disabled title="Not enabled until backend security is ready">Clock in — Awaiting security approval</button><button type="button" disabled title="Not enabled until backend security is ready">Clock out — Awaiting security approval</button><button id="gps-check" type="button" class="secondary">Test GPS permission</button></div><div id="gps-result" role="status" aria-live="polite">Optional device check. Location is not sent to Ironcrest or saved by this page.</div><ul><li>Worksite boundaries: active employer worksites loaded below</li><li>Server-side attendance records: not activated</li><li>Manager exceptions and suspicious activity review: planned</li><li>GPS alone cannot reliably prevent spoofing; additional controls will be required</li></ul></section>
 <section class="attendance-preview" aria-labelledby="geofence-title">
  <div class="eyebrow">Stage 10P-R · Worksite verification</div>
  <h2 id="geofence-title">My approved worksites</h2>
@@ -23,7 +23,7 @@
  <div class="attendance-actions"><button id="reload-worksites" type="button" class="secondary">Refresh worksites</button><button id="boundary-check" type="button" class="secondary" disabled>Verify worksite location</button><button id="attendance-preflight" type="button" class="secondary" disabled>Check Clock-In Eligibility</button></div>
  <div id="boundary-result" class="notice" role="status" aria-live="polite">No verification requested. Location is sent only if you press Verify; it is not saved by this page.</div>
 <div id="attendance-preflight-result" role="status" aria-live="polite">Attendance eligibility has not been checked. This is a preview only; no shift will be recorded.</div>
-<div class="attendance-actions"><button id="dry-run-in" type="button" class="secondary" disabled>Clock In — Dry Run</button><button id="dry-run-out" type="button" class="secondary" disabled>Clock Out — Dry Run</button></div><div id="dry-run-result" class="notice" role="status" aria-live="polite">Dry-run tests only. No shift will be recorded.</div><div class="notice" style="margin-top:18px"><strong>Controlled live attendance test</strong><p style="margin:8px 0">These buttons create real Supabase attendance records. Restricted to the designated test employee and Home GPS Test worksite. Confirm each action before submitting.</p><div class="attendance-actions"><button id="live-clock-in" type="button" disabled>Clock In — Live Test</button><button id="live-clock-out" type="button" class="secondary" disabled>Clock Out — Live Test</button></div><div id="live-attendance-result" class="notice" role="status" aria-live="polite">Live test not started. No attendance submitted by this page.</div><div class="attendance-actions" style="margin-top:14px"><button id="check-current-shift" type="button" class="secondary" disabled>Check Current Shift</button></div><div id="current-shift-result" class="notice" role="status" aria-live="polite">Shift status has not been checked. Read-only; no GPS required.</div></div>
+<div class="attendance-actions"><button id="dry-run-in" type="button" class="secondary" disabled>Clock In — Dry Run</button><button id="dry-run-out" type="button" class="secondary" disabled>Clock Out — Dry Run</button></div><div id="dry-run-result" class="notice" role="status" aria-live="polite">Dry-run tests only. No shift will be recorded.</div><div class="notice" style="margin-top:18px"><strong>Controlled live attendance test</strong><p style="margin:8px 0">These buttons create real Supabase attendance records. Restricted to the designated test employee and Home GPS Test worksite. Confirm each action before submitting.</p><div class="attendance-actions"><button id="live-clock-in" type="button" disabled>Clock In — Live Test</button><button id="live-clock-out" type="button" class="secondary" disabled>Clock Out — Live Test</button></div><div id="live-attendance-result" class="notice" role="status" aria-live="polite">Live test not started. No attendance submitted by this page.</div><div class="attendance-actions" style="margin-top:14px"><button id="check-current-shift" type="button" class="secondary" disabled>Check Current Shift</button></div><div class="attendance-actions" style="margin-top:14px"><button id="gps-diagnostic" type="button" class="secondary" disabled>Run Read-Only GPS Diagnostic</button></div><div id="gps-diagnostic-result" class="notice" role="status" aria-live="polite">No diagnostic run yet. This checks one GPS reading and server-side worksite eligibility without recording attendance. Coordinates are not displayed or stored by this page.</div><div id="current-shift-result" class="notice" role="status" aria-live="polite">Shift status has not been checked. Read-only; no GPS required.</div></div>
  <p style="font-size:12px">GPS accuracy is uncertain and location can be spoofed. A local boundary match is not proof of presence. Final checks must happen server-side, with manager exception safeguards, before attendance is enabled.</p>
 </section>
 <div class="section-label">Employee tools</div><div class="grid" aria-label="Employee tools preview">
@@ -44,11 +44,11 @@ $('gps-check').addEventListener('click',()=>{
   );
 });
 
-function clearWorksites(){if($('current-shift-result'))$('current-shift-result').textContent='Shift status has not been checked. Read-only; no GPS required.';verifiedOrgId=null;activeWorksites=[];$('worksite-list').textContent='No employer worksites loaded.';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;$('dry-run-in').disabled=true;$('dry-run-out').disabled=true;$('live-clock-in').disabled=true;$('live-clock-out').disabled=true;$('check-current-shift').disabled=true;$('boundary-result').textContent='No verification requested. Location is sent only if you press Verify; it is not saved by this page.';}
+function clearWorksites(){if($('current-shift-result'))$('current-shift-result').textContent='Shift status has not been checked. Read-only; no GPS required.';verifiedOrgId=null;activeWorksites=[];$('worksite-list').textContent='No employer worksites loaded.';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;$('dry-run-in').disabled=true;$('dry-run-out').disabled=true;$('live-clock-in').disabled=true;$('live-clock-out').disabled=true;$('check-current-shift').disabled=true;$('gps-diagnostic').disabled=true;$('boundary-result').textContent='No verification requested. Location is sent only if you press Verify; it is not saved by this page.';}
 async function loadWorksites(){
  const orgId=verifiedOrgId;
  if(!orgId){clearWorksites();return;}
- $('worksite-list').textContent='Loading active worksites…';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;$('dry-run-in').disabled=true;$('dry-run-out').disabled=true;$('live-clock-in').disabled=true;$('live-clock-out').disabled=true;$('check-current-shift').disabled=true;activeWorksites=[];
+ $('worksite-list').textContent='Loading active worksites…';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;$('dry-run-in').disabled=true;$('dry-run-out').disabled=true;$('live-clock-in').disabled=true;$('live-clock-out').disabled=true;$('check-current-shift').disabled=true;$('gps-diagnostic').disabled=true;activeWorksites=[];
  const {data,error}=await client.from('ironcrest_worksites').select('id,name,latitude,longitude,radius_m,active').eq('organization_id',orgId).eq('active',true).order('name').limit(50);
  if(orgId!==verifiedOrgId)return;
  if(error){$('worksite-list').textContent='Unable to load worksites: '+error.message+' (Ask your employer to verify Stage 10P-H database policy.)';return;}
@@ -56,7 +56,7 @@ async function loadWorksites(){
  if(!activeWorksites.length){$('worksite-list').textContent='Your employer has no active worksites available.';return;}
  const list=document.createElement('ul');list.style.paddingLeft='22px';
  for(const w of activeWorksites){const item=document.createElement('li');item.textContent=w.name+' — '+w.radius_m+' m allowed radius';list.appendChild(item);}
- $('worksite-list').replaceChildren(list);$('boundary-check').disabled=false;$('attendance-preflight').disabled=false;$('dry-run-in').disabled=false;$('dry-run-out').disabled=false;$('live-clock-in').disabled=false;$('live-clock-out').disabled=false;$('check-current-shift').disabled=false;
+ $('worksite-list').replaceChildren(list);$('boundary-check').disabled=false;$('attendance-preflight').disabled=false;$('dry-run-in').disabled=false;$('dry-run-out').disabled=false;$('live-clock-in').disabled=false;$('live-clock-out').disabled=false;$('check-current-shift').disabled=false;$('gps-diagnostic').disabled=false;
 }
 $('reload-worksites').addEventListener('click',loadWorksites);
  // Obtain a new position for each action. Safari can return a cached sample even
@@ -314,4 +314,60 @@ let dryRunBusy=false;
     finally{shiftStatusBusy=false;button.disabled=verifiedOrgId!==TEST_ORG_ID;}
   }
   $('check-current-shift').addEventListener('click',checkCurrentShift);
+
+  // Diagnostic reuses the existing authenticated, read-only worksite verification endpoint.
+  // No attendance write endpoint is called. Coordinates are never displayed or persisted here.
+  let gpsDiagnosticBusy=false;
+  $('gps-diagnostic').addEventListener('click',async()=>{
+    if(gpsDiagnosticBusy)return;
+    const button=$('gps-diagnostic'),out=$('gps-diagnostic-result');
+    gpsDiagnosticBusy=true;button.disabled=true;
+    const orgAtStart=verifiedOrgId;
+    try{
+      if(orgAtStart!==TEST_ORG_ID)throw new Error('Restricted test organization required.');
+      const {data:{user},error:userError}=await client.auth.getUser();
+      if(userError||user?.id!==TEST_EMPLOYEE_ID)throw new Error('Restricted test employee sign-in required.');
+      const {data:{session},error:sessionError}=await client.auth.getSession();
+      if(sessionError||!session?.access_token)throw new Error('Session expired; sign in again.');
+      if(!navigator.geolocation)throw new Error('Device geolocation unavailable.');
+      out.textContent='Obtaining a fresh GPS reading. No attendance will be recorded…';
+      const position=await getFreshWorksitePosition(()=>{out.textContent='Retrying once for a fresh GPS reading…';});
+      const {latitude,longitude,accuracy}=position.coords;
+      const age=Date.now()-position.timestamp;
+      if(![latitude,longitude,accuracy,position.timestamp].every(Number.isFinite)||accuracy<0)
+        throw new Error('Invalid GPS coordinates or accuracy.');
+      if(age>25000||age< -5000)throw new Error('GPS sample is stale or from the future (age '+Math.round(age/1000)+' seconds).');
+      out.textContent='GPS received (accuracy ±'+Math.round(accuracy)+' m, sample age '+Math.round(age/1000)+' s). Checking assigned worksite on server…';
+      const response=await fetch(GEOFENCE_API,{
+        method:'POST',cache:'no-store',referrerPolicy:'no-referrer',
+        headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},
+        body:JSON.stringify({latitude,longitude,accuracyMeters:accuracy,sampleTimestamp:position.timestamp})
+      });
+      const data=await response.json().catch(()=>null);
+      if(orgAtStart!==verifiedOrgId){out.textContent='Organization changed. Discarding diagnostic result.';return;}
+      if(!response.ok||data?.ok!==true){
+        out.textContent='GPS diagnostic rejected by server (HTTP '+response.status+'): '+String(data?.error||data?.message||data?.code||'Unknown error')+'. Device accuracy ±'+Math.round(accuracy)+' m; sample age '+Math.round(age/1000)+' s. No attendance recorded.';
+        return;
+      }
+      const statusLabels={inside_preview:'WITHIN assigned worksite boundary',outside_preview:'OUTSIDE assigned worksite boundary',boundary_uncertain:'BOUNDARY UNCERTAIN',accuracy_insufficient:'ACCURACY INSUFFICIENT'};
+      const matched=activeWorksites.find(w=>w.id===data.worksiteId);
+      const name=matched?.name||'Assigned worksite (name unavailable)';
+      const homeMatch=data.worksiteId===TEST_WORKSITE_ID;
+      const gpsEligible=data.status==='inside_preview';
+      const liveEligible=gpsEligible&&homeMatch;
+      out.textContent='Server result: '+(statusLabels[data.status]||String(data.status||'Unknown'))+
+        '. Worksite: '+name+'. Distance: '+data.distanceMeters+' m. GPS accuracy: ±'+data.accuracyMeters+
+        ' m (required ≤100 m). Radius: '+data.allowedRadiusMeters+' m. GPS sample age at capture: '+Math.round(age/1000)+
+        ' s. Home GPS Test selected: '+(homeMatch?'YES':'NO')+
+        '. Location eligible for restricted live test: '+(liveEligible?'YES (not authorization)':'NO')+
+        '. No attendance recorded or changed. No coordinates displayed.';
+    }catch(error){
+      const reasons={1:'Location permission denied',2:'Device could not determine location',3:'GPS request timed out',STALE_LOCATION:'Stale GPS reading',INVALID_LOCATION:'Invalid GPS reading'};
+      out.textContent='GPS diagnostic could not complete: '+(reasons[error?.code]||reasons[error?.message]||String(error?.message||'Unknown error'))+'. No attendance recorded.';
+    }finally{
+      gpsDiagnosticBusy=false;
+      button.disabled=verifiedOrgId!==TEST_ORG_ID||!activeWorksites.some(w=>w.id===TEST_WORKSITE_ID);
+    }
+  });
+
  let seq=0;async function refresh(){const current=++seq;clearWorksites();workspace.classList.add('hidden');show('Verifying your employee access…');const {data,error}=await client.auth.getUser();if(current!==seq)return;if(error||!data?.user){login.classList.remove('hidden');show('Sign in with your invited employee account.');return;}if(!data.user.email_confirmed_at){login.classList.remove('hidden');show('Verify your email address before entering the portal.','error');return;}const {data:memberships,error:membershipError}=await client.from('ironcrest_memberships').select('organization_id,role,active').eq('user_id',data.user.id).eq('active',true).eq('role','employee').limit(2);if(current!==seq)return;if(membershipError){login.classList.add('hidden');show('Unable to verify employee membership. Please contact your employer or try again later.','error');return;}if(!memberships?.length){login.classList.add('hidden');show('No active employee membership was found for this account. If you have an invitation, accept it first.','error');return;}if(memberships.length!==1){login.classList.add('hidden');show('Multiple employee organizations found. Organization selection is not available yet.','error');return;}const {data:org,error:orgError}=await client.from('ironcrest_organizations').select('name').eq('id',memberships[0].organization_id).maybeSingle();if(current!==seq)return;if(orgError||!org){login.classList.add('hidden');show('Membership verified, but organization details are not available. Contact your employer.','error');return;}$('member-email').textContent=data.user.email||'Verified employee';$('org-name').textContent=org.name;verifiedOrgId=memberships[0].organization_id;login.classList.add('hidden');workspace.classList.remove('hidden');show('Employee membership verified. Welcome to your portal.','ok');loadWorksites();}let busy=false;$('login-form').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;busy=true;$('signin').disabled=true;show('Signing in…');try{const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});$('password').value='';if(error){show('Sign-in failed. Check your credentials.','error');return;}await refresh();}catch{show('Unable to complete sign-in. Try again.','error')}finally{busy=false;$('signin').disabled=false}});$('signout').addEventListener('click',async()=>{$('signout').disabled=true;await client.auth.signOut();$('signout').disabled=false;await refresh()});client.auth.onAuthStateChange(()=>{setTimeout(()=>{if(!busy)refresh()},0)});refresh()})();</script></body></html>
