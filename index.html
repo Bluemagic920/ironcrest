@@ -123,6 +123,26 @@ window.addEventListener('load', () => {
 
 /* Stage 10P-AQ: owner-only read-only security diagnostics */
 .aq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.aq-metric{border:1px solid #ffffff22;border-radius:10px;padding:14px;background:#091827}.aq-metric strong{display:block;font-size:22px;color:#e7c381}.aq-metric span{font-size:12px;color:#b6c4d1}.aq-check{padding:9px 0;border-bottom:1px solid #ffffff18;font-size:13px}.aq-check strong{color:#d6e2ed}.aq-note{font-size:12px;color:#b9c9da}.panel #aq-run{width:auto;margin:8px 0;padding:11px 18px}@media(max-width:650px){.aq-grid{grid-template-columns:1fr}}
+
+/* Stage 11A: Owner-only Job & Task Tracking interactive preview; no database writes. */
+.jobs-section{display:none;margin-top:25px;padding:24px;border:1px solid #d8aa5c55;border-radius:15px;background:#07152399}
+.jobs-section.open{display:block}.jobs-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.jobs-head h2{margin:8px 0}.jobs-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.jobs-fields label{margin:8px 0 5px}.jobs-fields input,.jobs-fields select,.jobs-fields textarea{width:100%;background:#071321;color:#e9edf2;border:1px solid #71809665;border-radius:9px;padding:12px;font:inherit}
+.jobs-fields textarea{min-height:90px;resize:vertical}.jobs-wide{grid-column:1/-1}
+.panel .jobs-section button{width:auto;cursor:pointer;opacity:1;margin:10px 0 0;padding:11px 16px}
+.panel .workspace-card button.jobs-open{opacity:1;cursor:pointer;color:#e9c381;border-color:#d8aa5c66}
+.jobs-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0}
+.jobs-toolbar select,.jobs-toolbar input{background:#071321;color:#e9edf2;border:1px solid #71809665;border-radius:9px;padding:10px;min-width:140px;flex:1}
+.jobs-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:15px 0}
+.jobs-metric{background:#091a2c;border:1px solid #ffffff25;padding:12px;border-radius:10px}.jobs-metric strong{display:block;font-size:22px;color:#eac27b}.jobs-metric span{font-size:11px;color:#b8c6d4}
+.jobs-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.jobs-item{background:#091a2c;border:1px solid #ffffff26;border-radius:12px;padding:16px;min-width:0}
+.jobs-item h3{margin:0 0 8px;color:#f2d29b;font-size:16px;overflow-wrap:anywhere}.jobs-item p{font-size:12px;margin:6px 0;overflow-wrap:anywhere;white-space:pre-wrap}
+.jobs-pill{font-size:11px;color:#a9e5c4;border:1px solid #6dbf9b66;border-radius:30px;padding:4px 8px;display:inline-block}
+.jobs-item select{background:#071321;color:#e9edf2;border:1px solid #71809665;border-radius:8px;padding:8px;width:100%;margin-top:8px}
+.jobs-note{font-size:12px;color:#e9c993}.jobs-error{color:#ffb7b7}
+@media(max-width:650px){.jobs-section{padding:17px}.jobs-fields,.jobs-list{grid-template-columns:1fr}.jobs-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -151,11 +171,28 @@ window.addEventListener('load', () => {
 <div class="dashboard-heading"><h2>Management workspace</h2><span class="preview-tag">Stage 10K · Preview</span></div>
 <div class="workspace-grid" aria-label="Workforce management modules">
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Stage 10K · Test</span></div><p>Manage employee invitations. Restricted single-recipient testing is available to verified owners.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">▤</div><div class="module-top"><h3>Jobs &amp; Tasks</h3><span class="module-state">Stage 11A · Interactive preview</span></div><p>Create draft jobs, choose employee assignments, and explore progress tracking. Preview data stays in this browser session and is not sent to employees.</p><button type="button" class="jobs-open" id="jobs-open" aria-expanded="false" aria-controls="jobs-section">Open Job Tracking <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Coming soon</span></div><p>Review shifts and time entries, with location verification and exception controls planned.</p><button type="button" disabled aria-label="Time and attendance not yet available">View time records <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Coming soon</span></div><p>Organize employee schedules, assignments, and future shift coverage.</p><button type="button" disabled aria-label="Scheduling not yet available">Open scheduling <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
+<section class="jobs-section" id="jobs-section" aria-label="Job and task tracking preview">
+<div class="jobs-head"><div><div class="eyebrow">Stage 11A · Owner-only interactive preview</div><h2>Job &amp; Task Tracking</h2></div><button id="jobs-close" type="button" class="secondary-btn">Close</button></div>
+<p class="jobs-note"><strong>Preview mode:</strong> Jobs created here are temporary drafts held in this browser tab. They are not saved to Supabase, do not reach employees, and disappear on refresh. No production job writes are enabled.</p>
+<div class="jobs-metrics" id="jobs-metrics" aria-label="Preview job totals"></div>
+<form id="jobs-form"><div class="jobs-fields">
+<div class="jobs-wide"><label for="jobs-title">Job title</label><input id="jobs-title" maxlength="120" required placeholder="Example: Inspect equipment"></div>
+<div class="jobs-wide"><label for="jobs-description">Description / instructions</label><textarea id="jobs-description" maxlength="2000" placeholder="Describe the work to be done"></textarea></div>
+<div><label for="jobs-assignee">Assign employee</label><select id="jobs-assignee"><option value="">Unassigned</option></select></div>
+<div><label for="jobs-due">Due date</label><input id="jobs-due" type="date"></div>
+<div><label for="jobs-priority">Priority</label><select id="jobs-priority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select></div>
+<div><label for="jobs-status-input">Initial status</label><select id="jobs-status-input"><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select></div>
+</div><button type="submit" id="jobs-add">Add Preview Job</button></form>
+<div id="jobs-message" class="api-result" role="status" aria-live="polite">No jobs created. Load employee names to preview assignments.</div>
+<div class="jobs-toolbar"><button id="jobs-load-employees" type="button" class="secondary-btn">Load Employee Names</button><input id="jobs-search" type="search" maxlength="120" placeholder="Search preview jobs" aria-label="Search preview jobs"><select id="jobs-filter" aria-label="Filter job status"><option value="all">All statuses</option><option value="pending">Pending</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select></div>
+<div id="jobs-list" class="jobs-list" aria-live="polite"></div>
+</section>
 <section class="worksite-section" id="worksite-section" aria-label="Worksite management">
 <div class="worksite-head"><div><div class="eyebrow">Stage 10P-G · Secure worksite management</div><h2>Worksites &amp; Geofencing</h2></div><button id="worksite-close" class="secondary-btn" type="button">Close</button></div>
 <p>Employer-defined locations only. No employee location is requested, transmitted, or stored by this screen.</p>
@@ -246,6 +283,83 @@ window.addEventListener('load', () => {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'ironcrest-owner-auth-v1' }
   });
 
+
+
+  // Stage 11A: UI-only draft jobs. Never sends job data to an API or local storage.
+  const jobsSection=document.getElementById('jobs-section');
+  const jobsOpen=document.getElementById('jobs-open');
+  const jobsList=document.getElementById('jobs-list');
+  const jobsMetrics=document.getElementById('jobs-metrics');
+  const jobsMessage=document.getElementById('jobs-message');
+  const jobsAssignee=document.getElementById('jobs-assignee');
+  const jobsLoad=document.getElementById('jobs-load-employees');
+  const jobsSearch=document.getElementById('jobs-search');
+  const jobsFilter=document.getElementById('jobs-filter');
+  let draftJobs=[],draftEmployeeNames=new Map(),jobsRequest=0;
+  function jobNotice(message,kind=''){jobsMessage.textContent=message;jobsMessage.className='api-result '+kind;}
+  function renderJobs(){
+    jobsList.replaceChildren();jobsMetrics.replaceChildren();
+    const totals=[['All jobs',draftJobs.length],['Pending',draftJobs.filter(j=>j.status==='pending').length],['In progress',draftJobs.filter(j=>j.status==='in_progress').length],['Completed',draftJobs.filter(j=>j.status==='completed').length]];
+    for(const [label,value] of totals){const card=document.createElement('div');card.className='jobs-metric';const num=document.createElement('strong');num.textContent=String(value);const caption=document.createElement('span');caption.textContent=label;card.append(num,caption);jobsMetrics.append(card);}
+    const query=jobsSearch.value.trim().toLocaleLowerCase();
+    const visible=draftJobs.filter(j=>(jobsFilter.value==='all'||j.status===jobsFilter.value)&&(j.title+' '+j.description+' '+(draftEmployeeNames.get(j.assignee)||'')).toLocaleLowerCase().includes(query));
+    if(!visible.length){const empty=document.createElement('p');empty.textContent=draftJobs.length?'No preview jobs match these filters.':'No preview jobs yet. Add your first draft above.';jobsList.append(empty);}
+    for(const job of visible){
+      const card=document.createElement('article');card.className='jobs-item';
+      const heading=document.createElement('h3');heading.textContent=job.title;
+      const pill=document.createElement('span');pill.className='jobs-pill';pill.textContent=job.priority.toUpperCase()+' PRIORITY';
+      const description=document.createElement('p');description.textContent=job.description||'No instructions entered';
+      const assignment=document.createElement('p');assignment.textContent='Assigned: '+(draftEmployeeNames.get(job.assignee)||'Unassigned');
+      const due=document.createElement('p');due.textContent='Due: '+(job.due||'Not set');
+      const label=document.createElement('label');label.textContent='Job status';label.style.margin='10px 0 4px';
+      const status=document.createElement('select');
+      for(const [value,name] of [['pending','Pending'],['in_progress','In progress'],['completed','Completed']]){const option=document.createElement('option');option.value=value;option.textContent=name;status.append(option);}
+      status.value=job.status;status.addEventListener('change',()=>{job.status=status.value;renderJobs();jobNotice('Preview status updated. Not saved to the server.','ok');});
+      const remove=document.createElement('button');remove.type='button';remove.className='secondary-btn';remove.textContent='Remove Draft';remove.addEventListener('click',()=>{draftJobs=draftJobs.filter(j=>j.id!==job.id);renderJobs();jobNotice('Draft removed. No database records changed.');});
+      card.append(heading,pill,description,assignment,due,label,status,remove);jobsList.append(card);
+    }
+  }
+  jobsOpen.addEventListener('click',()=>{jobsSection.classList.add('open');jobsOpen.setAttribute('aria-expanded','true');renderJobs();jobsSection.scrollIntoView({behavior:'smooth',block:'start'});});
+  document.getElementById('jobs-close').addEventListener('click',()=>{jobsSection.classList.remove('open');jobsOpen.setAttribute('aria-expanded','false');++jobsRequest;jobsOpen.focus();});
+  [jobsSearch,jobsFilter].forEach(el=>el.addEventListener(el===jobsSearch?'input':'change',renderJobs));
+  document.getElementById('jobs-form').addEventListener('submit',event=>{
+    event.preventDefault();
+    if(!verifiedWorksiteOrg||!jobsSection.classList.contains('open')){jobNotice('Owner access required.','error');return;}
+    const title=document.getElementById('jobs-title').value.trim();
+    if(!title||title.length>120){jobNotice('Enter a valid job title.','error');return;}
+    if(draftJobs.length>=100){jobNotice('Preview limit: 100 jobs.','error');return;}
+    draftJobs.unshift({id:crypto.randomUUID(),title,description:document.getElementById('jobs-description').value.trim(),
+      assignee:jobsAssignee.value,due:document.getElementById('jobs-due').value,priority:document.getElementById('jobs-priority').value,
+      status:document.getElementById('jobs-status-input').value});
+    document.getElementById('jobs-form').reset();renderJobs();jobNotice('Preview job added. It is not saved to Supabase or visible to employees.','ok');
+  });
+  jobsLoad.addEventListener('click',async()=>{
+    const request=++jobsRequest;
+    jobsLoad.disabled=true;jobNotice('Loading employee names using the protected owner directory…');
+    try{
+      const org=await confirmWorksiteOwner();
+      const {data,error}=await client.auth.getSession();
+      if(error||!data?.session?.access_token)throw new Error('Owner session expired.');
+      const response=await fetch(API_BASE+'/api/employees/directory',{method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store',referrerPolicy:'no-referrer'});
+      const result=await response.json().catch(()=>null);
+      if(request!==jobsRequest||verifiedWorksiteOrg!==org||!jobsSection.classList.contains('open'))return;
+      if(!response.ok||result?.ok!==true||result?.readOnly!==true||result?.organizationScoped!==true||!Array.isArray(result.employees))throw new Error('Owner directory not verified (HTTP '+response.status+').');
+      if(result.employees.length>1000)throw new Error('Employee list exceeds preview limit.');
+      const names=new Map();
+      for(const person of result.employees){
+        if(person.membershipActive!==true||person.employmentStatus==='inactive')continue;
+        if(typeof person.membershipId!=='string')continue;
+        const name=[person.firstName,person.lastName].filter(x=>typeof x==='string'&&x.trim()).join(' ').trim();
+        if(name)names.set(person.membershipId,name);
+      }
+      draftEmployeeNames=names;jobsAssignee.replaceChildren();
+      const none=document.createElement('option');none.value='';none.textContent='Unassigned';jobsAssignee.append(none);
+      for(const [id,name] of names){const option=document.createElement('option');option.value=id;option.textContent=name;jobsAssignee.append(option);}
+      renderJobs();jobNotice(names.size+' eligible employee name(s) loaded for preview only. No assignments saved.','ok');
+    }catch(error){if(request===jobsRequest)jobNotice('Unable to load employees: '+(error?.message||'Connection error'),'error');}
+    finally{if(request===jobsRequest)jobsLoad.disabled=false;}
+  });
+  renderJobs();
 
   // Stage 10P-C: read-only database integration; do not enable writes before RLS audit.
   const worksiteSection = document.getElementById('worksite-section');
@@ -1050,7 +1164,7 @@ window.addEventListener('load', () => {
   });
 
   let checkVersion = 0;
-  const showLogin = () => { aqReset(); ++attendanceReadinessVersion; attendanceReadinessButton.disabled = false; setAttendanceReadiness('Not checked yet. Attendance remains disabled.'); verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); clearAssignmentOverview(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
+  const showLogin = () => { ++jobsRequest;draftJobs=[];draftEmployeeNames.clear();jobsAssignee.replaceChildren();const emptyJobOption=document.createElement('option');emptyJobOption.value='';emptyJobOption.textContent='Unassigned';jobsAssignee.append(emptyJobOption);jobsSection.classList.remove('open');jobsOpen.setAttribute('aria-expanded','false');jobsLoad.disabled=false;renderJobs();aqReset(); ++attendanceReadinessVersion; attendanceReadinessButton.disabled = false; setAttendanceReadiness('Not checked yet. Attendance remains disabled.'); verifiedWorksiteOrg = null; resetWorksiteEditor(); worksiteSection.classList.remove('open'); worksiteList.replaceChildren(); clearAssignmentOverview(); ++apiCheckVersion; ++backendCheckVersion; ++validationCheckVersion; ++rateCheckVersion; ++tokenCheckVersion; ++rollbackCheckVersion; rollbackButton.disabled = false; setRollbackResult('Not tested yet.'); tokenButton.disabled = false; setTokenResult('Not tested yet.'); rateButton.disabled = true; setRateResult('Disabled to prevent multiple test writes.'); apiButton.disabled = false; backendButton.disabled = false; validationButton.disabled = true; setValidationResult('Disabled: endpoint now creates test records.'); setApiResult('Not tested yet.'); setBackendResult('Not tested yet.'); restrictedInvitationUrl = ''; restrictedInviteLink.textContent = ''; restrictedInviteLinkBox.classList.remove('open'); restrictedInviteButton.disabled = true; employeeSection.classList.remove('open'); employeeOpen.setAttribute('aria-expanded', 'false'); ownerArea.style.display = 'none'; loginArea.style.display = 'block'; document.body.classList.remove('dashboard-active'); };
   const showOwner = (email, name) => {
     document.getElementById('owner-email').textContent = email || 'Verified account';
     document.getElementById('owner-org').textContent = name;
