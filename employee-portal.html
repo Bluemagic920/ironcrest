@@ -23,6 +23,7 @@
  <div class="attendance-actions"><button id="reload-worksites" type="button" class="secondary">Refresh worksites</button><button id="boundary-check" type="button" class="secondary" disabled>Verify worksite location</button><button id="attendance-preflight" type="button" class="secondary" disabled>Check Clock-In Eligibility</button></div>
  <div id="boundary-result" class="notice" role="status" aria-live="polite">No verification requested. Location is sent only if you press Verify; it is not saved by this page.</div>
 <div id="attendance-preflight-result" role="status" aria-live="polite">Attendance eligibility has not been checked. This is a preview only; no shift will be recorded.</div>
+<div class="attendance-actions"><button id="dry-run-in" type="button" class="secondary" disabled>Clock In — Dry Run</button><button id="dry-run-out" type="button" class="secondary" disabled>Clock Out — Dry Run</button></div><div id="dry-run-result" class="notice" role="status" aria-live="polite">Dry-run tests only. No shift will be recorded.</div>
  <p style="font-size:12px">GPS accuracy is uncertain and location can be spoofed. A local boundary match is not proof of presence. Final checks must happen server-side, with manager exception safeguards, before attendance is enabled.</p>
 </section>
 <div class="section-label">Employee tools</div><div class="grid" aria-label="Employee tools preview">
@@ -43,11 +44,11 @@ $('gps-check').addEventListener('click',()=>{
   );
 });
 
-function clearWorksites(){verifiedOrgId=null;activeWorksites=[];$('worksite-list').textContent='No employer worksites loaded.';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;$('boundary-result').textContent='No verification requested. Location is sent only if you press Verify; it is not saved by this page.';}
+function clearWorksites(){verifiedOrgId=null;activeWorksites=[];$('worksite-list').textContent='No employer worksites loaded.';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;$('dry-run-in').disabled=true;$('dry-run-out').disabled=true;$('boundary-result').textContent='No verification requested. Location is sent only if you press Verify; it is not saved by this page.';}
 async function loadWorksites(){
  const orgId=verifiedOrgId;
  if(!orgId){clearWorksites();return;}
- $('worksite-list').textContent='Loading active worksites…';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;activeWorksites=[];
+ $('worksite-list').textContent='Loading active worksites…';$('boundary-check').disabled=true;$('attendance-preflight').disabled=true;$('dry-run-in').disabled=true;$('dry-run-out').disabled=true;activeWorksites=[];
  const {data,error}=await client.from('ironcrest_worksites').select('id,name,latitude,longitude,radius_m,active').eq('organization_id',orgId).eq('active',true).order('name').limit(50);
  if(orgId!==verifiedOrgId)return;
  if(error){$('worksite-list').textContent='Unable to load worksites: '+error.message+' (Ask your employer to verify Stage 10P-H database policy.)';return;}
@@ -55,7 +56,7 @@ async function loadWorksites(){
  if(!activeWorksites.length){$('worksite-list').textContent='Your employer has no active worksites available.';return;}
  const list=document.createElement('ul');list.style.paddingLeft='22px';
  for(const w of activeWorksites){const item=document.createElement('li');item.textContent=w.name+' — '+w.radius_m+' m allowed radius';list.appendChild(item);}
- $('worksite-list').replaceChildren(list);$('boundary-check').disabled=false;$('attendance-preflight').disabled=false;
+ $('worksite-list').replaceChildren(list);$('boundary-check').disabled=false;$('attendance-preflight').disabled=false;$('dry-run-in').disabled=false;$('dry-run-out').disabled=false;
 }
 $('reload-worksites').addEventListener('click',loadWorksites);
  const GEOFENCE_API='https://ironcrest-invitations-api.bluemagic920.workers.dev/api/verify-worksite-boundary';
@@ -128,4 +129,40 @@ const response=await fetch('https://ironcrest-invitations-api.bluemagic920.worke
    output.textContent=(reasons[error?.code]||'Preflight request failed')+'. Attendance remains locked.';
   }finally{checkingPreflight=false;button.disabled=!verifiedOrgId||!activeWorksites.length;}
  });
-let seq=0;async function refresh(){const current=++seq;clearWorksites();workspace.classList.add('hidden');show('Verifying your employee access…');const {data,error}=await client.auth.getUser();if(current!==seq)return;if(error||!data?.user){login.classList.remove('hidden');show('Sign in with your invited employee account.');return;}if(!data.user.email_confirmed_at){login.classList.remove('hidden');show('Verify your email address before entering the portal.','error');return;}const {data:memberships,error:membershipError}=await client.from('ironcrest_memberships').select('organization_id,role,active').eq('user_id',data.user.id).eq('active',true).eq('role','employee').limit(2);if(current!==seq)return;if(membershipError){login.classList.add('hidden');show('Unable to verify employee membership. Please contact your employer or try again later.','error');return;}if(!memberships?.length){login.classList.add('hidden');show('No active employee membership was found for this account. If you have an invitation, accept it first.','error');return;}if(memberships.length!==1){login.classList.add('hidden');show('Multiple employee organizations found. Organization selection is not available yet.','error');return;}const {data:org,error:orgError}=await client.from('ironcrest_organizations').select('name').eq('id',memberships[0].organization_id).maybeSingle();if(current!==seq)return;if(orgError||!org){login.classList.add('hidden');show('Membership verified, but organization details are not available. Contact your employer.','error');return;}$('member-email').textContent=data.user.email||'Verified employee';$('org-name').textContent=org.name;verifiedOrgId=memberships[0].organization_id;login.classList.add('hidden');workspace.classList.remove('hidden');show('Employee membership verified. Welcome to your portal.','ok');loadWorksites();}let busy=false;$('login-form').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;busy=true;$('signin').disabled=true;show('Signing in…');try{const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});$('password').value='';if(error){show('Sign-in failed. Check your credentials.','error');return;}await refresh();}catch{show('Unable to complete sign-in. Try again.','error')}finally{busy=false;$('signin').disabled=false}});$('signout').addEventListener('click',async()=>{$('signout').disabled=true;await client.auth.signOut();$('signout').disabled=false;await refresh()});client.auth.onAuthStateChange(()=>{setTimeout(()=>{if(!busy)refresh()},0)});refresh()})();</script></body></html>
+let dryRunBusy=false;
+ async function runAttendanceDryRun(action){
+  const output=$('dry-run-result'), inBtn=$('dry-run-in'), outBtn=$('dry-run-out');
+  if(dryRunBusy)return;
+  if(!verifiedOrgId||!activeWorksites.length){output.textContent='No approved worksite loaded. Attendance remains locked.';return;}
+  if(!navigator.geolocation){output.textContent='Device location unavailable. Attendance remains locked.';return;}
+  dryRunBusy=true;inBtn.disabled=true;outBtn.disabled=true;
+  const org=verifiedOrgId;
+  output.textContent='Requesting a fresh, one-time GPS reading for '+(action==='clock-in'?'clock-in':'clock-out')+' dry run…';
+  try{
+   const {data:{session},error}=await client.auth.getSession();
+   if(error||!session?.access_token){output.textContent='Session expired. Please sign in again.';return;}
+   const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:0}));
+   if(org!==verifiedOrgId){output.textContent='Session changed. Test cancelled.';return;}
+   const {latitude,longitude,accuracy}=position.coords;
+   if(![latitude,longitude,accuracy,position.timestamp].every(Number.isFinite)||accuracy<0){output.textContent='Invalid location reading. Attendance remains locked.';return;}
+   const age=Date.now()-position.timestamp;
+   if(age>25000||age< -5000){output.textContent='Location reading is stale. Please retry. Attendance remains locked.';return;}
+   const response=await fetch('https://ironcrest-invitations-api.bluemagic920.workers.dev/api/attendance/dry-run/'+action,{
+    method:'POST',cache:'no-store',referrerPolicy:'no-referrer',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+    body:JSON.stringify({latitude,longitude,accuracyMeters:accuracy,sampleTimestamp:position.timestamp})
+   });
+   const data=await response.json().catch(()=>null);
+   if(org!==verifiedOrgId){output.textContent='Session changed. Result discarded.';return;}
+   if(!response.ok||data?.ok!==true){output.textContent=(data?.error||'Dry-run verification unavailable')+'. Attendance remains locked.';return;}
+   const labels={inside_preview:'Inside assigned worksite boundary',outside_preview:'Outside approved worksite boundary',boundary_uncertain:'Boundary uncertain',accuracy_insufficient:'GPS accuracy insufficient'};
+   const name=activeWorksites.find(w=>w.id===data.worksiteId)?.name||'Assigned worksite';
+   output.textContent=(action==='clock-in'?'Clock-in':'Clock-out')+' dry run: '+(labels[data.geofenceStatus]||data.geofenceStatus||'Location checked')+'. Worksite: '+name+'. Eligible for future review: '+(data.locationEligibleForFutureReview?'Yes':'No')+'. NO attendance recorded. Clock-in/out remain disabled.';
+  }catch(error){
+   const reasons={1:'Location permission denied',2:'Device location unavailable',3:'Location request timed out'};
+   output.textContent=(reasons[error?.code]||'Dry-run request failed')+'. Attendance remains locked.';
+  }finally{dryRunBusy=false;inBtn.disabled=!verifiedOrgId||!activeWorksites.length;outBtn.disabled=!verifiedOrgId||!activeWorksites.length;}
+ }
+ $('dry-run-in').addEventListener('click',()=>runAttendanceDryRun('clock-in'));
+ $('dry-run-out').addEventListener('click',()=>runAttendanceDryRun('clock-out'));
+ let seq=0;async function refresh(){const current=++seq;clearWorksites();workspace.classList.add('hidden');show('Verifying your employee access…');const {data,error}=await client.auth.getUser();if(current!==seq)return;if(error||!data?.user){login.classList.remove('hidden');show('Sign in with your invited employee account.');return;}if(!data.user.email_confirmed_at){login.classList.remove('hidden');show('Verify your email address before entering the portal.','error');return;}const {data:memberships,error:membershipError}=await client.from('ironcrest_memberships').select('organization_id,role,active').eq('user_id',data.user.id).eq('active',true).eq('role','employee').limit(2);if(current!==seq)return;if(membershipError){login.classList.add('hidden');show('Unable to verify employee membership. Please contact your employer or try again later.','error');return;}if(!memberships?.length){login.classList.add('hidden');show('No active employee membership was found for this account. If you have an invitation, accept it first.','error');return;}if(memberships.length!==1){login.classList.add('hidden');show('Multiple employee organizations found. Organization selection is not available yet.','error');return;}const {data:org,error:orgError}=await client.from('ironcrest_organizations').select('name').eq('id',memberships[0].organization_id).maybeSingle();if(current!==seq)return;if(orgError||!org){login.classList.add('hidden');show('Membership verified, but organization details are not available. Contact your employer.','error');return;}$('member-email').textContent=data.user.email||'Verified employee';$('org-name').textContent=org.name;verifiedOrgId=memberships[0].organization_id;login.classList.add('hidden');workspace.classList.remove('hidden');show('Employee membership verified. Welcome to your portal.','ok');loadWorksites();}let busy=false;$('login-form').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;busy=true;$('signin').disabled=true;show('Signing in…');try{const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});$('password').value='';if(error){show('Sign-in failed. Check your credentials.','error');return;}await refresh();}catch{show('Unable to complete sign-in. Try again.','error')}finally{busy=false;$('signin').disabled=false}});$('signout').addEventListener('click',async()=>{$('signout').disabled=true;await client.auth.signOut();$('signout').disabled=false;await refresh()});client.auth.onAuthStateChange(()=>{setTimeout(()=>{if(!busy)refresh()},0)});refresh()})();</script></body></html>
