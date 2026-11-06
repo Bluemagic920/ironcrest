@@ -39,7 +39,7 @@ $('gps-check').addEventListener('click',()=>{
   const button=$('gps-check');button.disabled=true;output.textContent='Requesting device location permission…';
   navigator.geolocation.getCurrentPosition(
     position=>{const accuracy=Math.round(position.coords.accuracy);output.textContent='GPS responded. Reported accuracy: approximately '+accuracy+' meters. No coordinates were displayed, transmitted, or stored. This does not authorize clock-in.';button.disabled=false;},
-    error=>{const reasons={1:'Location permission denied.',2:'Device location unavailable.',3:'Location request timed out.'};output.textContent=(reasons[error.code]||'Unable to read location.')+' Clock-in remains disabled.';button.disabled=false;},
+    error=>{const reasons={1:'Location permission denied.',2:'Device location unavailable.',3:'Location request timed out.',STALE_LOCATION:'Could not obtain a fresh location. Try again with location services enabled.',INVALID_LOCATION:'Invalid device location.'};output.textContent=(reasons[error.code]||'Unable to read location.')+' Clock-in remains disabled.';button.disabled=false;},
     {enableHighAccuracy:true,timeout:12000,maximumAge:0}
   );
 });
@@ -59,6 +59,19 @@ async function loadWorksites(){
  $('worksite-list').replaceChildren(list);$('boundary-check').disabled=false;$('attendance-preflight').disabled=false;$('dry-run-in').disabled=false;$('dry-run-out').disabled=false;
 }
 $('reload-worksites').addEventListener('click',loadWorksites);
+ // Obtain a new position for each action. Safari can return a cached sample even
+ // with maximumAge: 0; reject it and retry once, never refreshing its timestamp.
+ async function getFreshWorksitePosition(onRetry){
+  for(let attempt=0;attempt<2;attempt++){
+   const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:20000,maximumAge:0}));
+   const {latitude,longitude,accuracy}=position.coords;
+   if(![latitude,longitude,accuracy,position.timestamp].every(Number.isFinite)||accuracy<0){throw new Error('INVALID_LOCATION');}
+   const age=Date.now()-position.timestamp;
+   if(age>=-5000&&age<=25000)return position;
+   if(attempt===0){onRetry?.();continue;}
+   throw new Error('STALE_LOCATION');
+  }
+ }
  const GEOFENCE_API='https://ironcrest-invitations-api.bluemagic920.workers.dev/api/verify-worksite-boundary';
  let checkingBoundary=false;
  $('boundary-check').addEventListener('click',async()=>{
@@ -73,7 +86,7 @@ $('reload-worksites').addEventListener('click',loadWorksites);
        const {data:{session},error:sessionError}=await client.auth.getSession();
     if(sessionError||!session?.access_token){result.textContent='Employee session expired. Sign in again.';return;}
     if(orgAtStart!==verifiedOrgId){result.textContent='Session changed. Verification cancelled.';return;}
-    const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:0}));
+    const position=await getFreshWorksitePosition(()=>{result.textContent='Refreshing your location for a more accurate verification…';});
     if(orgAtStart!==verifiedOrgId||!verifiedOrgId){result.textContent='Session changed. Verification cancelled.';return;}
     const {latitude,longitude,accuracy}=position.coords;
     if(![latitude,longitude,accuracy].every(Number.isFinite)||accuracy<0||!Number.isFinite(position.timestamp)){result.textContent='Invalid GPS response. Attendance remains locked.';return;}
@@ -90,8 +103,8 @@ const response=await fetch(GEOFENCE_API,{
    const name=activeWorksites.find(w=>w.id===payload.worksiteId)?.name||'Approved worksite';
    result.textContent=(labels[payload.status]||'Verification completed.')+' Worksite: '+name+'. Distance: '+payload.distanceMeters+' m; GPS accuracy: ±'+payload.accuracyMeters+' m; radius: '+payload.allowedRadiusMeters+' m. Server-side preview only. No attendance authorized. No location history saved by this page.';
   }catch(error){
-   const reasons={1:'Location permission denied.',2:'Device location unavailable.',3:'Location request timed out.'};
-   result.textContent=(reasons[error?.code]||'Verification request failed.')+' Attendance remains locked.';
+   const reasons={1:'Location permission denied.',2:'Device location unavailable.',3:'Location request timed out.',STALE_LOCATION:'Could not obtain a fresh location. Try again with location services enabled.',INVALID_LOCATION:'Invalid device location.'};
+   result.textContent=(reasons[error?.code]||reasons[error?.message]||'Verification request failed.')+' Attendance remains locked.';
   }finally{checkingBoundary=false;button.disabled=!verifiedOrgId||!activeWorksites.length;}
  });
 
@@ -108,7 +121,7 @@ const response=await fetch(GEOFENCE_API,{
        const {data:{session},error}=await client.auth.getSession();
     if(error||!session?.access_token){output.textContent='Session expired. Please sign in again.';return;}
     if(originalOrg!==verifiedOrgId){output.textContent='Session changed; preflight cancelled.';return;}
-    const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:0}));
+    const position=await getFreshWorksitePosition(()=>{output.textContent='Refreshing your location for a more accurate verification…';});
     if(originalOrg!==verifiedOrgId||!verifiedOrgId){output.textContent='Session changed; preflight cancelled.';return;}
     const {latitude,longitude,accuracy}=position.coords;
     if(![latitude,longitude,accuracy].every(Number.isFinite)||accuracy<0||!Number.isFinite(position.timestamp)){output.textContent='Invalid device location. Attendance remains locked.';return;}
@@ -125,8 +138,8 @@ const response=await fetch('https://ironcrest-invitations-api.bluemagic920.worke
    const name=activeWorksites.find(w=>w.id===data.worksiteId)?.name||'Approved worksite';
    output.textContent=(labels[data.geofenceStatus]||'Location evaluated')+'. Worksite: '+name+'. Distance: '+data.distanceMeters+' m; accuracy: ±'+data.accuracyMeters+' m; radius: '+data.allowedRadiusMeters+' m. Location eligible for future review: '+(data.locationEligibleForFutureReview?'Yes':'No')+'. Clock-in and clock-out remain DISABLED. No attendance recorded.';
   }catch(error){
-   const reasons={1:'Location permission denied',2:'Device location unavailable',3:'Location request timed out'};
-   output.textContent=(reasons[error?.code]||'Preflight request failed')+'. Attendance remains locked.';
+   const reasons={1:'Location permission denied',2:'Device location unavailable',3:'Location request timed out',STALE_LOCATION:'Could not obtain a fresh location. Try again with location services enabled',INVALID_LOCATION:'Invalid device location'};
+   output.textContent=(reasons[error?.code]||reasons[error?.message]||'Preflight request failed')+'. Attendance remains locked.';
   }finally{checkingPreflight=false;button.disabled=!verifiedOrgId||!activeWorksites.length;}
  });
 let dryRunBusy=false;
@@ -141,7 +154,7 @@ let dryRunBusy=false;
   try{
    const {data:{session},error}=await client.auth.getSession();
    if(error||!session?.access_token){output.textContent='Session expired. Please sign in again.';return;}
-   const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:15000,maximumAge:0}));
+   const position=await getFreshWorksitePosition(()=>{output.textContent='Refreshing your location for a more accurate verification…';});
    if(org!==verifiedOrgId){output.textContent='Session changed. Test cancelled.';return;}
    const {latitude,longitude,accuracy}=position.coords;
    if(![latitude,longitude,accuracy,position.timestamp].every(Number.isFinite)||accuracy<0){output.textContent='Invalid location reading. Attendance remains locked.';return;}
@@ -159,8 +172,8 @@ let dryRunBusy=false;
    const name=activeWorksites.find(w=>w.id===data.worksiteId)?.name||'Assigned worksite';
    output.textContent=(action==='clock-in'?'Clock-in':'Clock-out')+' dry run: '+(labels[data.geofenceStatus]||data.geofenceStatus||'Location checked')+'. Worksite: '+name+'. Eligible for future review: '+(data.locationEligibleForFutureReview?'Yes':'No')+'. NO attendance recorded. Clock-in/out remain disabled.';
   }catch(error){
-   const reasons={1:'Location permission denied',2:'Device location unavailable',3:'Location request timed out'};
-   output.textContent=(reasons[error?.code]||'Dry-run request failed')+'. Attendance remains locked.';
+   const reasons={1:'Location permission denied',2:'Device location unavailable',3:'Location request timed out',STALE_LOCATION:'Could not obtain a fresh location. Try again with location services enabled',INVALID_LOCATION:'Invalid device location'};
+   output.textContent=(reasons[error?.code]||reasons[error?.message]||'Dry-run request failed')+'. Attendance remains locked.';
   }finally{dryRunBusy=false;inBtn.disabled=!verifiedOrgId||!activeWorksites.length;outBtn.disabled=!verifiedOrgId||!activeWorksites.length;}
  }
  $('dry-run-in').addEventListener('click',()=>runAttendanceDryRun('clock-in'));
