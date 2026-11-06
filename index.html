@@ -177,15 +177,15 @@ window.addEventListener('load', () => {
 <div class="dashboard-heading"><h2>Management workspace</h2><span class="preview-tag">Stage 10K · Preview</span></div>
 <div class="workspace-grid" aria-label="Workforce management modules">
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Stage 10K · Test</span></div><p>Manage employee invitations. Restricted single-recipient testing is available to verified owners.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
-<article class="workspace-card"><div class="module-icon" aria-hidden="true">▤</div><div class="module-top"><h3>Jobs &amp; Tasks</h3><span class="module-state">Stage 11C · Saved jobs read-only</span></div><p>Create draft jobs, choose employee assignments, and explore progress tracking. Drafts stay in this browser session; saved jobs can now be viewed securely from Supabase.</p><button type="button" class="jobs-open" id="jobs-open" aria-expanded="false" aria-controls="jobs-section">Open Job Tracking <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">▤</div><div class="module-top"><h3>Jobs &amp; Tasks</h3><span class="module-state">Stage 11E · Job editing test</span></div><p>Create draft jobs, choose employee assignments, and explore progress tracking. Drafts stay in this browser session; saved jobs can now be viewed securely from Supabase.</p><button type="button" class="jobs-open" id="jobs-open" aria-expanded="false" aria-controls="jobs-section">Open Job Tracking <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Coming soon</span></div><p>Review shifts and time entries, with location verification and exception controls planned.</p><button type="button" disabled aria-label="Time and attendance not yet available">View time records <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Coming soon</span></div><p>Organize employee schedules, assignments, and future shift coverage.</p><button type="button" disabled aria-label="Scheduling not yet available">Open scheduling <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
 <section class="jobs-section" id="jobs-section" aria-label="Job and task tracking preview">
-<div class="jobs-head"><div><div class="eyebrow">Stage 11D · Controlled job saving</div><h2>Job &amp; Task Tracking</h2></div><button id="jobs-close" type="button" class="secondary-btn">Close</button></div>
-<p class="jobs-note"><strong>Controlled test:</strong> Add Preview Job keeps a temporary browser draft. Save Job to Supabase makes a permanent job only after the secure Cloudflare job-write switch is enabled. Employee notifications and job editing are not enabled.</p>
+<div class="jobs-head"><div><div class="eyebrow">Stage 11E · Controlled job editing</div><h2>Job &amp; Task Tracking</h2></div><button id="jobs-close" type="button" class="secondary-btn">Close</button></div>
+<p class="jobs-note"><strong>Controlled test:</strong> Add Preview Job keeps a temporary browser draft. Save Job to Supabase makes a permanent job only after the secure Cloudflare job-write switch is enabled. Job editing is protected by a separate Cloudflare switch and starts locked. Employee notifications remain disabled.</p>
 <div class="jobs-metrics" id="jobs-metrics" aria-label="Preview job totals"></div>
 <form id="jobs-form"><div class="jobs-fields">
 <div class="jobs-wide"><label for="jobs-title">Job title</label><input id="jobs-title" maxlength="120" required placeholder="Example: Inspect equipment"></div>
@@ -200,7 +200,7 @@ window.addEventListener('load', () => {
 <div id="jobs-list" class="jobs-list" aria-live="polite"></div>
 <div class="saved-jobs" aria-label="Saved jobs from Supabase">
 <h3>Saved Jobs · Supabase</h3>
-<p>View permanently saved jobs for your verified organization. Saved jobs are read-only here; editing, deleting, and employee notifications are not enabled.</p>
+<p>View permanently saved jobs for your verified organization. Saved jobs can be edited only after the separate backend editing switch is enabled. Deleting and employee notifications are not enabled.</p>
 <div class="saved-jobs-actions"><button type="button" id="jobs-load-saved" class="secondary-btn">Load Saved Jobs</button><button type="button" id="jobs-refresh-saved" class="secondary-btn">Refresh Jobs</button></div>
 <div id="jobs-saved-message" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
 <div id="jobs-saved-list" class="jobs-list" aria-live="polite"></div>
@@ -417,6 +417,7 @@ window.addEventListener('load', () => {
   const savedJobsLoad=document.getElementById('jobs-load-saved');
   const savedJobsRefresh=document.getElementById('jobs-refresh-saved');
   let savedJobsRequest=0;
+  let savedJobEditing=false;
   const savedNotice=(message,kind='')=>{savedJobsMessage.textContent=message;savedJobsMessage.className='api-result '+kind;};
   function clearSavedJobs(){++savedJobsRequest;savedJobsList.replaceChildren();savedNotice('Not loaded yet.');savedJobsLoad.disabled=false;savedJobsRefresh.disabled=false;}
   async function loadSavedJobs(){
@@ -442,7 +443,40 @@ window.addEventListener('load', () => {
         const desc=document.createElement('p');desc.textContent=job.description||'No instructions entered';
         const assignee=document.createElement('p');assignee.textContent='Assignment: '+(job.assigned_membership_id?'Employee membership '+job.assigned_membership_id:'Unassigned');
         const due=document.createElement('p');due.textContent='Due: '+(job.due_date||'Not set');
-        card.append(heading,badge,desc,assignee,due);savedJobsList.append(card);
+        const edit=document.createElement('button');edit.type='button';edit.className='secondary-btn';edit.textContent='Edit Saved Job';
+        const editor=document.createElement('form');editor.className='jobs-fields';editor.hidden=true;editor.style.marginTop='12px';
+        function field(labelText,control,wide=false){const wrapper=document.createElement('div');if(wide)wrapper.className='jobs-wide';const label=document.createElement('label');label.textContent=labelText;label.append(control);wrapper.append(label);editor.append(wrapper);return control;}
+        const titleInput=document.createElement('input');titleInput.required=true;titleInput.maxLength=120;titleInput.value=job.title;field('Job title',titleInput,true);
+        const descInput=document.createElement('textarea');descInput.maxLength=2000;descInput.value=job.description||'';field('Description',descInput,true);
+        const priorityInput=document.createElement('select');for(const [v,t] of [['low','Low'],['normal','Normal'],['high','High'],['urgent','Urgent']]){const o=document.createElement('option');o.value=v;o.textContent=t;priorityInput.append(o);}priorityInput.value=job.priority;field('Priority',priorityInput);
+        const statusInput=document.createElement('select');for(const [v,t] of [['pending','Pending'],['in_progress','In progress'],['completed','Completed'],['cancelled','Cancelled']]){const o=document.createElement('option');o.value=v;o.textContent=t;statusInput.append(o);}statusInput.value=job.status;field('Status',statusInput);
+        const dueInput=document.createElement('input');dueInput.type='date';dueInput.value=job.due_date||'';field('Due date',dueInput);
+        const employeeInput=document.createElement('select');const unassigned=document.createElement('option');unassigned.value='';unassigned.textContent='Unassigned';employeeInput.append(unassigned);
+        for(const [id,name] of draftEmployeeNames){const option=document.createElement('option');option.value=id;option.textContent=name;employeeInput.append(option);}
+        if(job.assigned_membership_id&&!draftEmployeeNames.has(job.assigned_membership_id)){const existing=document.createElement('option');existing.value=job.assigned_membership_id;existing.textContent='Current assignment (load employee names to change)';employeeInput.append(existing);}
+        employeeInput.value=job.assigned_membership_id||'';field('Assign employee',employeeInput);
+        const save=document.createElement('button');save.type='submit';save.textContent='Save Changes';const cancel=document.createElement('button');cancel.type='button';cancel.className='secondary-btn';cancel.textContent='Cancel';cancel.addEventListener('click',()=>{editor.hidden=true;edit.hidden=false;});
+        const actions=document.createElement('div');actions.className='jobs-wide';actions.append(save,' ',cancel);editor.append(actions);
+        edit.addEventListener('click',()=>{editor.hidden=false;edit.hidden=true;});
+        editor.addEventListener('submit',async event=>{
+          event.preventDefault();if(savedJobEditing)return;
+          if(!job.updated_at||!Number.isFinite(Date.parse(job.updated_at))){savedNotice('Job version unavailable. Refresh Saved Jobs before editing.','error');return;}
+          if(!titleInput.value.trim()||titleInput.value.trim().length>120){savedNotice('Enter a valid title.','error');return;}
+          savedJobEditing=true;save.disabled=true;cancel.disabled=true;savedNotice('Submitting protected job update…');
+          try{
+            const org=await confirmWorksiteOwner();const {data,error}=await client.auth.getSession();if(error||!data?.session?.access_token)throw new Error('Owner session expired. Sign in again.');
+            const response=await fetch(API_BASE+'/api/jobs',{method:'PATCH',headers:{Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'},body:JSON.stringify({jobId:job.id,expectedUpdatedAt:job.updated_at,title:titleInput.value.trim(),description:descInput.value.trim(),priority:priorityInput.value,status:statusInput.value,dueDate:dueInput.value||null,assignedMembershipId:employeeInput.value||null}),cache:'no-store',referrerPolicy:'no-referrer'});
+            const result=await response.json().catch(()=>null);
+            if(!response.ok||result?.ok!==true||result?.jobUpdated!==true){
+              if(response.status===403&&result?.error==='Job editing not enabled')throw new Error('Job editing is safely disabled in Cloudflare. No changes were saved.');
+              throw new Error((result?.error||'Unable to confirm update')+' (HTTP '+response.status+').');
+            }
+            if(verifiedWorksiteOrg!==org||!jobsSection.classList.contains('open'))return;
+            await loadSavedJobs();savedNotice('Job updated permanently. Saved Jobs refreshed.','ok');
+          }catch(error){savedNotice((error?.message||'Job update failed')+' If the outcome is uncertain, refresh Saved Jobs before retrying.','error');}
+          finally{savedJobEditing=false;save.disabled=false;cancel.disabled=false;}
+        });
+        card.append(heading,badge,desc,assignee,due,edit,editor);savedJobsList.append(card);
       }
       if(!result.jobs.length){const empty=document.createElement('p');empty.textContent='No saved jobs yet. Create a job using Save Job to Supabase when controlled saving is enabled.';savedJobsList.append(empty);}
       savedNotice(result.jobs.length+' saved job(s) loaded from Supabase. Listing only; no records changed.','ok');
