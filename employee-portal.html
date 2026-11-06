@@ -14,7 +14,7 @@
 </style></head>
 <body><header><a href="./index.html"><img src="./ironcrest-logo.png" alt="Ironcrest Workforce Operations"></a><span class="eyebrow">Employee Portal · Preview</span></header><main><div class="eyebrow">Secure workforce access</div><h1>Employee Portal</h1><p>View your verified organization membership. Additional workforce tools are coming soon.</p><div id="notice" class="notice" role="status" aria-live="polite">Verifying your employee access…</div>
 <section id="login" class="panel hidden"><h2>Employee sign in</h2><p>Use the account that accepted your employee invitation.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required><button id="signin" type="submit" style="margin-top:18px">Sign in</button></form></section>
-<section id="workspace" class="hidden"><div class="panel"><div class="workspace-head"><div><div class="eyebrow">Verified employee access</div><h2>My workspace</h2><p class="welcome">Your secure home for workforce information.</p></div><span class="preview-pill">STAGE 10P-BC · CONTROLLED LIVE ATTENDANCE TEST</span></div><hr class="section-divider"><div class="meta" style="margin-top:24px"><div><p>Signed in as</p><strong id="member-email"></strong></div><div><p>Organization</p><strong id="org-name"></strong></div></div><button id="signout" class="secondary" style="margin-top:24px">Sign out</button></div><section class="attendance-preview" aria-labelledby="attendance-title"><div class="eyebrow">Stage 10P-R · Time &amp; Attendance</div><h2 id="attendance-title">Secure attendance setup</h2><p class="state">TEST MODE — Clock-in and clock-out are disabled</p><p>Before recording shifts, Ironcrest will require employer-defined worksites, server-side location checks, permission rules, and a manager exception process.</p><div class="attendance-actions"><button type="button" disabled title="Not enabled until backend security is ready">Clock in — Awaiting security approval</button><button type="button" disabled title="Not enabled until backend security is ready">Clock out — Awaiting security approval</button><button id="gps-check" type="button" class="secondary">Test GPS permission</button></div><div id="gps-result" role="status" aria-live="polite">Optional device check. Location is not sent to Ironcrest or saved by this page.</div><ul><li>Worksite boundaries: active employer worksites loaded below</li><li>Server-side attendance records: not activated</li><li>Manager exceptions and suspicious activity review: planned</li><li>GPS alone cannot reliably prevent spoofing; additional controls will be required</li></ul></section>
+<section id="workspace" class="hidden"><div class="panel"><div class="workspace-head"><div><div class="eyebrow">Verified employee access</div><h2>My workspace</h2><p class="welcome">Your secure home for workforce information.</p></div><span class="preview-pill">STAGE 10P-BD · CONTROLLED LIVE ATTENDANCE TEST</span></div><hr class="section-divider"><div class="meta" style="margin-top:24px"><div><p>Signed in as</p><strong id="member-email"></strong></div><div><p>Organization</p><strong id="org-name"></strong></div></div><button id="signout" class="secondary" style="margin-top:24px">Sign out</button></div><section class="attendance-preview" aria-labelledby="attendance-title"><div class="eyebrow">Stage 10P-R · Time &amp; Attendance</div><h2 id="attendance-title">Secure attendance setup</h2><p class="state">TEST MODE — Clock-in and clock-out are disabled</p><p>Before recording shifts, Ironcrest will require employer-defined worksites, server-side location checks, permission rules, and a manager exception process.</p><div class="attendance-actions"><button type="button" disabled title="Not enabled until backend security is ready">Clock in — Awaiting security approval</button><button type="button" disabled title="Not enabled until backend security is ready">Clock out — Awaiting security approval</button><button id="gps-check" type="button" class="secondary">Test GPS permission</button></div><div id="gps-result" role="status" aria-live="polite">Optional device check. Location is not sent to Ironcrest or saved by this page.</div><ul><li>Worksite boundaries: active employer worksites loaded below</li><li>Server-side attendance records: not activated</li><li>Manager exceptions and suspicious activity review: planned</li><li>GPS alone cannot reliably prevent spoofing; additional controls will be required</li></ul></section>
 <section class="attendance-preview" aria-labelledby="geofence-title">
  <div class="eyebrow">Stage 10P-R · Worksite verification</div>
  <h2 id="geofence-title">My approved worksites</h2>
@@ -164,6 +164,7 @@ let dryRunBusy=false;
    const {data:{session},error}=await client.auth.getSession();
    if(error||!session?.access_token){output.textContent='Session expired. Please sign in again.';return;}
    let data=null;
+   let localGpsAccuracy=null;
    let verified=false;
    // Each attempt requests a new sample. Do not alter its original timestamp.
    // GPS retries are bounded to two short attempts; server rejections remain final.
@@ -178,6 +179,7 @@ let dryRunBusy=false;
     }
     if(org!==verifiedOrgId){output.textContent='Session changed. Test cancelled.';return;}
     const {latitude,longitude,accuracy}=position.coords;
+    localGpsAccuracy=accuracy;
     if(![latitude,longitude,accuracy,position.timestamp].every(Number.isFinite)||accuracy<0){output.textContent='Invalid location reading. Attendance remains locked.';return;}
     const age=Date.now()-position.timestamp;
     if(age>25000||age< -5000){
@@ -203,8 +205,7 @@ let dryRunBusy=false;
    const labels={inside_preview:'Inside assigned worksite boundary',outside_preview:'Outside approved worksite boundary',boundary_uncertain:'Boundary uncertain',accuracy_insufficient:'GPS accuracy insufficient'};
    const name=activeWorksites.find(w=>w.id===data.worksiteId)?.name||'Assigned worksite';
    const meters=value=>typeof value==='number'&&Number.isFinite(value)?Math.round(value)+' m':'Not reported';
-   const localGpsAccuracy=accuracy;
-    const serverAccuracy=meters(data.accuracyMeters);
+   const serverAccuracy=meters(data.accuracyMeters);
    const distance=meters(data.distanceMeters);
    const radius=meters(data.allowedRadiusMeters);
    const threshold='100 m';
@@ -212,7 +213,7 @@ let dryRunBusy=false;
    output.textContent=(action==='clock-in'?'Clock-in':'Clock-out')+' dry run: '+(labels[data.geofenceStatus]||data.geofenceStatus||'Location checked')+'. Worksite: '+name+'. Device GPS accuracy: ±'+meters(localGpsAccuracy)+' ('+accuracyStatus+'). Server-reported accuracy: ±'+serverAccuracy+'. Required accuracy: 100 m or better. Distance to worksite: '+distance+'. Worksite radius: '+radius+'. Eligibility: '+(data.locationEligibleForFutureReview?'Yes':'No')+'. No attendance recorded. Clock-in/out remain disabled.';
   }catch(error){
    const reasons={1:'Location permission denied',2:'Device location unavailable',3:'Location request timed out',STALE_LOCATION:'Could not obtain a fresh location. Try again with location services enabled',INVALID_LOCATION:'Invalid device location'};
-   output.textContent=(reasons[error?.code]||reasons[error?.message]||'Dry-run request failed')+'. Attendance remains locked.';
+   output.textContent=(reasons[error?.code]||reasons[error?.message]||('Dry-run display error: '+String(error?.name||'unknown'))) + '. Attendance remains locked.';
   }finally{dryRunBusy=false;inBtn.disabled=!verifiedOrgId||!activeWorksites.length;outBtn.disabled=!verifiedOrgId||!activeWorksites.length;}
  }
  $('dry-run-in').addEventListener('click',()=>runAttendanceDryRun('clock-in'));
