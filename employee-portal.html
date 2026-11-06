@@ -61,16 +61,25 @@ async function loadWorksites(){
 $('reload-worksites').addEventListener('click',loadWorksites);
  // Obtain a new position for each action. Safari can return a cached sample even
  // with maximumAge: 0; reject it and retry once, never refreshing its timestamp.
+ // Fast-path: use the first fresh high-accuracy fix. Retry once only for
+ // a stale/invalid reading or a GPS timeout; never trust a cached fix.
  async function getFreshWorksitePosition(onRetry){
+  let lastError;
   for(let attempt=0;attempt<2;attempt++){
-   const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:20000,maximumAge:0}));
-   const {latitude,longitude,accuracy}=position.coords;
-   if(![latitude,longitude,accuracy,position.timestamp].every(Number.isFinite)||accuracy<0){throw new Error('INVALID_LOCATION');}
-   const age=Date.now()-position.timestamp;
-   if(age>=-5000&&age<=25000)return position;
-   if(attempt===0){onRetry?.();continue;}
-   throw new Error('STALE_LOCATION');
+   try{
+    const position=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:3000,maximumAge:0}));
+    const {latitude,longitude,accuracy}=position.coords;
+    if(![latitude,longitude,accuracy,position.timestamp].every(Number.isFinite)||accuracy<0)throw new Error('INVALID_LOCATION');
+    const age=Date.now()-position.timestamp;
+    if(age>=-5000&&age<=25000)return position;
+    lastError=new Error('STALE_LOCATION');
+   }catch(error){
+    if(error?.code===1)throw error; // Permission denial cannot be retried.
+    lastError=error;
+   }
+   if(attempt===0)onRetry?.();
   }
+  throw lastError||new Error('STALE_LOCATION');
  }
  const GEOFENCE_API='https://ironcrest-invitations-api.bluemagic920.workers.dev/api/verify-worksite-boundary';
  let checkingBoundary=false;
@@ -157,14 +166,14 @@ let dryRunBusy=false;
    let data=null;
    let verified=false;
    // Each attempt requests a new sample. Do not alter its original timestamp.
-   // Retry only stale readings; all other server rejections remain final.
-   for(let attempt=0;attempt<3;attempt++){
+   // GPS retries are bounded to two short attempts; server rejections remain final.
+   for(let attempt=0;attempt<1;attempt++){
     if(attempt>0)output.textContent='Refreshing your location automatically…';
     let position;
     try{
      position=await getFreshWorksitePosition(()=>{output.textContent='Refreshing your location automatically…';});
     }catch(gpsError){
-     if(gpsError?.message==='STALE_LOCATION'&&attempt<2)continue;
+     if(gpsError?.message==='STALE_LOCATION'&&attempt<0)continue;
      throw gpsError;
     }
     if(org!==verifiedOrgId){output.textContent='Session changed. Test cancelled.';return;}
@@ -172,7 +181,7 @@ let dryRunBusy=false;
     if(![latitude,longitude,accuracy,position.timestamp].every(Number.isFinite)||accuracy<0){output.textContent='Invalid location reading. Attendance remains locked.';return;}
     const age=Date.now()-position.timestamp;
     if(age>25000||age< -5000){
-     if(attempt<2)continue;
+     if(attempt<0)continue;
      output.textContent='Unable to verify a fresh location. Attendance remains locked. Please contact your manager if this continues.';return;
     }
     const response=await fetch('https://ironcrest-invitations-api.bluemagic920.workers.dev/api/attendance/dry-run/'+action,{
@@ -184,7 +193,6 @@ let dryRunBusy=false;
     if(org!==verifiedOrgId){output.textContent='Session changed. Result discarded.';return;}
     if(!response.ok||data?.ok!==true){
      const message=String(data?.error||'Dry-run verification unavailable');
-     if(/stale|too old|timestamp.*old/i.test(message)&&attempt<2)continue;
      output.textContent=(/stale|too old|timestamp.*old/i.test(message)?'Unable to verify a fresh location. Please contact your manager if this continues.':message)+ ' Attendance remains locked.';
      return;
     }
