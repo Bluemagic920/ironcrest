@@ -212,10 +212,10 @@ window.addEventListener('load', () => {
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
 <section class="activity-center" id="manager-activity-center" aria-labelledby="activity-center-title">
-<div class="activity-center-head"><div><div class="eyebrow">Ironcrest · Management workspace</div><h2 id="activity-center-title">Manager Overview</h2></div><span class="preview-tag">Stage 11K · Read-only Preview</span></div>
+<div class="activity-center-head"><div><div class="eyebrow">Ironcrest · Management workspace</div><h2 id="activity-center-title">Manager Overview</h2></div><span class="preview-tag">Stage 11L · Live Read-only Counters</span></div>
 <p>Daily operations at a glance. Green indicates a completed job without a reported issue; it does not mean manager-approved. Flag changes remain locked.</p>
 <div class="manager-metrics" aria-label="Manager overview counters">
-<div class="manager-metric"><strong id="manager-completed-today">—</strong><span>Completed Today</span></div>
+<div class="manager-metric"><strong id="manager-completed-today">—</strong><span>Completed Today (UTC)</span></div>
 <div class="manager-metric"><strong id="manager-in-progress">—</strong><span>In Progress</span></div>
 <div class="manager-metric"><strong id="manager-needs-attention">—</strong><span>Needs Attention</span></div>
 <div class="manager-metric"><strong id="manager-active-employees">—</strong><span>Active Employees</span></div>
@@ -228,7 +228,7 @@ window.addEventListener('load', () => {
 <div id="manager-activity-history" class="manager-history" hidden></div>
 <div class="manager-actions-note">Green: completed, no issue reported · Red: flagged for attention · Amber: review pending. Review and flag updates are disabled until secure server support is deployed.</div>
 </div>
-<p class="activity-disclosure">Stage 11K safety gate: activity is read-only and owner-scoped. The current endpoint may not supply employee names, full job history, in-progress totals, or a company time zone; missing information is never estimated. Persistent review and follow-up actions require protected authorization, audit logging, and concurrency checks.</p>
+<p class="activity-disclosure">Stage 11K safety gate: activity is read-only and owner-scoped. Live counts are exact, organization-scoped and read-only. Completed Today uses UTC rather than an unconfigured company time zone; recent job history remains capped. Missing information is never estimated. Persistent review and follow-up actions require protected authorization, audit logging, and concurrency checks.</p>
 </section>
 <section class="jobs-section" id="jobs-section" aria-label="Job and task tracking preview">
 <div class="jobs-head"><div><div class="eyebrow">Stage 11E · Controlled job editing</div><h2>Job &amp; Task Tracking</h2></div><button id="jobs-close" type="button" class="secondary-btn">Close</button></div>
@@ -391,8 +391,7 @@ window.addEventListener('load', () => {
       const payload=await response.json();
       if(!response.ok||payload.ok!==true)throw new Error('HTTP '+response.status+': '+(payload.error||'Request failed'));
       if(payload.readOnly!==true||payload.organizationScoped!==true||payload.reviewUpdatesEnabled!==false||!Array.isArray(payload.jobs))throw new Error('Unexpected activity response safeguards.');
-      // Existing endpoint only guarantees completed jobs and needs-review totals.
-      // Daily totals require a server-provided business-time-zone-aware count.
+      // Stage 11L exact counts; the server explicitly uses UTC for today.
       metric('manager-completed-today',safeCount(payload.completedTodayCount));
       metric('manager-in-progress',safeCount(payload.inProgressCount));
       metric('manager-needs-attention',safeCount(payload.flaggedCount));
@@ -402,7 +401,7 @@ window.addEventListener('load', () => {
       if(!recent.length)activityList.textContent='No completed jobs returned.';
       for(const job of payload.jobs)activityHistory.append(renderManagerJob(job));
       historyToggle.disabled=payload.jobs.length===0;
-      activityResult.textContent='PASS — '+safeCount(payload.jobCount)+' completed job(s) returned; '+safeCount(payload.needsReviewCount)+' awaiting review. Owner-scoped and read-only. Dashboard counters show — until supported by the backend.';
+      activityResult.textContent='PASS — '+safeCount(payload.jobCount)+' recent completed job(s) returned; '+safeCount(payload.needsReviewCount)+' awaiting review in this list. Live counters are organization-scoped, read-only; today uses UTC.';
       activityResult.className='api-result ok';
     }catch(error){activityResult.textContent='NOT VERIFIED — '+(error?.message||'Network error');activityResult.className='api-result error';}
     finally{activityCheck.disabled=false;}
