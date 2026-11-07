@@ -198,6 +198,7 @@ window.addEventListener('load', () => {
 <section class="activity-center" id="manager-activity-center" aria-labelledby="activity-center-title">
 <div class="activity-center-head"><div><div class="eyebrow">Ironcrest · Management workspace</div><h2 id="activity-center-title">Manager Activity Center</h2></div><span class="preview-tag">UI Preview · Not Live</span></div>
 <p>See completed jobs, identify customer follow-ups, and review employee activity in one place. The example below is illustrative and is not a live job record.</p>
+<div class="activity-demo" aria-label="Read-only manager activity test"><button type="button" class="secondary-btn" id="manager-activity-check">Check Manager Activity</button><div id="manager-activity-result" class="api-result" role="status" aria-live="polite">Not checked yet. Read-only; no records will be changed.</div><div id="manager-activity-list"></div></div>
 <div class="activity-demo" aria-label="Example job completion notification">
 <div><span aria-hidden="true">✓ </span><strong>Job Completed</strong> <span class="activity-state">Needs Review · Example</span></div>
 <p><strong>Anthony Thomson</strong> — Stage 11H Test Job</p>
@@ -327,6 +328,40 @@ window.addEventListener('load', () => {
   document.getElementById('activity-demo-review').addEventListener('click',()=>{activityFeedback.textContent='Example marked reviewed in this preview only. No record saved.';activityFeedback.className='api-result ok';});
   document.getElementById('activity-demo-followup').addEventListener('click',()=>{activityFeedback.textContent='Example flagged for follow-up in this preview only. No reminder or record saved.';activityFeedback.className='api-result ok';});
   document.getElementById('activity-demo-reset').addEventListener('click',()=>{activityFeedback.textContent='Preview reset. No database changes or customer contact.';activityFeedback.className='api-result';});
+
+  // Stage 11I: owner-authenticated, read-only activity verification.
+  const activityCheck=document.getElementById('manager-activity-check');
+  const activityResult=document.getElementById('manager-activity-result');
+  const activityList=document.getElementById('manager-activity-list');
+  activityCheck.addEventListener('click',async()=>{
+    activityCheck.disabled=true;
+    activityResult.textContent='Checking protected Manager Activity endpoint…';
+    activityResult.className='api-result';
+    activityList.replaceChildren();
+    try {
+      const {data,error}=await client.auth.getSession();
+      if(error||!data?.session?.access_token) throw new Error('Owner session missing. Sign in again.');
+      const response=await fetch(API_BASE+'/api/manager/activity',{
+        method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},
+        cache:'no-store',referrerPolicy:'no-referrer'
+      });
+      const payload=await response.json();
+      if(!response.ok||payload.ok!==true) throw new Error('HTTP '+response.status+': '+(payload.error||'Request failed'));
+      if(payload.readOnly!==true||payload.organizationScoped!==true||payload.reviewUpdatesEnabled!==false||!Array.isArray(payload.jobs))
+        throw new Error('Unexpected activity response safeguards.');
+      activityResult.textContent='PASS — '+payload.jobCount+' completed job(s); '+payload.needsReviewCount+' need review. Owner-scoped, read-only. No changes made.';
+      activityResult.className='api-result ok';
+      for(const job of payload.jobs){
+        const item=document.createElement('p');
+        const title=document.createElement('strong');title.textContent=job.title||'Untitled job';
+        item.append(title,document.createTextNode(' — '+(job.reviewStatus||'unknown')+' · '+(job.completedAt?new Date(job.completedAt).toLocaleString():'No completion timestamp')));
+        activityList.append(item);
+      }
+    } catch(error){
+      activityResult.textContent='NOT VERIFIED — '+(error?.message||'Network error');
+      activityResult.className='api-result error';
+    } finally {activityCheck.disabled=false;}
+  });
 
   // Stage 11A: UI-only draft jobs. Never sends job data to an API or local storage.
   const jobsSection=document.getElementById('jobs-section');
