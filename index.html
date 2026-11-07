@@ -149,6 +149,18 @@ window.addEventListener('load', () => {
 .saved-jobs p{font-size:12px}.saved-jobs-actions{display:flex;flex-wrap:wrap;gap:10px}
 .panel .saved-jobs-actions button{margin:8px 0;padding:10px 16px}
 .saved-jobs .jobs-list{margin-top:14px}
+
+/* Stage 11HC: Manager Activity Center preview. No backend writes or live notification claims. */
+.activity-center{margin:24px 0;padding:22px;border:1px solid #d8aa5c66;border-radius:15px;background:linear-gradient(145deg,#12283e,#091827)}
+.activity-center-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.activity-center h2{margin:5px 0 8px;font-size:21px}.activity-center p{font-size:13px}
+.activity-demo{margin-top:15px;padding:16px;border:1px solid #ffffff28;border-radius:12px;background:#0a1c2e}
+.activity-demo strong{color:#f2d29b}.activity-demo .activity-meta{font-size:12px;color:#b9c8d7;margin:8px 0}
+.activity-state{display:inline-block;padding:5px 9px;border:1px solid #d8aa5c66;border-radius:20px;color:#f2d29b;font-size:11px}
+.activity-demo-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.panel .activity-demo-actions button{width:auto;margin:0;padding:9px 13px;font-size:12px;cursor:pointer;opacity:1}
+.activity-disclosure{font-size:12px;color:#d8c49f;margin-top:13px}
+@media(max-width:650px){.activity-center{padding:16px}}
 </style>
 </head>
 <body>
@@ -183,6 +195,18 @@ window.addEventListener('load', () => {
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
+<section class="activity-center" id="manager-activity-center" aria-labelledby="activity-center-title">
+<div class="activity-center-head"><div><div class="eyebrow">Ironcrest · Management workspace</div><h2 id="activity-center-title">Manager Activity Center</h2></div><span class="preview-tag">UI Preview · Not Live</span></div>
+<p>See completed jobs, identify customer follow-ups, and review employee activity in one place. The example below is illustrative and is not a live job record.</p>
+<div class="activity-demo" aria-label="Example job completion notification">
+<div><span aria-hidden="true">✓ </span><strong>Job Completed</strong> <span class="activity-state">Needs Review · Example</span></div>
+<p><strong>Anthony Thomson</strong> — Stage 11H Test Job</p>
+<p class="activity-meta">Customer: Example Customer (placeholder) · Completion time: Example only</p>
+<div class="activity-demo-actions"><button type="button" class="secondary-btn" id="activity-demo-review">Preview: Mark Reviewed</button><button type="button" class="secondary-btn" id="activity-demo-followup">Preview: Follow-up Needed</button><button type="button" class="secondary-btn" id="activity-demo-reset">Reset Preview</button></div>
+<div id="activity-demo-feedback" class="api-result" role="status" aria-live="polite">Preview only. No database changes or customer contact.</div>
+</div>
+<p class="activity-disclosure">Live activity, unread counts, manager authorization, and persistent review/follow-up actions require a protected backend endpoint. No notification emails are sent.</p>
+</section>
 <section class="jobs-section" id="jobs-section" aria-label="Job and task tracking preview">
 <div class="jobs-head"><div><div class="eyebrow">Stage 11E · Controlled job editing</div><h2>Job &amp; Task Tracking</h2></div><button id="jobs-close" type="button" class="secondary-btn">Close</button></div>
 <p class="jobs-note"><strong>Controlled test:</strong> Add Preview Job keeps a temporary browser draft. Save Job to Supabase makes a permanent job only after the secure Cloudflare job-write switch is enabled. Job editing is protected by a separate Cloudflare switch and starts locked. Employee notifications remain disabled.</p>
@@ -297,6 +321,12 @@ window.addEventListener('load', () => {
   });
 
 
+
+  // Local demonstration only: never submits reviews or follow-ups to the server.
+  const activityFeedback=document.getElementById('activity-demo-feedback');
+  document.getElementById('activity-demo-review').addEventListener('click',()=>{activityFeedback.textContent='Example marked reviewed in this preview only. No record saved.';activityFeedback.className='api-result ok';});
+  document.getElementById('activity-demo-followup').addEventListener('click',()=>{activityFeedback.textContent='Example flagged for follow-up in this preview only. No reminder or record saved.';activityFeedback.className='api-result ok';});
+  document.getElementById('activity-demo-reset').addEventListener('click',()=>{activityFeedback.textContent='Preview reset. No database changes or customer contact.';activityFeedback.className='api-result';});
 
   // Stage 11A: UI-only draft jobs. Never sends job data to an API or local storage.
   const jobsSection=document.getElementById('jobs-section');
