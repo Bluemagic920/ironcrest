@@ -161,6 +161,22 @@ window.addEventListener('load', () => {
 .panel .activity-demo-actions button{width:auto;margin:0;padding:9px 13px;font-size:12px;cursor:pointer;opacity:1}
 .activity-disclosure{font-size:12px;color:#d8c49f;margin-top:13px}
 @media(max-width:650px){.activity-center{padding:16px}}
+
+/* Stage 11K: compact read-only manager overview */
+.manager-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:15px 0}
+.manager-metric{background:#081929;border:1px solid #ffffff27;border-radius:12px;padding:14px;min-width:0}
+.manager-metric strong{display:block;font-size:27px;color:#f2d29b;line-height:1.2}
+.manager-metric span{font-size:12px;color:#b9c8d7}
+.manager-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:14px 0}
+.manager-toolbar h3{margin:0;color:#f2d29b;font-size:16px}
+.manager-job-row{display:flex;gap:12px;justify-content:space-between;align-items:center;border:1px solid #ffffff22;background:#081929;border-radius:10px;padding:12px;margin:8px 0}
+.manager-job-main{min-width:0}.manager-job-main strong{display:block;color:#f2d29b;overflow-wrap:anywhere}
+.manager-job-main small{display:block;color:#b9c8d7;margin-top:4px;overflow-wrap:anywhere}
+.manager-flag{white-space:nowrap;font-size:12px;font-weight:600}
+.manager-flag.green{color:#83dfaa}.manager-flag.red{color:#ff9d9d}.manager-flag.gold{color:#f2d29b}
+.manager-history{max-height:410px;overflow:auto;padding-right:4px}
+.manager-actions-note{font-size:12px;color:#c8b996;margin-top:12px}
+@media(max-width:750px){.manager-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.manager-job-row{align-items:flex-start}}
 </style>
 </head>
 <body>
@@ -196,17 +212,23 @@ window.addEventListener('load', () => {
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
 <section class="activity-center" id="manager-activity-center" aria-labelledby="activity-center-title">
-<div class="activity-center-head"><div><div class="eyebrow">Ironcrest · Management workspace</div><h2 id="activity-center-title">Manager Activity Center</h2></div><span class="preview-tag">Stage 11J · Review Readiness</span></div>
-<p>View completed jobs from the protected backend. Review controls remain locked until the manager review endpoint is securely deployed and tested.</p>
-<div class="activity-demo" aria-label="Read-only manager activity test"><button type="button" class="secondary-btn" id="manager-activity-check">Check Manager Activity</button><div id="manager-activity-result" class="api-result" role="status" aria-live="polite">Not checked yet. Read-only; no records will be changed.</div><div id="manager-activity-list"></div></div>
-<div class="activity-demo" aria-label="Example job completion notification">
-<div><span aria-hidden="true">✓ </span><strong>Job Completed</strong> <span class="activity-state">Needs Review · Example</span></div>
-<p><strong>Anthony Thomson</strong> — Stage 11H Test Job</p>
-<p class="activity-meta">Customer: Example Customer (placeholder) · Completion time: Example only</p>
-<div class="activity-demo-actions"><button type="button" class="secondary-btn" id="activity-demo-review">Preview: Mark Reviewed</button><button type="button" class="secondary-btn" id="activity-demo-followup">Preview: Follow-up Needed</button><button type="button" class="secondary-btn" id="activity-demo-reset">Reset Preview</button></div>
-<div id="activity-demo-feedback" class="api-result" role="status" aria-live="polite">Preview only. No database changes or customer contact.</div>
+<div class="activity-center-head"><div><div class="eyebrow">Ironcrest · Management workspace</div><h2 id="activity-center-title">Manager Overview</h2></div><span class="preview-tag">Stage 11K · Read-only Preview</span></div>
+<p>Daily operations at a glance. Green indicates a completed job without a reported issue; it does not mean manager-approved. Flag changes remain locked.</p>
+<div class="manager-metrics" aria-label="Manager overview counters">
+<div class="manager-metric"><strong id="manager-completed-today">—</strong><span>Completed Today</span></div>
+<div class="manager-metric"><strong id="manager-in-progress">—</strong><span>In Progress</span></div>
+<div class="manager-metric"><strong id="manager-needs-attention">—</strong><span>Needs Attention</span></div>
+<div class="manager-metric"><strong id="manager-active-employees">—</strong><span>Active Employees</span></div>
 </div>
-<p class="activity-disclosure">Stage 11J safety gate: persistent review and follow-up actions require a protected backend endpoint with organization-scoped manager authorization, audit logging, and concurrency protection. No review writes or notification emails are enabled.</p>
+<div class="activity-demo" aria-label="Protected read-only manager activity">
+<button type="button" class="secondary-btn" id="manager-activity-check">Refresh Manager Overview</button>
+<div id="manager-activity-result" class="api-result" role="status" aria-live="polite">Not loaded. Counts are shown only when verified by the backend; unavailable metrics display —.</div>
+<div class="manager-toolbar"><h3>Recent Completed Jobs</h3><button type="button" class="secondary-btn" id="manager-history-toggle" aria-expanded="false" aria-controls="manager-activity-history" disabled>View Job History</button></div>
+<div id="manager-activity-list" aria-live="polite"></div>
+<div id="manager-activity-history" class="manager-history" hidden></div>
+<div class="manager-actions-note">Green: completed, no issue reported · Red: flagged for attention · Amber: review pending. Review and flag updates are disabled until secure server support is deployed.</div>
+</div>
+<p class="activity-disclosure">Stage 11K safety gate: activity is read-only and owner-scoped. The current endpoint may not supply employee names, full job history, in-progress totals, or a company time zone; missing information is never estimated. Persistent review and follow-up actions require protected authorization, audit logging, and concurrency checks.</p>
 </section>
 <section class="jobs-section" id="jobs-section" aria-label="Job and task tracking preview">
 <div class="jobs-head"><div><div class="eyebrow">Stage 11E · Controlled job editing</div><h2>Job &amp; Task Tracking</h2></div><button id="jobs-close" type="button" class="secondary-btn">Close</button></div>
@@ -323,44 +345,67 @@ window.addEventListener('load', () => {
 
 
 
-  // Local demonstration only: never submits reviews or follow-ups to the server.
-  const activityFeedback=document.getElementById('activity-demo-feedback');
-  document.getElementById('activity-demo-review').addEventListener('click',()=>{activityFeedback.textContent='Example marked reviewed in this preview only. No record saved.';activityFeedback.className='api-result ok';});
-  document.getElementById('activity-demo-followup').addEventListener('click',()=>{activityFeedback.textContent='Example flagged for follow-up in this preview only. No reminder or record saved.';activityFeedback.className='api-result ok';});
-  document.getElementById('activity-demo-reset').addEventListener('click',()=>{activityFeedback.textContent='Preview reset. No database changes or customer contact.';activityFeedback.className='api-result';});
-
-  // Stage 11I: owner-authenticated, read-only activity verification.
+  // Stage 11K: protected read-only activity. Do not infer missing metrics or review state.
   const activityCheck=document.getElementById('manager-activity-check');
   const activityResult=document.getElementById('manager-activity-result');
   const activityList=document.getElementById('manager-activity-list');
+  const activityHistory=document.getElementById('manager-activity-history');
+  const historyToggle=document.getElementById('manager-history-toggle');
+  const metric=(id,value)=>{document.getElementById(id).textContent=value;};
+  const resetManagerMetrics=()=>{
+    for(const id of ['manager-completed-today','manager-in-progress','manager-needs-attention','manager-active-employees'])metric(id,'—');
+  };
+  const safeCount=value=>Number.isSafeInteger(value)&&value>=0?String(value):'—';
+  const renderManagerJob=(job)=>{
+    const row=document.createElement('div');row.className='manager-job-row';
+    const main=document.createElement('div');main.className='manager-job-main';
+    const title=document.createElement('strong');title.textContent=typeof job.title==='string'&&job.title.trim()?job.title:'Untitled job';
+    const meta=document.createElement('small');
+    const employee=typeof job.employeeName==='string'&&job.employeeName.trim()?job.employeeName.trim()+' · ':'';
+    const timestamp=job.completedAt&&Number.isFinite(Date.parse(job.completedAt))?new Date(job.completedAt).toLocaleString():'Completion time unavailable';
+    meta.textContent=employee+timestamp;
+    main.append(title,meta);
+    const flag=document.createElement('span');flag.className='manager-flag';
+    const status=String(job.reviewStatus||'').toLowerCase();
+    if(status.includes('follow')||status.includes('flag')||status.includes('attention')){flag.classList.add('red');flag.textContent='⚑ Needs Attention';}
+    else if(status.includes('reviewed')||status.includes('approved')){flag.classList.add('green');flag.textContent='⚑ Reviewed';}
+    else if(status.includes('needs')||status.includes('pending')){flag.classList.add('gold');flag.textContent='⚑ Needs Review';}
+    else{flag.classList.add('green');flag.textContent='⚑ Completed';}
+    row.append(main,flag);return row;
+  };
+  historyToggle.addEventListener('click',()=>{
+    const opening=activityHistory.hidden;
+    activityHistory.hidden=!opening;
+    historyToggle.setAttribute('aria-expanded',String(opening));
+    historyToggle.textContent=opening?'Hide Job History':'View Job History';
+  });
   activityCheck.addEventListener('click',async()=>{
-    activityCheck.disabled=true;
-    activityResult.textContent='Checking protected Manager Activity endpoint…';
-    activityResult.className='api-result';
-    activityList.replaceChildren();
-    try {
+    activityCheck.disabled=true;historyToggle.disabled=true;
+    activityResult.textContent='Checking protected Manager Activity endpoint…';activityResult.className='api-result';
+    activityList.replaceChildren();activityHistory.replaceChildren();activityHistory.hidden=true;
+    historyToggle.textContent='View Job History';historyToggle.setAttribute('aria-expanded','false');resetManagerMetrics();
+    try{
       const {data,error}=await client.auth.getSession();
-      if(error||!data?.session?.access_token) throw new Error('Owner session missing. Sign in again.');
-      const response=await fetch(API_BASE+'/api/manager/activity',{
-        method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},
-        cache:'no-store',referrerPolicy:'no-referrer'
-      });
+      if(error||!data?.session?.access_token)throw new Error('Owner session missing. Sign in again.');
+      const response=await fetch(API_BASE+'/api/manager/activity',{method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store',referrerPolicy:'no-referrer'});
       const payload=await response.json();
-      if(!response.ok||payload.ok!==true) throw new Error('HTTP '+response.status+': '+(payload.error||'Request failed'));
-      if(payload.readOnly!==true||payload.organizationScoped!==true||payload.reviewUpdatesEnabled!==false||!Array.isArray(payload.jobs))
-        throw new Error('Unexpected activity response safeguards.');
-      activityResult.textContent='PASS — '+payload.jobCount+' completed job(s); '+payload.needsReviewCount+' need review. Owner-scoped, read-only. No changes made.';
+      if(!response.ok||payload.ok!==true)throw new Error('HTTP '+response.status+': '+(payload.error||'Request failed'));
+      if(payload.readOnly!==true||payload.organizationScoped!==true||payload.reviewUpdatesEnabled!==false||!Array.isArray(payload.jobs))throw new Error('Unexpected activity response safeguards.');
+      // Existing endpoint only guarantees completed jobs and needs-review totals.
+      // Daily totals require a server-provided business-time-zone-aware count.
+      metric('manager-completed-today',safeCount(payload.completedTodayCount));
+      metric('manager-in-progress',safeCount(payload.inProgressCount));
+      metric('manager-needs-attention',safeCount(payload.flaggedCount));
+      metric('manager-active-employees',safeCount(payload.activeEmployeeCount));
+      const recent=payload.jobs.slice(0,5);
+      for(const job of recent)activityList.append(renderManagerJob(job));
+      if(!recent.length)activityList.textContent='No completed jobs returned.';
+      for(const job of payload.jobs)activityHistory.append(renderManagerJob(job));
+      historyToggle.disabled=payload.jobs.length===0;
+      activityResult.textContent='PASS — '+safeCount(payload.jobCount)+' completed job(s) returned; '+safeCount(payload.needsReviewCount)+' awaiting review. Owner-scoped and read-only. Dashboard counters show — until supported by the backend.';
       activityResult.className='api-result ok';
-      for(const job of payload.jobs){
-        const item=document.createElement('p');
-        const title=document.createElement('strong');title.textContent=job.title||'Untitled job';
-        item.append(title,document.createTextNode(' — '+(job.reviewStatus||'unknown')+' · '+(job.completedAt?new Date(job.completedAt).toLocaleString():'No completion timestamp')));
-        activityList.append(item);
-      }
-    } catch(error){
-      activityResult.textContent='NOT VERIFIED — '+(error?.message||'Network error');
-      activityResult.className='api-result error';
-    } finally {activityCheck.disabled=false;}
+    }catch(error){activityResult.textContent='NOT VERIFIED — '+(error?.message||'Network error');activityResult.className='api-result error';}
+    finally{activityCheck.disabled=false;}
   });
 
   // Stage 11A: UI-only draft jobs. Never sends job data to an API or local storage.
