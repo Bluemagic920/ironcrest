@@ -150,7 +150,7 @@ window.addEventListener('load', () => {
 .panel .saved-jobs-actions button{margin:8px 0;padding:10px 16px}
 .saved-jobs .jobs-list{margin-top:14px}
 
-/* Stage 11HC: Manager Activity Center preview. No backend writes or live notification claims. */
+/* Stage 11J: Manager review readiness. No backend writes or live notification claims. */
 .activity-center{margin:24px 0;padding:22px;border:1px solid #d8aa5c66;border-radius:15px;background:linear-gradient(145deg,#12283e,#091827)}
 .activity-center-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .activity-center h2{margin:5px 0 8px;font-size:21px}.activity-center p{font-size:13px}
@@ -196,8 +196,8 @@ window.addEventListener('load', () => {
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
 <section class="activity-center" id="manager-activity-center" aria-labelledby="activity-center-title">
-<div class="activity-center-head"><div><div class="eyebrow">Ironcrest · Management workspace</div><h2 id="activity-center-title">Manager Activity Center</h2></div><span class="preview-tag">UI Preview · Not Live</span></div>
-<p>See completed jobs, identify customer follow-ups, and review employee activity in one place. The example below is illustrative and is not a live job record.</p>
+<div class="activity-center-head"><div><div class="eyebrow">Ironcrest · Management workspace</div><h2 id="activity-center-title">Manager Activity Center</h2></div><span class="preview-tag">Stage 11J · Review Readiness</span></div>
+<p>View completed jobs from the protected backend. Review controls remain locked until the manager review endpoint is securely deployed and tested.</p>
 <div class="activity-demo" aria-label="Read-only manager activity test"><button type="button" class="secondary-btn" id="manager-activity-check">Check Manager Activity</button><div id="manager-activity-result" class="api-result" role="status" aria-live="polite">Not checked yet. Read-only; no records will be changed.</div><div id="manager-activity-list"></div></div>
 <div class="activity-demo" aria-label="Example job completion notification">
 <div><span aria-hidden="true">✓ </span><strong>Job Completed</strong> <span class="activity-state">Needs Review · Example</span></div>
@@ -206,7 +206,7 @@ window.addEventListener('load', () => {
 <div class="activity-demo-actions"><button type="button" class="secondary-btn" id="activity-demo-review">Preview: Mark Reviewed</button><button type="button" class="secondary-btn" id="activity-demo-followup">Preview: Follow-up Needed</button><button type="button" class="secondary-btn" id="activity-demo-reset">Reset Preview</button></div>
 <div id="activity-demo-feedback" class="api-result" role="status" aria-live="polite">Preview only. No database changes or customer contact.</div>
 </div>
-<p class="activity-disclosure">Live activity, unread counts, manager authorization, and persistent review/follow-up actions require a protected backend endpoint. No notification emails are sent.</p>
+<p class="activity-disclosure">Stage 11J safety gate: persistent review and follow-up actions require a protected backend endpoint with organization-scoped manager authorization, audit logging, and concurrency protection. No review writes or notification emails are enabled.</p>
 </section>
 <section class="jobs-section" id="jobs-section" aria-label="Job and task tracking preview">
 <div class="jobs-head"><div><div class="eyebrow">Stage 11E · Controlled job editing</div><h2>Job &amp; Task Tracking</h2></div><button id="jobs-close" type="button" class="secondary-btn">Close</button></div>
