@@ -426,6 +426,11 @@ window.addEventListener('load', () => {
       for(const select of savedJobsList.querySelectorAll('select[data-job-assignee]')){
         fillEmployeeSelect(select,select.value);
       }
+      // Update saved job cards as well as the editors when names are loaded manually.
+      for(const label of savedJobsList.querySelectorAll('[data-saved-job-assignee]')){
+        const id=label.dataset.savedJobAssignee;
+        label.textContent='Assignment: '+(id?(draftEmployeeNames.get(id)||'Employee membership '+id):'Unassigned');
+      }
       renderJobs();jobNotice(names.size+' eligible employee name(s) loaded. Assignment options updated; no job records changed.','ok');
     }catch(error){if(request===jobsRequest)jobNotice('Unable to load employees: '+(error?.message||'Connection error'),'error');}
     finally{if(request===jobsRequest)jobsLoad.disabled=false;}
@@ -452,6 +457,23 @@ window.addEventListener('load', () => {
       if(version!==savedJobsRequest||verifiedWorksiteOrg!==org||!jobsSection.classList.contains('open'))return;
       if(!response.ok||result?.ok!==true||result?.readOnly!==true||result?.organizationScoped!==true||!Array.isArray(result.jobs)||result.jobs.length>100||result.jobCount!==result.jobs.length)
         throw new Error('Saved job response could not be verified (HTTP '+response.status+').');
+      // Resolve display names from the owner-authorized directory on each saved-jobs load.
+      // Never block reading jobs if the directory is temporarily unavailable.
+      try{
+        const directoryResponse=await fetch(API_BASE+'/api/employees/directory',{method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store',referrerPolicy:'no-referrer'});
+        const directory=await directoryResponse.json().catch(()=>null);
+        if(version!==savedJobsRequest||verifiedWorksiteOrg!==org||!jobsSection.classList.contains('open'))return;
+        if(directoryResponse.ok&&directory?.ok===true&&directory?.readOnly===true&&directory?.organizationScoped===true&&Array.isArray(directory.employees)&&directory.employees.length<=1000){
+          const names=new Map();
+          for(const person of directory.employees){
+            if(person.membershipActive!==true||person.employmentStatus==='inactive'||typeof person.membershipId!=='string')continue;
+            const name=[person.firstName,person.lastName].filter(x=>typeof x==='string'&&x.trim()).join(' ').trim();
+            if(name)names.set(person.membershipId,name);
+          }
+          draftEmployeeNames=names;
+          fillEmployeeSelect(jobsAssignee,jobsAssignee.value);
+        }
+      }catch(_directoryError){/* Saved jobs remain readable even if names cannot be resolved. */}
       const validStatus=['pending','in_progress','completed','cancelled'];
       const validPriority=['low','normal','high','urgent'];
       for(const job of result.jobs){
@@ -460,7 +482,7 @@ window.addEventListener('load', () => {
         const heading=document.createElement('h3');heading.textContent=job.title;
         const badge=document.createElement('span');badge.className='jobs-pill';badge.textContent=job.status.replaceAll('_',' ').toUpperCase()+' · '+job.priority.toUpperCase();
         const desc=document.createElement('p');desc.textContent=job.description||'No instructions entered';
-        const assignee=document.createElement('p');assignee.textContent='Assignment: '+(job.assigned_membership_id?'Employee membership '+job.assigned_membership_id:'Unassigned');
+        const assignee=document.createElement('p');assignee.dataset.savedJobAssignee=job.assigned_membership_id||'';assignee.textContent='Assignment: '+(job.assigned_membership_id?(draftEmployeeNames.get(job.assigned_membership_id)||'Employee membership '+job.assigned_membership_id):'Unassigned');
         const due=document.createElement('p');due.textContent='Due: '+(job.due_date||'Not set');
         const edit=document.createElement('button');edit.type='button';edit.className='secondary-btn';edit.textContent='Edit Saved Job';
         const editor=document.createElement('form');editor.className='jobs-fields';editor.hidden=true;editor.style.marginTop='12px';
