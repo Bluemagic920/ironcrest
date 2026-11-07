@@ -34,8 +34,8 @@
  <p style="font-size:12px">GPS accuracy is uncertain and location can be spoofed. A local boundary match is not proof of presence. Final checks must happen server-side, with manager exception safeguards, before attendance is enabled.</p>
 </section>
 <section class="attendance-preview" aria-labelledby="assigned-jobs-title">
- <div class="eyebrow">Stage 11G · Job Tracking</div>
- <div class="jobs-toolbar"><div><h2 id="assigned-jobs-title">My Assigned Jobs</h2><p>View jobs assigned to your employee account. Read-only.</p></div><button id="refresh-jobs" type="button" class="secondary">Refresh jobs</button></div>
+ <div class="eyebrow">Stage 11H-B · Job Tracking</div>
+ <div class="jobs-toolbar"><div><h2 id="assigned-jobs-title">My Assigned Jobs</h2><p>View assigned jobs. Status changes remain locked until the secure backend is enabled.</p></div><button id="refresh-jobs" type="button" class="secondary">Refresh jobs</button></div>
  <div id="jobs-status" role="status" aria-live="polite">Your assigned jobs have not been loaded.</div>
  <div id="assigned-jobs-list" class="jobs-list" aria-label="My assigned jobs"></div>
 </section>
@@ -385,13 +385,30 @@ let dryRunBusy=false;
 
   // Stage 11G: employee-only assigned jobs. Text nodes prevent job data from injecting HTML.
   const JOBS_API='https://ironcrest-invitations-api.bluemagic920.workers.dev/api/employee/jobs';
+  const JOB_TRANSITION_API='https://ironcrest-invitations-api.bluemagic920.workers.dev/api/employee/jobs/transition';
+  const JOB_HEALTH_API='https://ironcrest-invitations-api.bluemagic920.workers.dev/health';
+  let employeeJobUpdatesEnabled=false,jobTransitionBusy=false;
+  async function checkJobUpdateAvailability(){try{const r=await fetch(JOB_HEALTH_API,{cache:'no-store'});const data=await r.json();employeeJobUpdatesEnabled=r.ok&&data?.ok===true&&data?.employeeJobUpdatesEnabled===true;}catch{employeeJobUpdatesEnabled=false;}}
+  async function transitionAssignedJob(job,action){
+    if(jobTransitionBusy||!employeeJobUpdatesEnabled||!verifiedOrgId)return;
+    const verb=action==='start'?'start':'complete';
+    if(!window.confirm('Are you sure you want to '+verb+' this job: '+String(job.title||'Untitled job')+'?'))return;
+    jobTransitionBusy=true;const org=verifiedOrgId,status=$('jobs-status');status.textContent='Submitting job update…';
+    try{const {data:{session},error}=await client.auth.getSession();if(error||!session?.access_token)throw new Error('Session expired. Sign in again.');
+      const response=await fetch(JOB_TRANSITION_API,{method:'POST',cache:'no-store',referrerPolicy:'no-referrer',headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({jobId:job.id,expectedUpdatedAt:job.updated_at,action})});
+      const payload=await response.json().catch(()=>null);
+      if(!response.ok||payload?.ok!==true||payload?.jobUpdated!==true)throw new Error(payload?.code==='EMPLOYEE_JOB_UPDATES_LOCKED'?'Job updates are not enabled yet.':String(payload?.message||payload?.error||'Update not confirmed.'));
+      if(org===verifiedOrgId)status.textContent='Job updated. Refreshing…';
+    }catch(e){if(org===verifiedOrgId)window.alert(String(e?.message||'Update outcome uncertain')+' Refresh your jobs to check the current status before trying again.');}
+    finally{jobTransitionBusy=false;if(org===verifiedOrgId)await loadAssignedJobs();}
+  }
   let jobsBusy=false, jobsGeneration=0;
   function clearJobs(){jobsGeneration++;$('assigned-jobs-list').replaceChildren();$('jobs-status').textContent='Your assigned jobs have not been loaded.';$('refresh-jobs').disabled=false;}
   function jobText(parent,tag,value,cls){const node=document.createElement(tag);if(cls)node.className=cls;node.textContent=String(value??'');parent.appendChild(node);return node;}
   function formatJobDate(value){if(!value||typeof value!=='string'||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value))return 'No due date';const [y,m,d]=value.split('-').map(Number);const date=new Date(Date.UTC(y,m-1,d));return date.getUTCFullYear()===y&&date.getUTCMonth()===m-1&&date.getUTCDate()===d?date.toLocaleDateString(undefined,{timeZone:'UTC',year:'numeric',month:'short',day:'numeric'}):'Date unavailable';}
   async function loadAssignedJobs(){
     if(jobsBusy||!verifiedOrgId)return;
-    jobsBusy=true;const generation=++jobsGeneration,org=verifiedOrgId,button=$('refresh-jobs'),status=$('jobs-status'),list=$('assigned-jobs-list');
+    jobsBusy=true;await checkJobUpdateAvailability();const generation=++jobsGeneration,org=verifiedOrgId,button=$('refresh-jobs'),status=$('jobs-status'),list=$('assigned-jobs-list');
     button.disabled=true;status.textContent='Loading your assigned jobs…';list.replaceChildren();
     try{
       const {data:{session},error}=await client.auth.getSession();
@@ -414,9 +431,14 @@ let dryRunBusy=false;
         card.appendChild(tags);
         if(job.description)jobText(card,'p',job.description);
         jobText(card,'div','Due: '+formatJobDate(job.due_date),'job-date');
+        if(job.status==='pending'||job.status==='in_progress'){
+          const action=job.status==='pending'?'start':'complete';const btn=document.createElement('button');btn.type='button';btn.className='secondary';btn.textContent=action==='start'?'Start Job':'Mark Completed';
+          btn.disabled=!employeeJobUpdatesEnabled||jobTransitionBusy;btn.title=employeeJobUpdatesEnabled?'Update assigned job':'Employee job updates are locked until backend testing is complete';
+          btn.addEventListener('click',()=>transitionAssignedJob(job,action));card.appendChild(btn);
+        }
         fragment.appendChild(card);
       }
-      list.replaceChildren(fragment);status.textContent=payload.jobs.length+' assigned job'+(payload.jobs.length===1?'':'s')+' found.';
+      list.replaceChildren(fragment);status.textContent=payload.jobs.length+' assigned job'+(payload.jobs.length===1?'':'s')+' found. '+(employeeJobUpdatesEnabled?'Job status updates available.':'Job status buttons are locked pending controlled testing.');
     }catch(error){if(generation===jobsGeneration&&org===verifiedOrgId)status.textContent='Unable to load jobs: '+String(error?.message||'Connection unavailable');}
     finally{jobsBusy=false;if(generation===jobsGeneration)button.disabled=!verifiedOrgId;}
   }
