@@ -11,6 +11,13 @@
 #gps-result{font-size:13px;color:#bfd0e0;margin-top:15px;line-height:1.6;overflow-wrap:anywhere}
 .attendance-preview ul{padding-left:22px;color:#bdccda;font-size:13px;line-height:1.8}
 @media(max-width:650px){.attendance-actions button{width:100%}}
+
+/* Stage 11G employee assigned-jobs dashboard */
+.jobs-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.jobs-list{display:grid;gap:13px;margin-top:18px}.job-card{border:1px solid #57728a77;border-radius:12px;padding:17px;background:#0b2034}
+.job-card h3{margin:0 0 10px;font-size:17px;overflow-wrap:anywhere}.job-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.job-tag{font-size:11px;border:1px solid #8a9eb566;border-radius:20px;padding:5px 9px;color:#e9d2a1}
+.job-card p{margin:9px 0;white-space:pre-wrap;overflow-wrap:anywhere}.job-date{font-size:12px;color:#b9c9da}
 </style></head>
 <body><header><a href="./index.html"><img src="./ironcrest-logo.png" alt="Ironcrest Workforce Operations"></a><span class="eyebrow">Employee Portal · Preview</span></header><main><div class="eyebrow">Secure workforce access</div><h1>Employee Portal</h1><p>View your verified organization membership. Additional workforce tools are coming soon.</p><div id="notice" class="notice" role="status" aria-live="polite">Verifying your employee access…</div>
 <section id="login" class="panel hidden"><h2>Employee sign in</h2><p>Use the account that accepted your employee invitation.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required><button id="signin" type="submit" style="margin-top:18px">Sign in</button></form></section>
@@ -25,6 +32,12 @@
 <div id="attendance-preflight-result" role="status" aria-live="polite">Attendance eligibility has not been checked. This is a preview only; no shift will be recorded.</div>
 <div class="attendance-actions"><button id="dry-run-in" type="button" class="secondary" disabled>Clock In — Dry Run</button><button id="dry-run-out" type="button" class="secondary" disabled>Clock Out — Dry Run</button></div><div id="dry-run-result" class="notice" role="status" aria-live="polite">Dry-run tests only. No shift will be recorded.</div><div class="notice" style="margin-top:18px"><strong>Controlled live attendance test</strong><p style="margin:8px 0">These buttons create real Supabase attendance records. Restricted to the designated test employee and Home GPS Test worksite. Confirm each action before submitting.</p><div class="attendance-actions"><button id="live-clock-in" type="button" disabled>Clock In — Live Test</button><button id="live-clock-out" type="button" class="secondary" disabled>Clock Out — Live Test</button></div><div id="live-attendance-result" class="notice" role="status" aria-live="polite">Live test not started. No attendance submitted by this page.</div><div class="attendance-actions" style="margin-top:14px"><button id="check-current-shift" type="button" class="secondary" disabled>Check Current Shift</button></div><div class="attendance-actions" style="margin-top:14px"><button id="gps-diagnostic" type="button" class="secondary" disabled>Run Read-Only GPS Diagnostic</button></div><div id="gps-diagnostic-result" class="notice" role="status" aria-live="polite">No diagnostic run yet. This checks one GPS reading and server-side worksite eligibility without recording attendance. Coordinates are not displayed or stored by this page.</div><div id="current-shift-result" class="notice" role="status" aria-live="polite">Shift status has not been checked. Read-only; no GPS required.</div></div>
  <p style="font-size:12px">GPS accuracy is uncertain and location can be spoofed. A local boundary match is not proof of presence. Final checks must happen server-side, with manager exception safeguards, before attendance is enabled.</p>
+</section>
+<section class="attendance-preview" aria-labelledby="assigned-jobs-title">
+ <div class="eyebrow">Stage 11G · Job Tracking</div>
+ <div class="jobs-toolbar"><div><h2 id="assigned-jobs-title">My Assigned Jobs</h2><p>View jobs assigned to your employee account. Read-only.</p></div><button id="refresh-jobs" type="button" class="secondary">Refresh jobs</button></div>
+ <div id="jobs-status" role="status" aria-live="polite">Your assigned jobs have not been loaded.</div>
+ <div id="assigned-jobs-list" class="jobs-list" aria-label="My assigned jobs"></div>
 </section>
 <div class="section-label">Employee tools</div><div class="grid" aria-label="Employee tools preview">
 <article class="tile"><div class="tile-top"><span class="tile-icon" aria-hidden="true">◷</span><span class="tile-status">Coming soon</span></div><h2>Time &amp; Attendance</h2><p>Clock in and out securely after employer-configured worksite verification, attendance rules, and approved exceptions are enabled.</p><button type="button" disabled aria-label="Time and attendance coming soon">Not yet available</button></article>
@@ -370,4 +383,42 @@ let dryRunBusy=false;
     }
   });
 
- let seq=0;async function refresh(){const current=++seq;clearWorksites();workspace.classList.add('hidden');show('Verifying your employee access…');const {data,error}=await client.auth.getUser();if(current!==seq)return;if(error||!data?.user){login.classList.remove('hidden');show('Sign in with your invited employee account.');return;}if(!data.user.email_confirmed_at){login.classList.remove('hidden');show('Verify your email address before entering the portal.','error');return;}const {data:memberships,error:membershipError}=await client.from('ironcrest_memberships').select('organization_id,role,active').eq('user_id',data.user.id).eq('active',true).eq('role','employee').limit(2);if(current!==seq)return;if(membershipError){login.classList.add('hidden');show('Unable to verify employee membership. Please contact your employer or try again later.','error');return;}if(!memberships?.length){login.classList.add('hidden');show('No active employee membership was found for this account. If you have an invitation, accept it first.','error');return;}if(memberships.length!==1){login.classList.add('hidden');show('Multiple employee organizations found. Organization selection is not available yet.','error');return;}const {data:org,error:orgError}=await client.from('ironcrest_organizations').select('name').eq('id',memberships[0].organization_id).maybeSingle();if(current!==seq)return;if(orgError||!org){login.classList.add('hidden');show('Membership verified, but organization details are not available. Contact your employer.','error');return;}$('member-email').textContent=data.user.email||'Verified employee';$('org-name').textContent=org.name;verifiedOrgId=memberships[0].organization_id;login.classList.add('hidden');workspace.classList.remove('hidden');show('Employee membership verified. Welcome to your portal.','ok');loadWorksites();}let busy=false;$('login-form').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;busy=true;$('signin').disabled=true;show('Signing in…');try{const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});$('password').value='';if(error){show('Sign-in failed. Check your credentials.','error');return;}await refresh();}catch{show('Unable to complete sign-in. Try again.','error')}finally{busy=false;$('signin').disabled=false}});$('signout').addEventListener('click',async()=>{$('signout').disabled=true;await client.auth.signOut();$('signout').disabled=false;await refresh()});client.auth.onAuthStateChange(()=>{setTimeout(()=>{if(!busy)refresh()},0)});refresh()})();</script></body></html>
+  // Stage 11G: employee-only assigned jobs. Text nodes prevent job data from injecting HTML.
+  const JOBS_API='https://ironcrest-invitations-api.bluemagic920.workers.dev/api/employee/jobs';
+  let jobsBusy=false, jobsGeneration=0;
+  function clearJobs(){jobsGeneration++;$('assigned-jobs-list').replaceChildren();$('jobs-status').textContent='Your assigned jobs have not been loaded.';$('refresh-jobs').disabled=false;}
+  function jobText(parent,tag,value,cls){const node=document.createElement(tag);if(cls)node.className=cls;node.textContent=String(value??'');parent.appendChild(node);return node;}
+  function formatJobDate(value){if(!value||typeof value!=='string'||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(value))return 'No due date';const [y,m,d]=value.split('-').map(Number);const date=new Date(Date.UTC(y,m-1,d));return date.getUTCFullYear()===y&&date.getUTCMonth()===m-1&&date.getUTCDate()===d?date.toLocaleDateString(undefined,{timeZone:'UTC',year:'numeric',month:'short',day:'numeric'}):'Date unavailable';}
+  async function loadAssignedJobs(){
+    if(jobsBusy||!verifiedOrgId)return;
+    jobsBusy=true;const generation=++jobsGeneration,org=verifiedOrgId,button=$('refresh-jobs'),status=$('jobs-status'),list=$('assigned-jobs-list');
+    button.disabled=true;status.textContent='Loading your assigned jobs…';list.replaceChildren();
+    try{
+      const {data:{session},error}=await client.auth.getSession();
+      if(error||!session?.access_token)throw new Error('Session expired. Please sign in again.');
+      if(generation!==jobsGeneration||org!==verifiedOrgId)return;
+      const response=await fetch(JOBS_API,{method:'GET',cache:'no-store',referrerPolicy:'no-referrer',headers:{Authorization:'Bearer '+session.access_token}});
+      const payload=await response.json().catch(()=>null);
+      if(generation!==jobsGeneration||org!==verifiedOrgId)return;
+      if(!response.ok||payload?.ok!==true||!Array.isArray(payload.jobs)||payload.assignedOnly!==true||payload.readOnly!==true)throw new Error(String(payload?.error||'Unable to load assigned jobs.'));
+      if(!payload.jobs.length){status.textContent='No jobs are currently assigned to you.';return;}
+      const priorityLabels={low:'Low',normal:'Normal',high:'High',urgent:'Urgent'};
+      const statusLabels={pending:'Pending',in_progress:'In progress',completed:'Completed',cancelled:'Cancelled'};
+      const fragment=document.createDocumentFragment();
+      for(const job of payload.jobs){
+        const card=document.createElement('article');card.className='job-card';
+        jobText(card,'h3',job.title||'Untitled job');
+        const tags=document.createElement('div');tags.className='job-tags';
+        jobText(tags,'span','Status: '+(statusLabels[job.status]||'Unknown'),'job-tag');
+        jobText(tags,'span','Priority: '+(priorityLabels[job.priority]||'Unknown'),'job-tag');
+        card.appendChild(tags);
+        if(job.description)jobText(card,'p',job.description);
+        jobText(card,'div','Due: '+formatJobDate(job.due_date),'job-date');
+        fragment.appendChild(card);
+      }
+      list.replaceChildren(fragment);status.textContent=payload.jobs.length+' assigned job'+(payload.jobs.length===1?'':'s')+' found.';
+    }catch(error){if(generation===jobsGeneration&&org===verifiedOrgId)status.textContent='Unable to load jobs: '+String(error?.message||'Connection unavailable');}
+    finally{jobsBusy=false;if(generation===jobsGeneration)button.disabled=!verifiedOrgId;}
+  }
+  $('refresh-jobs').addEventListener('click',loadAssignedJobs);
+ let seq=0;async function refresh(){const current=++seq;clearWorksites();workspace.classList.add('hidden');show('Verifying your employee access…');const {data,error}=await client.auth.getUser();if(current!==seq)return;if(error||!data?.user){login.classList.remove('hidden');show('Sign in with your invited employee account.');return;}if(!data.user.email_confirmed_at){login.classList.remove('hidden');show('Verify your email address before entering the portal.','error');return;}const {data:memberships,error:membershipError}=await client.from('ironcrest_memberships').select('organization_id,role,active').eq('user_id',data.user.id).eq('active',true).eq('role','employee').limit(2);if(current!==seq)return;if(membershipError){login.classList.add('hidden');show('Unable to verify employee membership. Please contact your employer or try again later.','error');return;}if(!memberships?.length){login.classList.add('hidden');show('No active employee membership was found for this account. If you have an invitation, accept it first.','error');return;}if(memberships.length!==1){login.classList.add('hidden');show('Multiple employee organizations found. Organization selection is not available yet.','error');return;}const {data:org,error:orgError}=await client.from('ironcrest_organizations').select('name').eq('id',memberships[0].organization_id).maybeSingle();if(current!==seq)return;if(orgError||!org){login.classList.add('hidden');show('Membership verified, but organization details are not available. Contact your employer.','error');return;}$('member-email').textContent=data.user.email||'Verified employee';$('org-name').textContent=org.name;verifiedOrgId=memberships[0].organization_id;login.classList.add('hidden');workspace.classList.remove('hidden');show('Employee membership verified. Welcome to your portal.','ok');loadWorksites();loadAssignedJobs();}let busy=false;$('login-form').addEventListener('submit',async e=>{e.preventDefault();if(busy)return;busy=true;$('signin').disabled=true;show('Signing in…');try{const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});$('password').value='';if(error){show('Sign-in failed. Check your credentials.','error');return;}await refresh();}catch{show('Unable to complete sign-in. Try again.','error')}finally{busy=false;$('signin').disabled=false}});$('signout').addEventListener('click',async()=>{$('signout').disabled=true;await client.auth.signOut();$('signout').disabled=false;await refresh()});client.auth.onAuthStateChange(()=>{setTimeout(()=>{if(!busy)refresh()},0)});refresh()})();</script></body></html>
