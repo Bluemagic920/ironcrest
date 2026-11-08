@@ -1,0 +1,70 @@
+name: Safe code checks
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  syntax:
+    name: JavaScript syntax (no deployment)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check standalone JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            node --check "$file"
+          done < <(find . -type f -name '*.js' -not -path './.git/*' -print0)
+      - name: Check inline JavaScript in HTML
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import subprocess, tempfile, sys
+          class Scripts(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.capture = False
+                  self.parts = []
+                  self.scripts = []
+              def handle_starttag(self, tag, attrs):
+                  if tag != 'script':
+                      return
+                  a = dict(attrs)
+                  typ = a.get('type', '').strip().lower()
+                  self.capture = 'src' not in a and typ in ('', 'text/javascript', 'application/javascript', 'module')
+                  self.parts = []
+              def handle_data(self, data):
+                  if self.capture:
+                      self.parts.append(data)
+              def handle_endtag(self, tag):
+                  if tag == 'script' and self.capture:
+                      self.scripts.append(''.join(self.parts))
+                      self.capture = False
+          errors = 0
+          for path in Path('.').rglob('*.html'):
+              if '.git' in path.parts:
+                  continue
+              parser = Scripts()
+              parser.feed(path.read_text(encoding='utf-8'))
+              for index, script in enumerate(parser.scripts, 1):
+                  if not script.strip():
+                      continue
+                  with tempfile.NamedTemporaryFile(mode='w', suffix='.mjs', encoding='utf-8') as temp:
+                      temp.write(script)
+                      temp.flush()
+                      result = subprocess.run(['node', '--check', temp.name], capture_output=True, text=True)
+                      if result.returncode:
+                          print(f'FAIL {path} inline script #{index}: {result.stderr}', file=sys.stderr)
+                          errors += 1
+                      else:
+                          print(f'OK {path} inline script #{index}')
+          sys.exit(1 if errors else 0)
+          PY
