@@ -65,3 +65,8 @@ test('expired provider authentication returns 401 and never reads company data',
 test('existing rate limiter stops repeated reporting before privileged reads',async()=>{
  const s=fixture();const response=await s.route(request(),{...env,INVITATION_RATE_LIMITER:{limit:async()=>({success:false})}});assert.equal(response.status,429);assert.equal(s.calls.length,1);
 });
+
+test('Cloudflare-compatible manual redirects reject redirect responses without forwarding credentials',async()=>{
+ const calls=[];const route=createAttendanceRecordsRoute({fetcher:async(url,options)=>{calls.push({url,options});assert.equal(options.redirect,'manual');return new Response(null,{status:302,headers:{Location:'https://foreign.invalid'}});}});
+ const response=await route(request(),env);assert.equal(response.status,503);assert.equal(calls.length,1);assert.ok(calls[0].url.startsWith('https://nhiqbcevcdxfzvrprgck.supabase.co/'));
+});

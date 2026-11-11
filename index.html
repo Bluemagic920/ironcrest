@@ -211,8 +211,16 @@ window.addEventListener('load', () => {
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Recorded shifts</span></div><p>Review recorded shifts, open clock-ins, hours, and attendance exceptions.</p><button type="button" id="attendance-records-open" disabled aria-expanded="false" aria-controls="attendance-records">View time records <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Coming soon</span></div><p>Organize employee schedules, assignments, and future shift coverage.</p><button type="button" disabled aria-label="Scheduling not yet available">Open scheduling <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
-<article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Company preferences</span></div><p>Manage your company name, time zone, and the first day of your workweek.</p><button type="button" id="company-settings-open" disabled aria-expanded="false" aria-controls="company-settings">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
+<section class="attendance-records" id="company-settings" hidden aria-labelledby="company-settings-title">
+<div class="jobs-head"><h2 id="company-settings-title">Company Settings</h2><button id="company-settings-close" type="button" class="secondary-btn">Close settings</button></div>
+<p>Set your company identity and planning preferences. Attendance reports currently show UTC dates and times.</p>
+<form id="company-settings-form">
+<div class="jobs-form-grid"><label>Company name<input id="company-name" type="text" required maxlength="120" autocomplete="organization"></label><label>Company time zone<input id="company-time-zone" type="text" list="company-time-zones" required maxlength="100" placeholder="America/Phoenix"><datalist id="company-time-zones"></datalist></label><label>Workweek starts on<select id="company-week-start"><option value="0">Sunday</option><option value="1" selected>Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></label></div>
+<div class="saved-jobs-actions"><button id="company-settings-save" type="submit" disabled>Save company settings</button><button id="company-settings-reload" type="button" class="secondary-btn">Reload saved settings</button></div>
+<p id="company-settings-status" role="status" aria-live="polite">Load company settings to begin.</p>
+</form></section>
 <section class="attendance-records" id="attendance-records" hidden aria-labelledby="attendance-records-title">
 <div class="jobs-head"><h2 id="attendance-records-title">Time &amp; Attendance Records</h2><button id="attendance-records-close" type="button" class="secondary-btn">Close</button></div>
 <p>Review recorded attendance without changing time entries. Times and date filters use UTC. Hours cover closed shifts within the selected dates; open shifts require review. This report is not payroll approval.</p>
@@ -332,6 +340,7 @@ window.addEventListener('load', () => {
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="./attendance-records.js?v=records-2"></script>
+<script src="./company-settings.js?v=1"></script>
 <script>
 (() => {
   'use strict';
@@ -1503,6 +1512,8 @@ window.addEventListener('load', () => {
     finally { signoutButton.disabled = false; }
   });
   verifyOwner().catch(() => { showLogin(); setMessage('Unable to verify the current session. Please refresh.', 'error'); });
+
+  window.IroncrestCompanySettings?.mount({document,client,verifyOwner:confirmWorksiteOwner,apiBase:API_BASE});
 
   window.IroncrestAttendance?.mount({document,client,verifyOwner:confirmWorksiteOwner,apiBase:API_BASE,
     download:(csv,filename)=>{const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}

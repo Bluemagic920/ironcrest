@@ -28,7 +28,7 @@ export function createAttendanceRecordsRoute({fetcher=fetch}={}){
   async function read(path,headers=server,body){
    const resources={user:'AUTH',ironcrest_memberships:'MEMBERSHIPS',ironcrest_organizations:'ORGANIZATION',ironcrest_business_entitlement:'ENTITLEMENT',ironcrest_attendance_entries:'ENTRIES',ironcrest_attendance_exceptions:'EXCEPTIONS'};
    const resource=resources[path.split('?')[0].split('/').pop()]||'LABELS';reference='REPORT_'+resource+'_UNAVAILABLE';
-   const response=await fetcher(PROJECT+path,{method:body?'POST':'GET',headers:{...headers,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),redirect:'error',signal:AbortSignal.timeout(8000)});
+   const response=await fetcher(PROJECT+path,{method:body?'POST':'GET',headers:{...headers,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),redirect:'manual',signal:AbortSignal.timeout(8000)});
    if(path==='/auth/v1/user'&&[401,403].includes(response.status))return null;
    if(!response.ok){let code='';try{const error=await response.json();if(typeof error?.code==='string'&&/^[A-Z0-9_]{1,20}$/.test(error.code))code='_'+error.code;}catch{}reference='REPORT_'+resource+'_'+response.status+code;throw Error('report_unavailable');}const raw=await response.text();if(raw.length>1024*1024)throw Error('report_too_large');return JSON.parse(raw);
   }
