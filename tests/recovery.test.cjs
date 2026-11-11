@@ -1,10 +1,10 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');const path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'../accept-invitation.html'),'utf8');const source=html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
 async function flush(){for(let i=0;i<25;i++)await Promise.resolve();}
-function setup({token=false}={}){
+function setup({token=false,emailError=null}={}){
  const nodes=new Map();function $(id){if(!nodes.has(id)){const hidden=new Set(['hidden']);nodes.set(id,{value:'',disabled:false,textContent:'',classList:{add:c=>hidden.add(c),remove:c=>hidden.delete(c),contains:c=>hidden.has(c)},addEventListener:(e,fn)=>{nodes.get(id)[e]=fn;}});}return nodes.get(id);}
  let callback;let user={id:'fixture-user',email_confirmed_at:'confirmed'};let updater=async()=>({error:null});const updates=[];
- const auth={getUser:async()=>({data:{user}}),updateUser:async data=>{updates.push(data);return updater(data);},onAuthStateChange:fn=>callback=fn};
+ const auth={resend:async()=>({error:emailError}),resetPasswordForEmail:async()=>({error:emailError}),getUser:async()=>({data:{user}}),updateUser:async data=>{updates.push(data);return updater(data);},onAuthStateChange:fn=>callback=fn};
  const storage=new Map(token?[['ironcrest-pending-invitation-v1','a'.repeat(64)]]:[]);
  const ctx={window:{supabase:{createClient:()=>({auth})},location:{assign(){}}},location:{search:'',hash:'',origin:'https://ironcrest.profitharborai.com',pathname:'/accept-invitation.html'},history:{replaceState(){}},sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},document:{getElementById:$},URLSearchParams,setTimeout:fn=>Promise.resolve().then(fn),fetch:()=>{throw Error('No worker call should occur');}};
  vm.runInNewContext(source,ctx);
@@ -34,4 +34,8 @@ test('provider rejection clears entered passwords and allows correction',async()
 });
 test('sign-out invalidates an active recovery form',async()=>{
  const s=setup();await s.event('PASSWORD_RECOVERY');await s.event('SIGNED_OUT');s.$('new-password').value=s.$('confirm-password').value='fixture-password';s.$('recovery-form').submit({preventDefault(){}});await flush();assert.equal(s.updates.length,0);assert.equal(s.$('recovery-ui').classList.contains('hidden'),true);
+});
+
+test('verification and password-reset provider failures are not reported as successful emails',async()=>{
+ for(const id of ['resend','reset']){const s=setup({token:true,emailError:{message:'private provider details'}});s.$('email').value='fixture@example.com';await s.$(id).onclick();await flush();assert.match(s.$('notice').textContent,/could not be requested/);assert.doesNotMatch(s.$('notice').textContent,/private provider|will arrive/);}
 });
