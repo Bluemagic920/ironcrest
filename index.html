@@ -312,8 +312,8 @@ window.addEventListener('load', () => {
 <div id="restricted-invite-status" class="api-result" role="status" aria-live="polite">No test email requested from this page yet.</div>
 <div id="restricted-invite-link-box" class="private-link" aria-live="polite"><strong>Private invitation link — copy now</strong><p>Only share this link with the configured test recipient. It will disappear if you leave or reload this page. Do not paste it into this chat.</p><div id="restricted-invite-link" class="link-value"></div><button id="restricted-copy-button" type="button" class="secondary-btn">Copy Private Link</button></div>
 <div class="email-preview-wrap" aria-label="Stage 10C invitation email preview"><h3>Stage 10C · Branded Invitation Email Preview</h3><p>Preview the email employees would receive after invitation delivery is approved. This is a local sample only: no email is sent, no invitation is created, and no private link is displayed.</p><button id="preview-invitation-email" type="button" class="secondary-btn" aria-expanded="false" aria-controls="invitation-email-preview">Preview Invitation Email</button><div class="email-preview-subject">Sample subject: You're invited to join your team on IronCrest</div><div id="invitation-email-preview" class="email-preview" aria-label="Sample invitation email"><div class="email-preview-head"><img class="email-preview-logo" src="./ironcrest-logo.png" alt="IronCrest Workforce Operations shield logo"></div><div class="email-preview-body"><h4>You're invited to IronCrest.</h4><p>Hello,</p><p>Your organization has invited you to join its team on IronCrest Workforce Operations.</p><p>Once invitations are enabled, you'll be able to use a secure, time-limited invitation link to complete your account setup.</p><div class="email-preview-cta">Accept Invitation — Sample Only</div><p style="font-size:12px">This is a non-clickable preview. A real invitation email will include a unique secure link and an expiration notice.</p><p>If you weren't expecting this invitation, you can ignore the email.</p></div><div class="email-preview-foot">IronCrest Workforce Operations · Powered by ProfitHarbor AI<br>This preview is not an email and has not been sent.</div></div></div>
-<div class="employee-directory" aria-label="Read-only employee directory">
-<h3>Employee Directory</h3><p>Owner-only employee directory. Edit employee details below; worksite assignments and attendance are not changed.</p>
+<div class="employee-directory" aria-label="Employee directory">
+<h3>Employee Directory</h3><p>Manage employee names, job titles, contact details, and employment status. Employment status is a personnel label; it does not change sign-in access, assignments, or attendance. Contact email does not change an employee’s sign-in email.</p>
 <button id="directory-load" type="button" class="secondary-btn">Load Employee Directory</button>
 <div id="directory-status" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
 <div id="directory-filters" class="directory-filters" hidden>
@@ -945,6 +945,7 @@ window.addEventListener('load', () => {
   const directoryWorksiteFilter = document.getElementById('directory-worksite-filter');
   const directoryMatchCount = document.getElementById('directory-match-count');
   let directoryPeople = [];
+  let directoryOwnerUser = null;
   let directoryRequestVersion = 0;
   function applyDirectoryFilters(){
     const query=directorySearch.value.trim().toLocaleLowerCase();
@@ -963,6 +964,11 @@ window.addEventListener('load', () => {
     directoryMatchCount.textContent=matches+' of '+directoryPeople.length+' employee(s) shown'+(matches===0?' — no matches.':'');
   }
   [directorySearch,directoryStatusFilter,directoryWorksiteFilter].forEach(el=>el.addEventListener(el===directorySearch?'input':'change',applyDirectoryFilters));
+  client.auth.onAuthStateChange((event,session)=>{
+    if(event==='SIGNED_OUT'||(directoryOwnerUser&&session?.user?.id!==directoryOwnerUser)){
+      ++directoryRequestVersion;directoryOwnerUser=null;directoryPeople=[];directoryList.replaceChildren();directoryFilters.hidden=true;directoryMatchCount.textContent='';directoryLoad.disabled=false;directoryMessage('Load the employee directory to begin.');
+    }
+  });
   function directoryMessage(message, kind='') {
     directoryStatus.textContent = message;
     directoryStatus.className = 'api-result '+kind;
@@ -976,7 +982,9 @@ window.addEventListener('load', () => {
     try {
       await confirmWorksiteOwner();
       const {data,error} = await client.auth.getSession();
-      if (error || !data?.session?.access_token) throw new Error('Owner session expired. Sign in again.');
+      if (version!==directoryRequestVersion) return;
+      if (error || !data?.session?.access_token || !data.session.user?.id) throw new Error('Owner session expired. Sign in again.');
+      directoryOwnerUser=data.session.user.id;
       const response = await fetch(API_BASE+'/api/employees/directory',{
         method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},
         cache:'no-store',referrerPolicy:'no-referrer'
@@ -1015,7 +1023,7 @@ window.addEventListener('load', () => {
         const emailLine=document.createElement('p');emailLine.textContent='Email: '+(person.email || 'Not entered');
         const edit=document.createElement('button');edit.type='button';edit.className='secondary-btn';edit.textContent='Edit Employee';
         const form=document.createElement('form');form.hidden=true;form.style.marginTop='12px';
-        const fields=[['First name','firstName',person.firstName||'',100,true],['Last name','lastName',person.lastName||'',100,true],['Job title','jobTitle',person.jobTitle||'',120,false],['Phone number','phoneNumber',person.phoneNumber||'',30,false],['Email address','email',person.email||'',254,false]];
+        const fields=[['First name','firstName',person.firstName||'',100,true],['Last name','lastName',person.lastName||'',100,true],['Job title','jobTitle',person.jobTitle||'',120,false],['Phone number','phoneNumber',person.phoneNumber||'',30,false],['Contact email (separate from sign-in)','email',person.email||'',254,false]];
         const inputs={};
         for(const [labelText,key,value,max,required] of fields){
           const label=document.createElement('label');label.textContent=labelText;label.style.display='block';label.style.marginTop='8px';
@@ -1032,21 +1040,23 @@ window.addEventListener('load', () => {
         const feedback=document.createElement('p');feedback.setAttribute('role','status');
         form.append(save,feedback);
         edit.addEventListener('click',()=>{form.hidden=!form.hidden;edit.textContent=form.hidden?'Edit Employee':'Cancel Editing';});
+        let profileNeedsReload=false;
         form.addEventListener('submit',async event=>{
-          event.preventDefault();save.disabled=true;feedback.textContent='Saving…';
+          event.preventDefault();if(profileNeedsReload)return;const saveVersion=directoryRequestVersion;save.disabled=true;feedback.textContent='Saving…';
           try{
-            await confirmWorksiteOwner();
-            const {data:auth,error:authError}=await client.auth.getSession();
-            if(authError||!auth?.session?.access_token) throw new Error('Owner session expired.');
-            const payload={membershipId:person.membershipId,firstName:inputs.firstName.value,lastName:inputs.lastName.value,
+            await confirmWorksiteOwner();if(saveVersion!==directoryRequestVersion)return;
+            const {data:auth,error:authError}=await client.auth.getSession();if(saveVersion!==directoryRequestVersion)return;
+            if(authError||!auth?.session?.access_token||auth.session.user?.id!==directoryOwnerUser) throw new Error('Owner session changed. Reload the directory.');
+            const payload={membershipId:person.membershipId,revision:person.revision,firstName:inputs.firstName.value,lastName:inputs.lastName.value,
               jobTitle:inputs.jobTitle.value,phoneNumber:inputs.phoneNumber.value,email:inputs.email.value,employmentStatus:select.value};
             const response=await fetch(API_BASE+'/api/employees/profile',{
               method:'PATCH',headers:{Authorization:'Bearer '+auth.session.access_token,'Content-Type':'application/json'},
               body:JSON.stringify(payload),cache:'no-store',referrerPolicy:'no-referrer'
             });
-            const result=await response.json();
-            if(!response.ok||result.ok!==true||result.updated!==true||result.attendanceEnabled!==false||result.attendanceWritesEnabled!==false)
+            const result=await response.json();if(saveVersion!==directoryRequestVersion)return;
+            if(!response.ok||result.ok!==true||result.updated!==true||!Number.isSafeInteger(result.revision)||result.attendanceEnabled!==false||result.attendanceWritesEnabled!==false)
               throw new Error(result.error||'Update was not verified.');
+            person.revision=result.revision;
             name.textContent=payload.firstName.trim()+' '+payload.lastName.trim();
             person.firstName=payload.firstName.trim();person.lastName=payload.lastName.trim();
             person.jobTitle=payload.jobTitle.trim();person.email=payload.email.trim();person.phoneNumber=payload.phoneNumber.trim();person.employmentStatus=payload.employmentStatus;
@@ -1055,13 +1065,13 @@ window.addEventListener('load', () => {
             emailLine.textContent='Email: '+(payload.email.trim()||'Not entered');
             status.textContent='Membership: '+(person.membershipActive?'Active':'Inactive')+' · Employment: '+payload.employmentStatus;
             feedback.textContent='Saved successfully.';applyDirectoryFilters();
-          }catch(e){feedback.textContent='Unable to save: '+(e?.message||'Connection error');}
-          finally{save.disabled=false;}
+          }catch(e){if(saveVersion===directoryRequestVersion){profileNeedsReload=true;feedback.textContent='Unable to save: '+(e?.message||'Connection error')+' Reload the employee directory before trying again.';}}
+          finally{if(saveVersion===directoryRequestVersion)save.disabled=profileNeedsReload;}
         });
         card.append(name,status,job,phone,emailLine,sites,edit,form);directoryList.append(card);directoryPeople.push({person,card});
       }
       directoryFilters.hidden=false;applyDirectoryFilters();
-      directoryMessage(result.employees.length+' employee(s) loaded. Owner-only editing available; attendance locked.','ok');
+      directoryMessage(result.employees.length+' employee(s) loaded. Select Edit Employee to make changes.','ok');
     } catch(e) {
       if(version===directoryRequestVersion){directoryList.replaceChildren();directoryPeople=[];directoryFilters.hidden=true;directoryMatchCount.textContent='';directoryMessage('Unable to load directory: '+(e?.message||'Connection error'),'error');}
     } finally {if(version===directoryRequestVersion)directoryLoad.disabled=false;}
