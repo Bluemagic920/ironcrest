@@ -179,6 +179,9 @@ window.addEventListener('load', () => {
 @media(max-width:750px){.manager-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.manager-job-row{align-items:flex-start}}
 
 .attendance-records{border:1px solid #d8aa5c55;border-radius:16px;padding:24px;margin:24px 0;background:#091a2c}.attendance-records[hidden]{display:none}.attendance-table-wrap{overflow:auto;margin:20px 0}.attendance-records table{border-collapse:collapse;width:100%;font-size:13px;text-align:left}.attendance-records th,.attendance-records td{padding:12px;border-bottom:1px solid #ffffff20;vertical-align:top}.attendance-records caption{text-align:left;font-weight:750;padding:10px 0;color:#e7c381}
+
+/* Company preferences and scheduling */
+.schedule-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.schedule-fields label{min-width:0}.schedule-panel select,#company-settings select{width:100%;padding:14px 15px;background:#071321;border:1px solid #71809665;border-radius:9px;color:#dce2e9;font:inherit}.schedule-panel button:not(:disabled),#company-settings button:not(:disabled){cursor:pointer;opacity:1}.schedule-panel td button{width:auto;margin:4px;padding:8px 12px;font-size:12px}.schedule-panel form{margin:22px 0;padding:18px;border:1px solid #ffffff24;border-radius:12px}.schedule-panel td{white-space:normal;min-width:110px}@media(max-width:650px){.schedule-fields{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -209,10 +212,18 @@ window.addEventListener('load', () => {
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Stage 10K · Test</span></div><p>Manage employee invitations. Restricted single-recipient testing is available to verified owners.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▤</div><div class="module-top"><h3>Jobs &amp; Tasks</h3><span class="module-state">Stage 11E · Job editing test</span></div><p>Create draft jobs, choose employee assignments, and explore progress tracking. Drafts stay in this browser session; saved jobs can now be viewed securely from Supabase.</p><button type="button" class="jobs-open" id="jobs-open" aria-expanded="false" aria-controls="jobs-section">Open Job Tracking <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Recorded shifts</span></div><p>Review recorded shifts, open clock-ins, hours, and attendance exceptions.</p><button type="button" id="attendance-records-open" disabled aria-expanded="false" aria-controls="attendance-records">View time records <span aria-hidden="true">→</span></button></article>
-<article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Coming soon</span></div><p>Organize employee schedules, assignments, and future shift coverage.</p><button type="button" disabled aria-label="Scheduling not yet available">Open scheduling <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Shift planning</span></div><p>Create draft shifts, publish assignments, and track schedule cancellations.</p><button type="button" id="schedule-open" disabled aria-expanded="false" aria-controls="schedule-panel">Open scheduling <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Company preferences</span></div><p>Manage your company name, time zone, and the first day of your workweek.</p><button type="button" id="company-settings-open" disabled aria-expanded="false" aria-controls="company-settings">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
+<section class="attendance-records schedule-panel" id="schedule-panel" hidden aria-labelledby="schedule-heading">
+<div class="jobs-head"><h2 id="schedule-heading">Workforce Schedule</h2><button type="button" id="schedule-close" class="secondary-btn">Close schedule</button></div>
+<p id="schedule-zone">Dates and times use your company time zone.</p><p>Save shifts as private drafts, then publish them when ready. Published shifts are read-only; cancel and create a replacement when plans change. Publishing does not send notifications or clock anyone in.</p>
+<div class="schedule-fields"><label>From date<input type="date" id="schedule-start" required></label><label>Through date<input type="date" id="schedule-end" required></label></div>
+<button type="button" id="schedule-reload">Reload schedule</button><p id="schedule-status" role="status" aria-live="polite">Load your schedule to begin.</p>
+<form id="schedule-form"><h3 id="schedule-editing">New draft shift</h3><div class="schedule-fields"><label>Shift title<input type="text" id="schedule-title" required maxlength="120" placeholder="Morning crew"></label><label>Employee<select id="schedule-employee" required><option value="">Choose an employee</option></select></label><label>Worksite<select id="schedule-worksite" required><option value="">Choose a worksite</option></select></label><label>Shift starts<input type="datetime-local" id="schedule-shift-start" required step="60"></label><label>Shift ends<input type="datetime-local" id="schedule-shift-end" required step="60"></label></div><div class="saved-jobs-actions"><button type="submit" id="schedule-save" disabled>Save draft shift</button><button type="button" id="schedule-new" class="secondary-btn">New draft</button></div></form>
+<div class="attendance-table-wrap"><table><caption>Workforce Schedule</caption><thead><tr><th>Shift</th><th>Employee</th><th>Worksite</th><th>Starts</th><th>Ends</th><th>Status</th><th>Actions</th></tr></thead><tbody id="schedule-body"></tbody></table></div>
+</section>
 <section class="attendance-records" id="company-settings" hidden aria-labelledby="company-settings-title">
 <div class="jobs-head"><h2 id="company-settings-title">Company Settings</h2><button id="company-settings-close" type="button" class="secondary-btn">Close settings</button></div>
 <p>Set your company identity and planning preferences. Attendance reports currently show UTC dates and times.</p>
@@ -341,6 +352,7 @@ window.addEventListener('load', () => {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="./attendance-records.js?v=records-2"></script>
 <script src="./company-settings.js?v=1"></script>
+<script src="./scheduling.js?v=1"></script>
 <script>
 (() => {
   'use strict';
@@ -1513,6 +1525,7 @@ window.addEventListener('load', () => {
   });
   verifyOwner().catch(() => { showLogin(); setMessage('Unable to verify the current session. Please refresh.', 'error'); });
 
+  window.IroncrestScheduling?.mount({document,client,verifyOwner:confirmWorksiteOwner,apiBase:API_BASE});
   window.IroncrestCompanySettings?.mount({document,client,verifyOwner:confirmWorksiteOwner,apiBase:API_BASE});
 
   window.IroncrestAttendance?.mount({document,client,verifyOwner:confirmWorksiteOwner,apiBase:API_BASE,
