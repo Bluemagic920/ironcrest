@@ -184,6 +184,8 @@ window.addEventListener('load', () => {
 .panel .workspace-card button:not(:disabled){opacity:1;cursor:pointer;color:#e9c381;border-color:#d8aa5c88;background:#d8aa5c12}.panel .workspace-card button:not(:disabled):hover{background:#d8aa5c24}
 .panel{min-width:0}.schedule-panel{min-width:0;max-width:100%}
 .schedule-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.schedule-fields label{min-width:0}.schedule-panel select,#company-settings select{width:100%;padding:14px 15px;background:#071321;border:1px solid #71809665;border-radius:9px;color:#dce2e9;font:inherit}.schedule-panel button:not(:disabled),#company-settings button:not(:disabled){cursor:pointer;opacity:1}.schedule-panel td button{width:auto;margin:4px;padding:8px 12px;font-size:12px}.schedule-panel form{margin:22px 0;padding:18px;border:1px solid #ffffff24;border-radius:12px}.schedule-panel td{white-space:normal;min-width:110px}@media(max-width:650px){.schedule-fields{grid-template-columns:1fr}}
+
+.announcements-panel{min-width:0;max-width:100%}.announcement-card{margin:18px 0;padding:18px;border:1px solid #d8aa5c55;border-radius:12px;background:#0b1d30}.announcement-card h3{color:#e9c381;margin:0 0 8px;overflow-wrap:anywhere}.announcement-body{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}.announcement-meta{font-size:12px;color:#aab8c8}.announcement-actions{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}.announcement-actions button{width:auto;margin:0!important}.announcements-panel textarea,.announcements-panel select{width:100%;padding:13px;background:#071321;color:#dce2e9;border:1px solid #71809665;border-radius:9px;font:inherit}.announcements-panel textarea{min-height:160px;resize:vertical}.announcements-panel button:not(:disabled){cursor:pointer;opacity:1}
 </style>
 </head>
 <body>
@@ -217,7 +219,9 @@ window.addEventListener('load', () => {
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Shift planning</span></div><p>Create draft shifts, publish assignments, and track schedule cancellations.</p><button type="button" id="schedule-open" disabled aria-expanded="false" aria-controls="schedule-panel">Open scheduling <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Company preferences</span></div><p>Manage your company name, time zone, and the first day of your workweek.</p><button type="button" id="company-settings-open" disabled aria-expanded="false" aria-controls="company-settings">Company settings <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">✧</div><div class="module-top"><h3>Company Announcements</h3><span class="module-state">Team notices</span></div><p>Write private drafts and publish company notices for your team.</p><button id="announcements-open" type="button" disabled aria-expanded="false" aria-controls="announcements-panel">Manage announcements <span aria-hidden="true">→</span></button></article>
 </div>
+<section class="attendance-records announcements-panel" id="announcements-panel" hidden aria-labelledby="announcements-heading"><div class="jobs-head"><h2 id="announcements-heading">Company Announcements</h2><button id="announcements-close" type="button" class="secondary-btn">Close announcements</button></div><p>Published notices are visible to employees with active company access. Drafts stay private. Published notices cannot be edited; archive one and publish a replacement if needed. No emails or automatic notifications are sent.</p><label>Show notices<select id="announcements-filter"><option value="all">All notices</option><option value="draft">Drafts</option><option value="published">Published</option><option value="archived">Archived</option></select></label><div class="announcement-actions"><button id="announcements-reload" type="button">Reload announcements</button></div><p id="announcements-status" role="status" aria-live="polite">Load company announcements to begin.</p><form id="announcements-form"><h3 id="announcements-editor-heading">New draft announcement</h3><label>Title<input id="announcements-title" required maxlength="160" type="text"></label><label>Message<textarea id="announcements-body" required maxlength="5000" rows="6"></textarea></label><div class="announcement-actions"><button id="announcements-save" type="submit" disabled>Save draft</button><button id="announcements-new" type="button" class="secondary-btn">New draft</button></div></form><div id="announcements-list"></div><div class="announcement-actions"><button id="announcements-previous" type="button" disabled>Previous page</button><button id="announcements-next" type="button" disabled>Next page</button></div></section>
 <section class="attendance-records schedule-panel" id="schedule-panel" hidden aria-labelledby="schedule-heading">
 <div class="jobs-head"><h2 id="schedule-heading">Workforce Schedule</h2><button type="button" id="schedule-close" class="secondary-btn">Close schedule</button></div>
 <p id="schedule-zone">Dates and times use your company time zone.</p><p>Save shifts as private drafts, then publish them when ready. Published shifts are read-only; cancel and create a replacement when plans change. Publishing does not send notifications or clock anyone in.</p>
@@ -355,6 +359,7 @@ window.addEventListener('load', () => {
 <script src="./attendance-records.js?v=records-2"></script>
 <script src="./company-settings.js?v=2"></script>
 <script src="./scheduling.js?v=2"></script>
+<script src="./announcements.js?v=1"></script>
 <script>
 (() => {
   'use strict';
@@ -1537,6 +1542,7 @@ window.addEventListener('load', () => {
   });
   verifyOwner().catch(() => { showLogin(); setMessage('Unable to verify the current session. Please refresh.', 'error'); });
 
+  window.IroncrestAnnouncements?.mount({document,client,verifyMembership:confirmWorksiteOwner,apiBase:API_BASE,owner:true});
   window.IroncrestScheduling?.mount({document,client,verifyOwner:confirmWorksiteOwner,apiBase:API_BASE});
   window.IroncrestCompanySettings?.mount({document,client,verifyOwner:confirmWorksiteOwner,apiBase:API_BASE});
 
