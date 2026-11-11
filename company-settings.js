@@ -32,7 +32,7 @@
   }
   const zones=[...new Set(['UTC','America/Phoenix','America/New_York','America/Chicago','America/Denver','America/Los_Angeles',...(typeof Intl.supportedValuesOf==='function'?Intl.supportedValuesOf('timeZone'):[])])];
   for(const zone of zones){const option=document.createElement('option');option.value=zone;$('company-time-zones').append(option);}
-  open.disabled=false;open.addEventListener('click',()=>{panel.hidden=false;open.setAttribute('aria-expanded','true');run(false);});
+  open.disabled=false;open.addEventListener('click',()=>{panel.hidden=false;open.setAttribute('aria-expanded','true');panel.scrollIntoView({behavior:'smooth',block:'start'});run(false);});
   $('company-settings-close').addEventListener('click',clear);reload.addEventListener('click',()=>run(false));
   form.addEventListener('submit',event=>{event.preventDefault();if(form.reportValidity())run(true);});
   client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'||event==='USER_DELETED'||(identity&&session?.user?.id!==identity))clear();});

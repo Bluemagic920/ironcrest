@@ -73,7 +73,7 @@
    status.textContent=payload.action==='save_draft'?'Saving draft shift…':payload.action==='publish'?'Publishing shift…':'Cancelling shift…';
    needsReload=true;await call('/action',payload);if(!current())return;editorReset();rows=[];body.replaceChildren();status.textContent='Shift '+(payload.action==='save_draft'?'saved as a draft':payload.action==='publish'?'published':'cancelled')+'. Reload the schedule to see the latest shifts.';
   });}
-  open.disabled=false;open.addEventListener('click',()=>{panel.hidden=false;open.setAttribute('aria-expanded','true');load();});
+  open.disabled=false;open.addEventListener('click',()=>{panel.hidden=false;open.setAttribute('aria-expanded','true');panel.scrollIntoView({behavior:'smooth',block:'start'});load();});
   $('schedule-close').addEventListener('click',clear);$('schedule-reload').addEventListener('click',load);
   if(!selfOnly){$('schedule-new').addEventListener('click',()=>{if(!busy)editorReset();});form.addEventListener('submit',event=>{event.preventDefault();if(busy||!context||!form.reportValidity())return;
    try{const start=localToUtc($('schedule-shift-start').value,context.timeZone),end=localToUtc($('schedule-shift-end').value,context.timeZone);if(Date.parse(end)<=Date.parse(start)||Date.parse(end)-Date.parse(start)>86400000)throw Error('A shift must end after it starts and last no longer than 24 hours.');
