@@ -177,6 +177,8 @@ window.addEventListener('load', () => {
 .manager-history{max-height:410px;overflow:auto;padding-right:4px}
 .manager-actions-note{font-size:12px;color:#c8b996;margin-top:12px}
 @media(max-width:750px){.manager-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.manager-job-row{align-items:flex-start}}
+
+.attendance-records{border:1px solid #d8aa5c55;border-radius:16px;padding:24px;margin:24px 0;background:#091a2c}.attendance-records[hidden]{display:none}.attendance-table-wrap{overflow:auto;margin:20px 0}.attendance-records table{border-collapse:collapse;width:100%;font-size:13px;text-align:left}.attendance-records th,.attendance-records td{padding:12px;border-bottom:1px solid #ffffff20;vertical-align:top}.attendance-records caption{text-align:left;font-weight:750;padding:10px 0;color:#e7c381}
 </style>
 </head>
 <body>
@@ -206,11 +208,20 @@ window.addEventListener('load', () => {
 <div class="workspace-grid" aria-label="Workforce management modules">
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Stage 10K · Test</span></div><p>Manage employee invitations. Restricted single-recipient testing is available to verified owners.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▤</div><div class="module-top"><h3>Jobs &amp; Tasks</h3><span class="module-state">Stage 11E · Job editing test</span></div><p>Create draft jobs, choose employee assignments, and explore progress tracking. Drafts stay in this browser session; saved jobs can now be viewed securely from Supabase.</p><button type="button" class="jobs-open" id="jobs-open" aria-expanded="false" aria-controls="jobs-section">Open Job Tracking <span aria-hidden="true">→</span></button></article>
-<article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Coming soon</span></div><p>Review shifts and time entries, with location verification and exception controls planned.</p><button type="button" disabled aria-label="Time and attendance not yet available">View time records <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Recorded shifts</span></div><p>Review recorded shifts, open clock-ins, hours, and attendance exceptions.</p><button type="button" id="attendance-records-open" disabled aria-expanded="false" aria-controls="attendance-records">View time records <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Coming soon</span></div><p>Organize employee schedules, assignments, and future shift coverage.</p><button type="button" disabled aria-label="Scheduling not yet available">Open scheduling <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⚙</div><div class="module-top"><h3>Company Settings</h3><span class="module-state">Coming soon</span></div><p>Configure business preferences, workforce features, and employee permissions.</p><button type="button" disabled aria-label="Company settings not yet available">Company settings <span aria-hidden="true">→</span></button></article>
 </div>
+<section class="attendance-records" id="attendance-records" hidden aria-labelledby="attendance-records-title">
+<div class="jobs-head"><h2 id="attendance-records-title">Time &amp; Attendance Records</h2><button id="attendance-records-close" type="button" class="secondary-btn">Close</button></div>
+<p>Review recorded attendance without changing time entries. Times and date filters use UTC. Hours cover closed shifts within the selected dates; open shifts require review. This report is not payroll approval.</p>
+<div class="jobs-fields"><div><label for="attendance-start">Start date (UTC)</label><input id="attendance-start" type="date" required></div><div><label for="attendance-end">End date (UTC)</label><input id="attendance-end" type="date" required></div><div><label for="attendance-employee">Employee</label><select id="attendance-employee"><option value="">All</option></select></div><div><label for="attendance-worksite">Worksite</label><select id="attendance-worksite"><option value="">All</option></select></div></div>
+<div class="saved-jobs-actions"><button id="attendance-records-load" type="button">Load recorded attendance</button><button id="attendance-records-export" type="button" class="secondary-btn" disabled>Export displayed shifts (CSV)</button></div>
+<p id="attendance-records-status" role="status" aria-live="polite">Select up to 31 days.</p><p id="attendance-records-summary" role="status" aria-live="polite"></p>
+<div class="attendance-table-wrap"><table><caption>Recorded shifts</caption><thead><tr><th>Employee</th><th>Worksite</th><th>Clock in</th><th>Clock out</th><th>Closed hours in range</th><th>Status</th></tr></thead><tbody id="attendance-records-body"></tbody></table></div>
+<div class="attendance-table-wrap"><table><caption>Exception requests in selected dates</caption><thead><tr><th>Employee</th><th>Worksite</th><th>Requested action</th><th>Status</th><th>Requested at (UTC)</th></tr></thead><tbody id="attendance-exceptions-body"></tbody></table></div>
+</section>
 <section class="activity-center" id="manager-activity-center" aria-labelledby="activity-center-title">
 <div class="activity-center-head"><div><div class="eyebrow">Ironcrest · Management workspace</div><h2 id="activity-center-title">Manager Overview</h2></div><span class="preview-tag">Stage 11L · Live Read-only Counters</span></div>
 <p>Daily operations at a glance. Green indicates a completed job without a reported issue; it does not mean manager-approved. Flag changes remain locked.</p>
@@ -320,6 +331,7 @@ window.addEventListener('load', () => {
 </main>
 <footer>© <span id="year">2026</span> Ironcrest Workforce Operations · Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="./attendance-records.js"></script>
 <script>
 (() => {
   'use strict';
@@ -1491,6 +1503,10 @@ window.addEventListener('load', () => {
     finally { signoutButton.disabled = false; }
   });
   verifyOwner().catch(() => { showLogin(); setMessage('Unable to verify the current session. Please refresh.', 'error'); });
+
+  window.IroncrestAttendance?.mount({document,client,verifyOwner:confirmWorksiteOwner,apiBase:API_BASE,
+    download:(csv,filename)=>{const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=filename;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  });
 })();
 </script>
 </body></html>

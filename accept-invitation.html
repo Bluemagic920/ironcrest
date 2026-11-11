@@ -12,7 +12,8 @@
 <main><section class="panel"><div class="eyebrow">Secure employee onboarding</div><h1>Join your team</h1><p>Sign in or create your account using the email address that received your Ironcrest invitation.</p>
 <div id="notice" class="notice" role="status" aria-live="polite">Checking your invitation…</div>
 <div id="auth-ui" class="hidden"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@company.com"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="Enter your password"><button id="signin" type="button">Sign in</button><button id="signup" type="button" class="secondary">Create employee account</button><button id="resend" type="button" class="secondary">Resend verification email</button><button id="reset" type="button" class="secondary">Forgot password?</button></div>
-<div id="ready-ui" class="hidden"><p id="account"></p><button id="accept" type="button">Accept invitation</button><button id="signout" class="secondary" type="button">Use a different account</button></div>
+<div id="recovery-ui" class="hidden"><h2>Choose a new password</h2><p>This updates the ProfitHarbor account you also use for Ironcrest.</p><form id="recovery-form"><label for="new-password">New password</label><input id="new-password" type="password" autocomplete="new-password" minlength="8" required><label for="confirm-password">Confirm new password</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="8" required><button id="save-password" type="submit" disabled>Save new password</button></form><a href="./employee-portal.html">Return to employee sign in</a></div>
+<p id="recovery-done" class="hidden"><a href="./employee-portal.html">Continue to employee sign in</a></p><div id="ready-ui" class="hidden"><p id="account"></p><button id="accept" type="button">Accept invitation</button><button id="signout" class="secondary" type="button">Use a different account</button></div>
 <p class="small">Invitations are private and expire. If your link is no longer valid, ask your employer for a new invitation.</p></section></main>
 <footer>© 2026 Ironcrest Workforce Operations · Powered by ProfitHarbor AI</footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -22,6 +23,7 @@ const SUPABASE_URL='https://nhiqbcevcdxfzvrprgck.supabase.co';
 const SUPABASE_KEY='sb_publishable_VwM3o7h2Jxq9_2WkkdE4kg_WKU6bvP6';
 const API='https://ironcrest-invitations-api.bluemagic920.workers.dev';
 const $=id=>document.getElementById(id),notice=$('notice'),auth=$('auth-ui'),ready=$('ready-ui');
+let recovery=false,recoveryUser=null,recoveryVersion=0;
 const show=(msg,type='')=>{notice.textContent=msg;notice.className='notice '+type};
 // Accept the deployed dashboard's ?token= links and legacy #invite= links.
 // Keep the invitation in tab-scoped storage during email verification.
@@ -52,15 +54,16 @@ try {
     token=sessionStorage.getItem(TOKEN_KEY);
   }
 } catch {token=incoming;}
-if(!token||!/^[a-f0-9]{64}$/.test(token)){
-  show('This invitation link is missing or invalid. Open the original invitation link from your employer. If you verified your email in another browser or device, reopen that invitation link there.','error');return;
+const validInvitation=!!token&&/^[a-f0-9]{64}$/.test(token);
+if(!validInvitation){
+  show('This invitation link is missing or invalid. Open the original invitation link from your employer. If you verified your email in another browser or device, reopen that invitation link there.','error');
 }
 if(!window.supabase?.createClient){show('Secure sign-in is temporarily unavailable. Please try again.','error');return;}
 const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce',storageKey:'ironcrest-employee-auth-v1'}});
 const redirect=location.origin+location.pathname; // Supabase allowlisted redirect; pending token stays in this tab
 let busy=false;
 const setBusy=value=>{busy=value;for(const id of ['signin','signup','resend','reset','accept','signout'])$(id).disabled=value};
-async function refresh(){const {data,error}=await client.auth.getUser();if(error||!data?.user){auth.classList.remove('hidden');ready.classList.add('hidden');show('Sign in or create an account to continue.');return;}
+async function refresh(){if(recovery)return;if(!validInvitation){auth.classList.add('hidden');ready.classList.add('hidden');return;}const {data,error}=await client.auth.getUser();if(recovery)return;if(error||!data?.user){auth.classList.remove('hidden');ready.classList.add('hidden');show('Sign in or create an account to continue.');return;}
 const u=data.user;if(!u.email_confirmed_at){auth.classList.remove('hidden');ready.classList.add('hidden');$('email').value=u.email||'';show('Check your email to verify your account before accepting the invitation.','error');return;}
 auth.classList.add('hidden');ready.classList.remove('hidden');$('account').textContent='Signed in as '+(u.email||'verified account');show('Your account is verified. Select Accept invitation to join your employer’s team.');}
 async function action(fn){if(busy)return;setBusy(true);try{await fn()}catch{show('The request could not be completed. Please try again.','error')}finally{setBusy(false)}}
@@ -70,6 +73,32 @@ $('resend').onclick=()=>action(async()=>{const email=$('email').value.trim();if(
 $('reset').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email){show('Enter your email address first.','error');return;}await client.auth.resetPasswordForEmail(email,{redirectTo:redirect});show('If the account exists, a password reset email will arrive shortly.','success')});
 $('signout').onclick=()=>action(async()=>{await client.auth.signOut();await refresh()});
 $('accept').onclick=()=>action(async()=>{const {data}=await client.auth.getSession();const access=data?.session?.access_token;if(!access){show('Please sign in again.','error');await refresh();return;}const res=await fetch(API+'/api/accept-invitation',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+access},body:JSON.stringify({token})});const payload=await res.json().catch(()=>({}));if(res.ok&&payload.invitationAccepted){try{sessionStorage.removeItem(TOKEN_KEY)}catch{}ready.classList.add('hidden');show('Invitation accepted! Opening your employee portal…','success');window.location.assign('./employee-portal.html');return;}if((res.status===403||res.status===503)&&/not enabled|disabled|unavailable/i.test(String(payload.error||''))){show('Employee invitation acceptance is not available yet. Please try again after your employer confirms activation.','error');return;}show('This invitation could not be accepted. It may be expired, already used, or assigned to a different email address. Contact your employer.','error')});
-client.auth.onAuthStateChange(()=>{setTimeout(()=>{if(!busy)refresh()},0)});refresh();
+async function beginRecovery(){
+ const version=++recoveryVersion;recovery=true;recoveryUser=null;
+ auth.classList.add('hidden');ready.classList.add('hidden');$('recovery-ui').classList.remove('hidden');$('save-password').disabled=true;
+ show('Verifying your password reset link…');
+ try{const {data,error}=await client.auth.getUser();if(version!==recoveryVersion)return;
+  if(error||!data?.user?.id){show('This reset link is invalid or expired. Request a new password reset email.','error');return;}
+  recoveryUser=data.user.id;$('save-password').disabled=false;show('Enter and confirm your new password.');
+ }catch{if(version===recoveryVersion)show('Unable to verify the reset link. Please try again.','error');}
+}
+$('recovery-form').addEventListener('submit',e=>{e.preventDefault();if(busy||!recovery||!recoveryUser)return;
+ const password=$('new-password').value,confirm=$('confirm-password').value,version=recoveryVersion,user=recoveryUser;
+ if(password.length<8||password!==confirm){show('Use at least 8 characters and enter the same password twice.','error');return;}
+ action(async()=>{const {data,error}=await client.auth.getUser();
+  if(version!==recoveryVersion||!recovery||error||data?.user?.id!==user){show('Your reset session changed. Open a new reset link.','error');return;}
+  $('save-password').disabled=true;
+  try{const {error:updateError}=await client.auth.updateUser({password});if(version!==recoveryVersion)return;
+   if(updateError){show('Password could not be updated. Your password must meet the account security requirements.','error');return;}
+   recovery=false;recoveryUser=null;recoveryVersion++;$('recovery-ui').classList.add('hidden');$('recovery-done').classList.remove('hidden');
+   show('Password updated. You can return to employee sign in or continue with your original invitation.','success');
+  }finally{$('new-password').value='';$('confirm-password').value='';if(recovery&&version===recoveryVersion)$('save-password').disabled=false;}
+ });
+});
+client.auth.onAuthStateChange(event=>{
+ if(event==='PASSWORD_RECOVERY'){recovery=true;setTimeout(beginRecovery,0);return;}
+ if(event==='SIGNED_OUT'){recoveryVersion++;recovery=false;recoveryUser=null;$('new-password').value='';$('confirm-password').value='';$('recovery-ui').classList.add('hidden');$('save-password').disabled=true;}
+ setTimeout(()=>{if(!busy&&!recovery)refresh()},0);
+});refresh();
 })();
 </script></body></html>

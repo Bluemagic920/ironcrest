@@ -68,3 +68,6 @@ jobs:
                           print(f'OK {path} inline script #{index}')
           sys.exit(1 if errors else 0)
           PY
+
+      - name: Employee access and recovery regression tests
+        run: node --test tests/*.test.cjs tests/*.test.mjs
