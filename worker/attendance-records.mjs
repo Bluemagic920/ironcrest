@@ -24,10 +24,13 @@ export function createAttendanceRecordsRoute({fetcher=fetch}={}){
   try{if([...url.searchParams.keys()].some(key=>!['start','end'].includes(key))||url.searchParams.getAll('start').length!==1||url.searchParams.getAll('end').length!==1)throw Error();window=reportWindow(url.searchParams.get('start'),url.searchParams.get('end'));}catch{return reply({error:'select_up_to_31_calendar_days'},400);}
   const key=env.SUPABASE_SERVICE_ROLE_KEY;
   const server={apikey:key,...(key.startsWith('sb_secret_')?{}:{Authorization:'Bearer '+key})};
+  let reference='REPORT_UNAVAILABLE';
   async function read(path,headers=server,body){
+   const resources={user:'AUTH',ironcrest_memberships:'MEMBERSHIPS',ironcrest_organizations:'ORGANIZATION',ironcrest_business_entitlement:'ENTITLEMENT',ironcrest_attendance_entries:'ENTRIES',ironcrest_attendance_exceptions:'EXCEPTIONS'};
+   const resource=resources[path.split('?')[0].split('/').pop()]||'LABELS';reference='REPORT_'+resource+'_UNAVAILABLE';
    const response=await fetcher(PROJECT+path,{method:body?'POST':'GET',headers:{...headers,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),redirect:'error',signal:AbortSignal.timeout(8000)});
    if(path==='/auth/v1/user'&&[401,403].includes(response.status))return null;
-   if(!response.ok)throw Error('report_unavailable');const raw=await response.text();if(raw.length>1024*1024)throw Error('report_too_large');return JSON.parse(raw);
+   if(!response.ok){let code='';try{const error=await response.json();if(typeof error?.code==='string'&&/^[A-Z0-9_]{1,20}$/.test(error.code))code='_'+error.code;}catch{}reference='REPORT_'+resource+'_'+response.status+code;throw Error('report_unavailable');}const raw=await response.text();if(raw.length>1024*1024)throw Error('report_too_large');return JSON.parse(raw);
   }
   const query=(table,params)=>'/rest/v1/'+table+'?'+new URLSearchParams(params);
   try{
@@ -64,6 +67,6 @@ export function createAttendanceRecordsRoute({fetcher=fetch}={}){
    return reply({ok:true,readOnly:true,organizationScoped:true,selfScoped:employee,window,limit:200,entriesTruncated:entries.length>200,exceptionsTruncated:exceptions.length>200,
     employeeNames,worksiteNames,entries:project(entries,['id','employee_user_id','worksite_id','clock_in_at','clock_out_at','clock_in_exception_id','clock_out_exception_id']),
     exceptions:project(exceptions,['id','employee_user_id','worksite_id','requested_action','status','requested_at','reviewed_at'])});
-  }catch{return reply({error:'attendance_records_unavailable'},503);}
+  }catch{return reply({error:'attendance_records_unavailable',reference},503);}
  };
 }
