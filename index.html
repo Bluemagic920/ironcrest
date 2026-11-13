@@ -9,7 +9,7 @@ window.addEventListener('load', () => {
 });
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071321">
-<title>IronCrest Workforce Operations | Coming Soon</title>
+<title>Ironcrest | Workforce Operations</title>
 <link rel="icon" type="image/x-icon" href="./ironcrest-favicon.ico?v=2">
 <link rel="icon" type="image/png" sizes="256x256" href="./ironcrest-favicon.png?v=2">
 <link rel="apple-touch-icon" href="./ironcrest-favicon.png?v=2">
@@ -196,27 +196,27 @@ window.addEventListener('load', () => {
   <div class="launch-shell">
     <div class="launch-eyebrow">IronCrest Workforce Operations · In development</div>
     <h1 id="launch-title">A stronger foundation for the people who move your business forward.</h1>
-    <p class="launch-lead">Meet IronCrest: an upcoming workforce operations platform being developed to help businesses organize teams, manage schedules, and bring everyday workforce activity into one professional workspace.</p>
-    <div class="launch-actions"><a class="launch-primary" href="#launch-features">Explore what's planned</a><a class="launch-secondary" href="https://profitharborai.com/">Discover ProfitHarbor AI</a></div>
+    <p class="launch-lead">Ironcrest brings employee records, invitations, schedules, jobs, and company notices into one workforce workspace.</p>
+    <div class="launch-actions"><a class="launch-primary" href="#launch-features">Explore the workspace</a><a class="launch-secondary" href="https://profitharborai.com/">Discover ProfitHarbor AI</a></div>
     <div id="launch-features" class="launch-grid" aria-label="Planned workforce capabilities">
-      <article class="launch-feature"><strong>Employee management</strong><p>Team records, employee access, and invitation workflows are in development. Owner-only invitation testing is restricted.</p></article>
-      <article class="launch-feature"><strong>Time &amp; attendance</strong><p>Planned tools for reviewing shifts, time entries, and exceptions.</p></article>
-      <article class="launch-feature"><strong>Workforce scheduling</strong><p>Planned scheduling tools to organize assignments and shift coverage.</p></article>
-      <article class="launch-feature"><strong>Company settings</strong><p>Planned controls for organization preferences and workforce permissions.</p></article>
+      <article class="launch-feature"><strong>Employee management</strong><p>Manage employee profiles and invite verified employees into your company.</p></article>
+      <article class="launch-feature"><strong>Time &amp; attendance</strong><p>Review recorded shifts, hours, and attendance exceptions. Clock-in/out remains in controlled testing.</p></article>
+      <article class="launch-feature"><strong>Workforce scheduling</strong><p>Create draft shifts, publish assignments, and share each employee’s own schedule.</p></article>
+      <article class="launch-feature"><strong>Company settings</strong><p>Set your company name, time zone, and workweek preferences.</p></article>
     </div>
-    <p class="launch-disclosure">Coming soon: the workforce features above are planned or in restricted testing and are not yet generally available. No public employee registration or launch-notification signup is active.</p>
+    <p class="launch-disclosure">Early access: verified Business owners manage their company workspace; employees join by invitation. General clock-in/out and payroll integration remain pending release.</p>
     <p class="launch-footnote">Powered by <a href="https://profitharborai.com/">ProfitHarbor AI</a> · Navigate Growth. Build Wealth.</p>
   </div>
 </section>
 <main>
 <section class="identity" aria-label="Ironcrest brand"><img src="ironcrest-logo.png" alt="Ironcrest Workforce Operations silver and gold shield emblem, powered by ProfitHarbor AI"><div class="tagline">Built for the people who move business forward</div></section>
-<section class="panel"><div class="eyebrow">Secure Owner Access</div><div id="login-area"><h1>Welcome to<br>Ironcrest.</h1><p>Sign in with your existing ProfitHarbor AI account to verify your Ironcrest owner access. Only restricted owner-authorized test invitations are currently available.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" placeholder="name@example.com" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required><button id="login-button" type="submit">Owner Sign In</button></form></div><div class="owner-area" id="owner-area">
+<section class="panel"><div class="eyebrow">Secure Owner Access</div><div id="login-area"><h1>Welcome to<br>Ironcrest.</h1><p>Sign in with your existing ProfitHarbor AI account to verify your Ironcrest owner access. Employee invitations and company management require verified Business owner access.</p><form id="login-form"><label for="email">Email</label><input id="email" type="email" placeholder="name@example.com" autocomplete="username" required><label for="password">Password</label><input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required><button id="login-button" type="submit">Owner Sign In</button></form></div><div class="owner-area" id="owner-area">
 <div class="owner-top"><div><div class="eyebrow">Ironcrest · Owner Command Center</div><h1>Workforce overview</h1><p class="owner-subtitle">A secure foundation for managing your team, schedules, and operations.</p></div><div class="owner-chip"><span class="owner-dot"></span>Owner access verified</div></div>
 <div class="owner-details"><div><span>Organization</span><strong id="owner-org"></strong></div><div><span>Signed in as</span><strong id="owner-email"></strong></div><div><span>Access level</span><strong id="owner-role">Owner</strong></div></div>
 <div class="dashboard-heading"><h2>Management workspace</h2><span class="preview-tag">Owner workspace</span></div>
 <div class="workspace-grid" aria-label="Workforce management modules">
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">♙</div><div class="module-top"><h3>Employees</h3><span class="module-state">Team management</span></div><p>Manage employee profiles and invitations for your company.</p><button type="button" class="employee-open" id="employee-open" aria-expanded="false" aria-controls="employee-section">Manage employees <span aria-hidden="true">→</span></button></article>
-<article class="workspace-card"><div class="module-icon" aria-hidden="true">▤</div><div class="module-top"><h3>Jobs &amp; Tasks</h3><span class="module-state">Stage 11E · Job editing test</span></div><p>Create draft jobs, choose employee assignments, and explore progress tracking. Drafts stay in this browser session; saved jobs can now be viewed securely from Supabase.</p><button type="button" class="jobs-open" id="jobs-open" aria-expanded="false" aria-controls="jobs-section">Open Job Tracking <span aria-hidden="true">→</span></button></article>
+<article class="workspace-card"><div class="module-icon" aria-hidden="true">▤</div><div class="module-top"><h3>Jobs &amp; Tasks</h3><span class="module-state">Saved jobs</span></div><p>Create draft jobs, choose employee assignments, and explore progress tracking. Drafts stay in this browser session; saved jobs can now be viewed securely from Supabase.</p><button type="button" class="jobs-open" id="jobs-open" aria-expanded="false" aria-controls="jobs-section">Open Job Tracking <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">◷</div><div class="module-top"><h3>Time &amp; Attendance</h3><span class="module-state">Recorded shifts</span></div><p>Review recorded shifts, open clock-ins, hours, and attendance exceptions.</p><button type="button" id="attendance-records-open" disabled aria-expanded="false" aria-controls="attendance-records">View time records <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">▦</div><div class="module-top"><h3>Scheduling</h3><span class="module-state">Shift planning</span></div><p>Create draft shifts, publish assignments, and track schedule cancellations.</p><button type="button" id="schedule-open" disabled aria-expanded="false" aria-controls="schedule-panel">Open scheduling <span aria-hidden="true">→</span></button></article>
 <article class="workspace-card"><div class="module-icon" aria-hidden="true">⌖</div><div class="module-top"><h3>Worksites &amp; Geofencing</h3><span class="module-state">Stage 10P-G · Owner controls</span></div><p>Configure and manage organization worksites with owner-authorized Supabase access.</p><button type="button" class="worksite-open" id="worksite-open" aria-expanded="false" aria-controls="worksite-section">Manage worksites <span aria-hidden="true">→</span></button></article>
@@ -285,7 +285,7 @@ window.addEventListener('load', () => {
 <div id="jobs-list" class="jobs-list" aria-live="polite"></div>
 <div class="saved-jobs" aria-label="Saved jobs from Supabase">
 <h3>Saved Jobs · Supabase</h3>
-<p>View permanently saved jobs for your verified organization. Saved jobs can be edited only after the separate backend editing switch is enabled. Deleting and employee notifications are not enabled.</p>
+<p>View permanently saved jobs for your verified organization. Create and update saved jobs for your verified company. Deleting and automatic employee emails are not enabled.</p>
 <div class="saved-jobs-actions"><button type="button" id="jobs-load-saved" class="secondary-btn">Load Saved Jobs</button><button type="button" id="jobs-refresh-saved" class="secondary-btn">Refresh Jobs</button></div>
 <div id="jobs-saved-message" class="api-result" role="status" aria-live="polite">Not loaded yet.</div>
 <div id="jobs-saved-list" class="jobs-list" aria-live="polite"></div>
@@ -1527,7 +1527,7 @@ window.addEventListener('load', () => {
     if (orgError || !org) { showLogin(); setMessage('Your owner membership was found, but the organization could not be verified.', 'error'); return; }
     verifiedWorksiteOrg = memberships[0].organization_id;
     showOwner(userData.user.email, org.name);
-    setMessage('Secure owner session active. Workforce features are not yet enabled.', 'ok');
+    setMessage('Secure owner session active. Each feature verifies your company access.', 'ok');
   }
   document.getElementById('login-form').addEventListener('submit', async event => {
     event.preventDefault();
