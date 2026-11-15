@@ -24,9 +24,11 @@ The full deployed Worker is still not versioned here. Do not replace it with an 
 
 `worker/business-billing.mjs` provides catalog validation, monthly/annual Business and employee/unlimited add-on interpretation, fresh paid-invoice verification, timestamp-bounded raw-body HMAC verification, lifecycle event dispatch, and explicit reconciliation hooks for refund/dispute/fraud events. It rejects unknown prices, mixed intervals/currencies, partial item lists, duplicate bases, mismatched customers/products, unpaid invoices and unsupported compositions. Trials do not grant access. Paid cancellation at period end preserves access until expiry. Paused, expired, canceled and failed subscriptions do not grant access.
 
-Chris confirmed Ironcrest Business at **$129.99** on November 15. Chris also confirmed monthly cadence. The annual amount and employee/add-on terms remain unconfirmed; verify currency and catalog IDs before production approval.
+Chris confirmed Ironcrest is included in ProfitHarbor AI Business. The connected live Stripe account was inspected read-only on November 15 and confirms **$129.99 USD/month** and **$1,325.90 USD/year**, matching Chris's screenshot. `worker/business-catalog.mjs` records those exact live product/price IDs and the existing **$49.99 USD/month unlimited-employees add-on**. The current hosted entitlement function supplies **20 employees** for Business; no arbitrary per-seat package is approved.
 
-The catalog is an explicitly supplied server configuration. Test catalog IDs and employee counts are invented fixtures, not approved commercial terms. Ordinary Pro subscriptions are never automatically Business subscriptions. Lifetime entitlements and legacy billing rows are not modified.
+The inspected hosted helper currently reads legacy `ph_subscriptions_live` rows and only has a monthly Business mapping. It does not read `ph_business_subscriptions_live`; annual Business is absent from its price mapping. `docs/business-entitlement-proposal.sql` prepares a separate, service-only v2 helper supporting both verified Business prices, current Business rows, conservative legacy compatibility, preserved lifetime owners and unlimited add-ons. A canceled current record blocks stale legacy fallback. This SQL was tested in a disposable local database but **was not applied to hosted Supabase**. The live helper and all production callers remain unchanged. Integration must verify the writer's subscription-type conventions and explicitly switch approved callers to the new helper.
+
+The catalog is an explicitly supplied server configuration. General test catalog IDs/counts remain invented fixtures; a separate test verifies the observed live catalog. Subscription validation checks the exact unit amount and Stripe mode as well as price, product, currency and interval. Ordinary Pro subscriptions are never automatically Business subscriptions. Lifetime entitlements and legacy billing rows are not modified.
 
 The module is **not imported into a production entry point** and defaults to a closed source approval gate. It also requires `ENABLE_BUSINESS_BILLING=true`, an explicit `BUSINESS_STRIPE_MODE` and a separate `BUSINESS_STRIPE_WEBHOOK_SECRET`. Do not reuse a live webhook secret in a test environment.
 
@@ -37,11 +39,21 @@ Persistence is a required adapter contract, not an implemented database integrat
 - `reconcileRisk(event, stripe)` must resolve Stripe object relationships, durably journal and suspend/reconcile affected entitlement. Missing or failing reconciliation returns a retryable error.
 - Stripe retrieval adapters must use the approved account, API version, bounded requests, complete item lists, and fresh subscription/invoice reads under the lock.
 
-The tests use mock adapters. They validate component behavior, **not database durability or actual Stripe delivery**.
+The webhook orchestration tests use mock adapters. They validate component behavior, **not database durability or actual Stripe webhook delivery**.
+
+## Stripe sandbox observations
+
+On November 15, the connected isolated ProfitHarbor AI sandbox was used to create a separate Business test product with monthly USD 129.99 and annual USD 1325.90 prices. An invented customer with a Stripe test PaymentMethod produced active subscriptions and paid invoices for both intervals. Both subscriptions were then canceled without proration or additional invoices. No real payment, email recipient or hosted entitlement was involved. Test product, prices, customer and canceled subscription history remain in the sandbox for review.
+
+`tests/fixtures/business-sandbox.json` contains only projected subscription/invoice response fields needed by the tests, including paid and canceled states. No payment credential, invoice access link or client secret is included. These real API responses exposed that current invoices omit the older `paid` boolean. The component checks `status='paid'`, zero remaining amount and matching subscription/customer/mode/currency; an explicitly false legacy `paid` field is rejected. Actual invoice fields now have regression coverage.
+
+The first customer-fixture attempt used a legacy card token and was rejected by Stripe, triggering a deprecation notice. It was corrected to a PaymentMethod before the successful tests. No legacy API policy was enabled and no legacy token integration was added to the application. Chris confirmed tax is not currently collected; sandbox subscriptions had automatic tax disabled and live tax settings were unchanged.
+
+Current validation: 142 application checks, 29 disposable PostgreSQL results (including suite parent results), Worker syntax checks and HTML inline syntax checks pass locally. GitHub CI passed after correcting private Unix socket configuration for the Linux database runner; the expanded Business changes require a fresh CI pass.
 
 ## Work required before approval
 
-November 15: review commercial price/employee contract, locate authoritative billing deployment and schema, and compare active Ironcrest Worker with candidate sources. Current repository lacks an approved Business price catalog and checkout implementation.
+November 15: live Business catalog and current entitlement schema inspected read-only; monthly/annual catalog and v2 entitlement proposal prepared. Still locate the authoritative active billing deployment and compare the active Ironcrest Worker with candidate sources. This repository lacks a complete Business checkout implementation and production billing persistence adapter.
 
 November 16: implement and database-test durable checkout reservations, customer mapping, event journaling, entitlement synchronization and risk reconciliation against that contract. Connect checkout, portal and lifecycle handling in the authoritative ProfitHarbor billing service. Run isolated Stripe integration checks for monthly/annual purchases, add-ons, async payment, renewal/failure/cancellation, duplicate/out-of-order events, lost responses and refunds/disputes. Confirm tax registrations and recurring-payment tax configuration before enabling tax collection; see [Stripe recurring taxes](https://docs.stripe.com/billing/taxes/collect-taxes).
 

@@ -1,0 +1,200 @@
+{
+  "account": "ProfitHarbor AI sandbox",
+  "observedOn": "2026-11-15",
+  "catalog": [
+    {
+      "priceId": "price_1Uc5Z1AJcPWZlA8sEhP4K4Mb",
+      "productId": "prod_VdMHQOCOBLAiwX",
+      "kind": "business",
+      "interval": "month",
+      "currency": "usd",
+      "unitAmount": 12999,
+      "employees": 20
+    },
+    {
+      "priceId": "price_1Uc5Z2AJcPWZlA8s96n61KyL",
+      "productId": "prod_VdMHQOCOBLAiwX",
+      "kind": "business",
+      "interval": "year",
+      "currency": "usd",
+      "unitAmount": 132590,
+      "employees": 20
+    }
+  ],
+  "fixtures": [
+    {
+      "interval": "month",
+      "subscription": {
+        "id": "sub_1Uc5ZlAJcPWZlA8szCrzMYY0",
+        "customer": "cus_VdMIBW0g8GYiiO",
+        "livemode": false,
+        "status": "active",
+        "latest_invoice": "in_1Uc5ZlAJcPWZlA8sEouGOKxu",
+        "cancel_at_period_end": false,
+        "items": {
+          "has_more": false,
+          "data": [
+            {
+              "quantity": 1,
+              "current_period_end": 1797349361,
+              "price": {
+                "id": "price_1Uc5Z1AJcPWZlA8sEhP4K4Mb",
+                "product": "prod_VdMHQOCOBLAiwX",
+                "currency": "usd",
+                "unit_amount": 12999,
+                "livemode": false,
+                "recurring": {
+                  "interval": "month",
+                  "interval_count": 1,
+                  "meter": null,
+                  "trial_period_days": null,
+                  "usage_type": "licensed"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "invoice": {
+        "id": "in_1Uc5ZlAJcPWZlA8sEouGOKxu",
+        "customer": "cus_VdMIBW0g8GYiiO",
+        "livemode": false,
+        "status": "paid",
+        "amount_remaining": 0,
+        "currency": "usd",
+        "parent": {
+          "quote_details": null,
+          "subscription_details": {
+            "metadata": {
+              "purpose": "ironcrest-nov17-integration-tests"
+            },
+            "subscription": "sub_1Uc5ZlAJcPWZlA8szCrzMYY0"
+          },
+          "type": "subscription_details"
+        }
+      }
+    },
+    {
+      "interval": "year",
+      "subscription": {
+        "id": "sub_1Uc5ZoAJcPWZlA8sSRbwbyC6",
+        "customer": "cus_VdMIBW0g8GYiiO",
+        "livemode": false,
+        "status": "active",
+        "latest_invoice": "in_1Uc5ZoAJcPWZlA8slO2xFAe8",
+        "cancel_at_period_end": false,
+        "items": {
+          "has_more": false,
+          "data": [
+            {
+              "quantity": 1,
+              "current_period_end": 1826293364,
+              "price": {
+                "id": "price_1Uc5Z2AJcPWZlA8s96n61KyL",
+                "product": "prod_VdMHQOCOBLAiwX",
+                "currency": "usd",
+                "unit_amount": 132590,
+                "livemode": false,
+                "recurring": {
+                  "interval": "year",
+                  "interval_count": 1,
+                  "meter": null,
+                  "trial_period_days": null,
+                  "usage_type": "licensed"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "invoice": {
+        "id": "in_1Uc5ZoAJcPWZlA8slO2xFAe8",
+        "customer": "cus_VdMIBW0g8GYiiO",
+        "livemode": false,
+        "status": "paid",
+        "amount_remaining": 0,
+        "currency": "usd",
+        "parent": {
+          "quote_details": null,
+          "subscription_details": {
+            "metadata": {
+              "purpose": "ironcrest-nov17-integration-tests"
+            },
+            "subscription": "sub_1Uc5ZoAJcPWZlA8sSRbwbyC6"
+          },
+          "type": "subscription_details"
+        }
+      }
+    }
+  ],
+  "cancellations": [
+    {
+      "interval": "month",
+      "subscription": {
+        "id": "sub_1Uc5ZlAJcPWZlA8szCrzMYY0",
+        "customer": "cus_VdMIBW0g8GYiiO",
+        "livemode": false,
+        "status": "canceled",
+        "latest_invoice": "in_1Uc5ZlAJcPWZlA8sEouGOKxu",
+        "cancel_at_period_end": false,
+        "items": {
+          "has_more": false,
+          "data": [
+            {
+              "quantity": 1,
+              "current_period_end": 1797349361,
+              "price": {
+                "id": "price_1Uc5Z1AJcPWZlA8sEhP4K4Mb",
+                "product": "prod_VdMHQOCOBLAiwX",
+                "currency": "usd",
+                "unit_amount": 12999,
+                "livemode": false,
+                "recurring": {
+                  "interval": "month",
+                  "interval_count": 1,
+                  "meter": null,
+                  "trial_period_days": null,
+                  "usage_type": "licensed"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "interval": "year",
+      "subscription": {
+        "id": "sub_1Uc5ZoAJcPWZlA8sSRbwbyC6",
+        "customer": "cus_VdMIBW0g8GYiiO",
+        "livemode": false,
+        "status": "canceled",
+        "latest_invoice": "in_1Uc5ZoAJcPWZlA8slO2xFAe8",
+        "cancel_at_period_end": false,
+        "items": {
+          "has_more": false,
+          "data": [
+            {
+              "quantity": 1,
+              "current_period_end": 1826293364,
+              "price": {
+                "id": "price_1Uc5Z2AJcPWZlA8s96n61KyL",
+                "product": "prod_VdMHQOCOBLAiwX",
+                "currency": "usd",
+                "unit_amount": 132590,
+                "livemode": false,
+                "recurring": {
+                  "interval": "year",
+                  "interval_count": 1,
+                  "meter": null,
+                  "trial_period_days": null,
+                  "usage_type": "licensed"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

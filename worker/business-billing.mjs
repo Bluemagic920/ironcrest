@@ -11,6 +11,7 @@ export function businessCatalog(entries) {
     if (!entry || !id(entry.priceId,'price') || !id(entry.productId,'prod') || catalog.has(entry.priceId)
       || !['business','employee_addon','unlimited'].includes(entry.kind)
       || !['month','year'].includes(entry.interval) || !/^[a-z]{3}$/.test(entry.currency)
+      || !Number.isSafeInteger(entry.unitAmount) || entry.unitAmount < 1
       || !Number.isSafeInteger(entry.employees) || entry.employees < 0 || entry.employees > 100000
       || (entry.kind === 'employee_addon' && entry.employees === 0)
       || (entry.kind === 'unlimited' && entry.employees !== 0)) throw Error('Invalid approved catalog');
@@ -31,6 +32,7 @@ export function businessSnapshot(subscription, invoice, catalog, {customerId,liv
   for (const item of subscription.items.data) {
     const price=item?.price, approved=catalog.get(price?.id);
     if (!approved || seen.has(price.id) || resourceId(price.product)!==approved.productId
+      || price.unit_amount!==approved.unitAmount || price.livemode!==livemode
       || price.currency!==approved.currency || price.recurring?.interval!==approved.interval
       || price.recurring.interval_count!==1 || price.recurring.usage_type!=='licensed'
       || !Number.isSafeInteger(item.quantity) || item.quantity<1 || item.quantity>100000
@@ -49,7 +51,7 @@ export function businessSnapshot(subscription, invoice, catalog, {customerId,liv
     const linked=invoice?.parent?.subscription_details?.subscription ?? invoice?.subscription;
     if (!id(invoice?.id,'in') || resourceId(subscription.latest_invoice)!==invoice.id
       || invoice.livemode!==livemode || resourceId(invoice.customer)!==customerId
-      || resourceId(linked)!==subscription.id || invoice.status!=='paid' || invoice.paid!==true
+      || resourceId(linked)!==subscription.id || invoice.status!=='paid' || ('paid' in invoice && invoice.paid!==true)
       || invoice.amount_remaining!==0 || invoice.currency!==base.currency) throw Error('Paid invoice required');
   }
   const employees=base.employees+(addon?addon.employees*addon.quantity:0);
