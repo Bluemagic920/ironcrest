@@ -5,7 +5,7 @@ test('isolated PostgreSQL general attendance proposal',async t=>{
  const env={...process.env,TEMP:dir,TMP:dir};for(const key of Object.keys(env))if(key.startsWith('PG'))delete env[key];
  const port=await new Promise(resolve=>{const server=net.createServer();server.listen(0,'127.0.0.1',()=>{const p=server.address().port;server.close(()=>resolve(p));});});
  const args=['-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-h','127.0.0.1','-p',String(port),'-U','ironcrest_test','-d','postgres'];
- function command(name,args){const fd=fs.openSync(path.join(dir,name+'.log'),'a');try{const r=cp.spawnSync(path.join(bin,name+(process.platform==='win32'?'.exe':'')),args,{env,windowsHide:true,encoding:'utf8',timeout:60000,stdio:['ignore',fd,fd]});if(r.error||r.status!==0)throw Error(r.error?.message||fs.readFileSync(path.join(dir,name+'.log'),'utf8'));return r.stdout;}finally{fs.closeSync(fd);}}
+ function command(name,args){const fd=fs.openSync(path.join(dir,name+'.log'),'a');try{const r=cp.spawnSync(path.join(bin,name+(process.platform==='win32'?'.exe':'')),args,{env,windowsHide:true,encoding:'utf8',timeout:60000,stdio:['ignore',fd,fd]});if(r.error||r.status!==0)throw Error(r.error?.message||fs.readFileSync(path.join(dir,name+'.log'),'utf8')+(fs.existsSync(path.join(dir,'server.log'))?'\n'+fs.readFileSync(path.join(dir,'server.log'),'utf8'):''));return r.stdout;}finally{fs.closeSync(fd);}}
  function sql(text,role='service_role',success=true){const r=cp.spawnSync(path.join(bin,'psql'+(process.platform==='win32'?'.exe':'')),args,{input:(role?"SET ROLE "+role+";SET request.jwt.claim.role='"+role+"';\n":'')+text,env,windowsHide:true,encoding:'utf8',timeout:30000});if(r.error||success&&r.status!==0)throw Error(r.error?.message||r.stderr);return r;}
  const rpc=(revision,name='Example',actor=OWNER,zone='America/Phoenix',day=1)=>`SELECT public.ironcrest_save_company_settings('${actor}','${ORG}','${name}','${zone}',${day},${revision});`;
  const call=(...params)=>JSON.parse(sql(rpc(...params)).stdout.trim());
@@ -13,7 +13,7 @@ test('isolated PostgreSQL general attendance proposal',async t=>{
  let started=false;
  try{
   command('initdb',['-D',data,'-U','ironcrest_test','-A','trust','--no-locale','-E','UTF8']);
-  command('pg_ctl',['-D',data,'-l',path.join(dir,'server.log'),'-o','-h 127.0.0.1 -p '+port,'-w','start']);started=true;
+  command('pg_ctl',['-D',data,'-l',path.join(dir,'server.log'),'-o','-h 127.0.0.1 -p '+port+(process.platform==='win32'?'':' -k '+dir),'-w','start']);started=true;
 
   const EMP='44444444-4444-4444-8444-444444444444',MEM='66666666-6666-4666-8666-666666666666',SITE='77777777-7777-4777-8777-777777777777',FOREIGN='55555555-5555-4555-8555-555555555555';
   sql(`CREATE ROLE anon NOLOGIN;CREATE ROLE authenticated NOLOGIN;CREATE ROLE service_role NOLOGIN BYPASSRLS;

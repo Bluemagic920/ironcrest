@@ -24,7 +24,7 @@ The full deployed Worker is still not versioned here. Do not replace it with an 
 
 `worker/business-billing.mjs` provides catalog validation, monthly/annual Business and employee/unlimited add-on interpretation, fresh paid-invoice verification, timestamp-bounded raw-body HMAC verification, lifecycle event dispatch, and explicit reconciliation hooks for refund/dispute/fraud events. It rejects unknown prices, mixed intervals/currencies, partial item lists, duplicate bases, mismatched customers/products, unpaid invoices and unsupported compositions. Trials do not grant access. Paid cancellation at period end preserves access until expiry. Paused, expired, canceled and failed subscriptions do not grant access.
 
-Chris confirmed Ironcrest Business at **$129.99** on November 15. The existing product page identifies this as a monthly price; monthly cadence and USD are working assumptions to confirm in the Stripe catalog before production approval. Annual pricing and employee/add-on terms remain unconfirmed.
+Chris confirmed Ironcrest Business at **$129.99** on November 15. Chris also confirmed monthly cadence. The annual amount and employee/add-on terms remain unconfirmed; verify currency and catalog IDs before production approval.
 
 The catalog is an explicitly supplied server configuration. Test catalog IDs and employee counts are invented fixtures, not approved commercial terms. Ordinary Pro subscriptions are never automatically Business subscriptions. Lifetime entitlements and legacy billing rows are not modified.
 
