@@ -56,3 +56,8 @@ test('only active assigned worksites are returned, with no coordinate or assignm
  for(const bad of [{assignments:[{worksite_id:SITE,organization_id:OWNER,membership_id:MEM,active:true}]},{assignments:Array(101).fill({worksite_id:SITE,organization_id:ORG,membership_id:MEM,active:true})},{sites:[{id:OWNER,name:'Foreign',organization_id:ORG,active:true}]},{sites:[{id:SITE,name:'Inactive',organization_id:ORG,active:false}]}]){const f=fixture(bad);assert.equal((await f.route(req(null,'status'),env)).status,503);}
  const none=fixture({assignments:[]});assert.deepEqual((await (await none.route(req(null,'status'),env)).json()).worksites,[]);assert.ok(!none.calls.some(c=>new URL(c.url).pathname.endsWith('/ironcrest_worksites')));
 });
+test('mutation receipts never expose extra privileged RPC fields',async()=>{
+ const result={entryId:ENTRY,action:'clock_in',operationId:OP,replayed:false,clockInAt:'2026-11-12T14:00:00Z',latitude:33,longitude:-112,service_key:'private-provider-field',audit:{private:true}};
+ const s=fixture({result});const answer=await (await s.route(req(),env)).json();
+ assert.deepEqual(answer.result,{entryId:ENTRY,action:'clock_in',operationId:OP,replayed:false,clockInAt:'2026-11-12T14:00:00Z'});
+});
