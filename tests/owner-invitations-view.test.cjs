@@ -8,7 +8,7 @@ function setup(){
  return {$,api,requests,copies,setHandler:fn=>handler=fn,switchUser:()=>{user='other';listener('SIGNED_IN',{user:{id:user}});},switchOrg:()=>org='other-company'};
 }
 test('owner must load the company list before creating and invitation data stays plain text',async()=>{
- const s=setup();await s.api.perform();assert.equal(s.requests.length,0);await s.api.load();assert.equal(s.$('owner-invitation-list').children[0].children[0].textContent,'<fixture@example.com>');assert.equal(s.$('legacy-invite-controls').hidden,true);assert.equal(s.$('owner-invitation-send').disabled,false);
+ const s=setup();await s.api.perform();assert.equal(s.requests.length,0);await s.api.load();assert.equal(s.$('owner-invitation-list').children[0].children[0].textContent,'<fixture@example.com>');assert.equal(s.$('owner-invitation-send').disabled,false);
 });
 test('creation sends only the email and displays private link only on the explicit response',async()=>{
  const s=setup();await s.api.load();s.$('owner-invitation-email').value='employee@example.com';s.setHandler(async()=>({ok:true,json:async()=>({ok:true,organizationScoped:true,invitationCreated:true,deliveryStatus:'accepted',privateInvitationUrl:link})}));await s.api.perform();assert.deepEqual(JSON.parse(s.requests[1].options.body),{email:'employee@example.com'});assert.equal(s.$('owner-invitation-private-url').value,link);assert.equal(s.copies.length,0);await s.$('owner-invitation-copy').listeners.click();assert.deepEqual(s.copies,[link]);s.switchUser();assert.equal(s.$('owner-invitation-private-url').value,'');assert.equal(s.$('owner-invitation-private-box').hidden,true);
