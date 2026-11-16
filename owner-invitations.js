@@ -8,7 +8,7 @@
   let generation=0,busy=false,identity=null,loadedUser=null,loadedOrg=null,ready=false,needsReload=false,privateLink=null,canSend=false,controller=null;
   function forgetLink(){privateLink=null;$('owner-invitation-private-url').value='';$('owner-invitation-private-box').hidden=true;}
   function controls(){for(const node of panel.querySelectorAll('button,input,select'))node.disabled=busy;send.disabled=busy||!ready||needsReload||!canSend;if(needsReload)for(const node of list.querySelectorAll('button'))node.disabled=true;}
-  function clear(){++generation;controller?.abort();busy=false;ready=false;needsReload=false;identity=null;loadedUser=null;loadedOrg=null;canSend=false;forgetLink();form.reset();list.replaceChildren();$('owner-invitation-capacity').textContent='';status.textContent='Load invitations to begin.';$('legacy-invite-controls').hidden=false;controls();}
+  function clear(){++generation;controller?.abort();busy=false;ready=false;needsReload=false;identity=null;loadedUser=null;loadedOrg=null;canSend=false;forgetLink();form.reset();list.replaceChildren();$('owner-invitation-capacity').textContent='';status.textContent='Load invitations to begin.';controls();}
   const base=apiBase+'/api/employees/invitations';
   async function execute(write,task){
    if(busy)return;busy=true;const version=++generation;controller=new AbortController();controls();
@@ -38,7 +38,7 @@
    const result=await call('?'+params);if(!current())return;if(!Array.isArray(result.invitations)||result.invitations.length>100||!result.capacity||!Number.isSafeInteger(result.capacity.occupiedSlots))throw Error('Invitation list could not be verified.');
    loadedUser=user;loadedOrg=org;ready=true;needsReload=false;canSend=result.emailConfigured===true&&result.acceptanceEnabled===true&&(result.capacity.unlimited===true||result.capacity.occupiedSlots<result.capacity.employeeLimit);
    $('owner-invitation-capacity').textContent=result.capacity.activeEmployees+' active employees · '+result.capacity.pendingInvitations+' pending invitations · '+(result.capacity.unlimited?'Unlimited team capacity':result.capacity.occupiedSlots+' of '+result.capacity.employeeLimit+' team places used');
-   $('legacy-invite-controls').hidden=true;render(result.invitations);status.textContent=(result.truncated?'Showing the newest 100 invitations. Search by exact email or filter by status.':result.invitations.length+' invitation(s).')+(!result.acceptanceEnabled?' Invitation acceptance is not available yet.':!result.emailConfigured?' Email delivery is not configured.':!canSend?' Team capacity is full. Revoke an unused pending invitation or review your plan.':'');
+   render(result.invitations);status.textContent=(result.truncated?'Showing the newest 100 invitations. Search by exact email or filter by status.':result.invitations.length+' invitation(s).')+(!result.acceptanceEnabled?' Invitation acceptance is not available yet.':!result.emailConfigured?' Email delivery is not configured.':!canSend?' Team capacity is full. Revoke an unused pending invitation or review your plan.':'');
   });}
   async function perform(revokePayload){return execute(true,async(call,current)=>{
    forgetLink();needsReload=true;status.textContent=revokePayload?'Revoking pending invitation…':'Creating invitation and submitting email…';const result=await call(revokePayload?'/revoke':'',revokePayload||{email:$('owner-invitation-email').value.trim()});if(!current())return;ready=false;list.replaceChildren();
