@@ -3,6 +3,8 @@
 Development checkpoint: November 15, 2026. Target: November 17, 2026 (America/Phoenix).
 This is a development target, not production authorization or a promise of launch readiness.
 
+Later November 15 implementation: the durable webhook store/adapters, deployable sandbox bridge and invitation receipt recovery are now implemented and locally tested. See [Webhook and invitation release package](WEBHOOK_AND_INVITATION_RELEASE.md) for the current scope, verified active source baselines, remaining hosted acceptance and approval boundary. The earlier component-only descriptions below are historical context.
+
 ## Smaller fixes completed first
 
 - Attendance write receipts explicitly project public fields; arbitrary privileged RPC fields are no longer forwarded to employees.

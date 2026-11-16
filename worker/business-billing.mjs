@@ -44,20 +44,21 @@ export function businessSnapshot(subscription, invoice, catalog, {customerId,liv
     if (approved.kind==='employee_addon') { if(addon)throw Error('One employee add-on required');addon=record; }
     if (approved.kind==='unlimited') { if(unlimited || item.quantity!==1)throw Error('One unlimited add-on required');unlimited=record; }
   }
-  if (!base || (addon && unlimited) || [addon,unlimited].some(x=>x&&(x.interval!==base.interval||x.currency!==base.currency))) throw Error('Invalid Business composition');
-  const end=Math.min(base.end,...[addon,unlimited].filter(Boolean).map(x=>x.end));
+  if ((!base&&(!unlimited||addon)) || (addon && unlimited) || (base&&[addon,unlimited].some(x=>x&&(x.interval!==base.interval||x.currency!==base.currency)))) throw Error('Invalid Business composition');
+  const principal=base||unlimited;
+  const end=Math.min(principal.end,...[addon,unlimited].filter(Boolean).map(x=>x.end));
   const active=subscription.status==='active' && !subscription.pause_collection && end*1000>now;
   if (active) {
     const linked=invoice?.parent?.subscription_details?.subscription ?? invoice?.subscription;
     if (!id(invoice?.id,'in') || resourceId(subscription.latest_invoice)!==invoice.id
       || invoice.livemode!==livemode || resourceId(invoice.customer)!==customerId
       || resourceId(linked)!==subscription.id || invoice.status!=='paid' || ('paid' in invoice && invoice.paid!==true)
-      || invoice.amount_remaining!==0 || invoice.currency!==base.currency) throw Error('Paid invoice required');
+      || invoice.amount_remaining!==0 || invoice.currency!==principal.currency) throw Error('Paid invoice required');
   }
-  const employees=base.employees+(addon?addon.employees*addon.quantity:0);
+  const employees=base?base.employees+(addon?addon.employees*addon.quantity:0):0;
   if (!Number.isSafeInteger(employees)||employees>100000)throw Error('Employee limit exceeded');
-  return {stripe_subscription_id:subscription.id,stripe_customer_id:customerId,status:subscription.status,
-    business_active:active,unlimited_employees:active&&Boolean(unlimited),employee_limit:active?employees:0,
+  return {stripe_subscription_id:subscription.id,stripe_customer_id:customerId,status:subscription.status,subscription_type:base?'business':'unlimited_employees',
+    business_active:active&&Boolean(base),unlimited_employees:active&&Boolean(unlimited),employee_limit:active?employees:0,
     current_period_end:new Date(end*1000).toISOString(),cancel_at_period_end:subscription.cancel_at_period_end===true};
 }
 
@@ -96,23 +97,39 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
     try{
       // The adapter must resolve risk events through Stripe charge/payment/invoice
       // relationships, then atomically journal and suspend access pending review.
-      if(risk.includes(event.type)){await store.reconcileRisk(event,stripe);return reply({received:true,reviewRequired:true});}
+      if(risk.includes(event.type)){const receipt=await store.reconcileRisk(event,stripe);return reply({received:true,reviewRequired:receipt?.reviewRequired!==false,...(receipt?.ignored?{ignored:true}:{})});}
       const object=event.data?.object;
       if(event.type.startsWith('checkout.')&&(object?.mode!=='subscription'||!['paid','no_payment_required'].includes(object.payment_status)))return reply({received:true,ignored:true});
       const customer=resourceId(object?.customer);
       const subId=event.type.startsWith('customer.subscription.')?object?.id:resourceId(object?.parent?.subscription_details?.subscription ?? object?.subscription);
       if(!id(customer,'cus')||!id(subId,'sub'))throw Error();
+      if(typeof store.isMapped==='function'&&!await store.isMapped(customer)){
+        if(await stripe.isRelevantSubscription(subId,customer))throw Error('Business customer mapping pending');
+        return reply({received:true,ignored:true});
+      }
       // Store contract: durable per-customer serialization, immutable customer to
       // owner mapping, event deduplication, subscription replacement rejection,
       // and atomic journal + entitlement update. No lifetime/legacy row updates.
+      let reviewRequired=false;
       await store.withCustomerLock(customer,async transaction=>{
-        if(await transaction.hasEvent(event.id))return;
+        if(await transaction.hasEvent(event.id,event.type))return;
         const subscription=await stripe.retrieveSubscription(subId);
         const invoice=subscription.status==='active'?await stripe.retrieveInvoice(resourceId(subscription.latest_invoice)):null;
-        const snapshot=businessSnapshot(subscription,invoice,catalog,{customerId:customer,livemode:event.livemode,now:now()});
-        await transaction.commitEvent({eventId:event.id,eventType:event.type,snapshot});
+        let snapshot;
+        try{snapshot=businessSnapshot(subscription,invoice,catalog,{customerId:customer,livemode:event.livemode,now:now()});}
+        catch(error){
+          if(subscription?.id!==subId||resourceId(subscription.customer)!==customer||subscription.livemode!==event.livemode||typeof transaction.markReview!=='function')throw error;
+          const invoiceSubscription=resourceId(invoice?.parent?.subscription_details?.subscription??invoice?.subscription);
+          const pendingPayment=error.message==='Paid invoice required'&&invoice?.status!=='paid'&&invoice?.id===resourceId(subscription.latest_invoice)
+            &&resourceId(invoice.customer)===customer&&invoiceSubscription===subId&&invoice.livemode===event.livemode&&invoice.currency===subscription.items.data[0]?.price.currency
+            &&Number.isSafeInteger(invoice.amount_remaining)&&invoice.amount_remaining>=0;
+          if(pendingPayment){snapshot={...businessSnapshot({...subscription,status:'past_due'},null,catalog,{customerId:customer,livemode:event.livemode,now:now()}),status:subscription.status};}
+          else{await transaction.markReview({eventId:event.id,eventType:event.type,subscriptionId:subId});reviewRequired=true;return;}
+        }
+        const receipt=await transaction.commitEvent({eventId:event.id,eventType:event.type,snapshot});
+        reviewRequired=receipt?.reviewRequired===true;
       });
-      return reply({received:true});
+      return reply({received:true,...(reviewRequired?{reviewRequired:true}:{})});
     }catch{return reply({error:'billing_retry_or_reconciliation_required'},500);}
   };
 }

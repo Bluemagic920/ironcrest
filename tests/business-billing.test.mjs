@@ -28,6 +28,10 @@ test('monthly and annual Business base, capacity add-ons and unlimited are expli
   s.items.data=[item('base',interval),item('unlimited',interval)];assert.equal(businessSnapshot(s,invoice(),catalog,options).unlimited_employees,true);
  }
 });
+test('a standalone paid unlimited subscription never grants Business without the base subscription',()=>{
+ const s=sub();s.items.data=[item('unlimited')];const r=businessSnapshot(s,invoice(),catalog,options);
+ assert.equal(r.subscription_type,'unlimited_employees');assert.equal(r.business_active,false);assert.equal(r.unlimited_employees,true);assert.equal(r.employee_limit,0);
+});
 test('unknown Pro price, duplicate bases, add-on alone, mixed intervals and invalid quantities cannot grant Business',()=>{
  for(const items of [[item(),item()],[item('add')],[item(),item('add','year')],[item(),item('add'),item('unlimited')],[{...item(),quantity:2}],[{...item(),quantity:NaN}],[{...item(),price:{...item().price,id:'price_pro'}}]]){
   const s=sub();s.items.data=items;assert.throws(()=>businessSnapshot(s,invoice(),catalog,options));
