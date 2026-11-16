@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /employee-portal.html
+Disallow: /accept-invitation.html

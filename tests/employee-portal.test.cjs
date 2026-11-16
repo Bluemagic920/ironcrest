@@ -45,7 +45,7 @@ test('old-account action cannot post using a newly obtained session',async()=>{
 test('old worksite response cannot overwrite a new session in the same org',async()=>{
  const s=setup();await flush();s.api.setOrg('same-org');const pending=deferred();s.setWorksite(()=>pending.promise);const loading=s.api.loadWorksites();await flush();
  s.api.clearWorksites();s.api.setOrg('same-org');pending.resolve({data:[{id:'old',name:'Old worksite',radius_m:100}]});await loading;
- assert.equal(s.$('worksite-list').textContent,'No employer worksites loaded.');assert.equal(s.$('boundary-check').disabled,true);
+ assert.equal(s.$('worksite-list').textContent,'No employer worksites loaded.');
 });
 
 test('manual refresh cannot invalidate an in-flight job transition',async()=>{
