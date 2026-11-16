@@ -91,7 +91,7 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
       if(!await verifyBusinessSignature(raw,request.headers.get('Stripe-Signature'),env.BUSINESS_STRIPE_WEBHOOK_SECRET,{now:now(),cryptoApi}))throw Error();
       event=JSON.parse(raw);if(!id(event?.id,'evt')||event.livemode!==(env.BUSINESS_STRIPE_MODE==='live')||typeof event.type!=='string')throw Error();
     }catch{return reply({error:'invalid_event'},400);}
-    const lifecycle=['customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','invoice.paid','invoice.payment_failed','checkout.session.completed','checkout.session.async_payment_succeeded'];
+    const lifecycle=['customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','customer.subscription.paused','customer.subscription.resumed','invoice.paid','invoice.payment_failed','checkout.session.completed','checkout.session.async_payment_succeeded'];
     const risk=['charge.dispute.created','charge.refunded','radar.early_fraud_warning.created'];
     if(!lifecycle.includes(event.type)&&!risk.includes(event.type))return reply({received:true,ignored:true});
     try{
@@ -110,10 +110,16 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
       // Store contract: durable per-customer serialization, immutable customer to
       // owner mapping, event deduplication, subscription replacement rejection,
       // and atomic journal + entitlement update. No lifetime/legacy row updates.
-      let reviewRequired=false;
+      let reviewRequired=false,ignored=false;
       await store.withCustomerLock(customer,async transaction=>{
         if(await transaction.hasEvent(event.id,event.type))return;
         const subscription=await stripe.retrieveSubscription(subId);
+        const items=subscription?.items;
+        const products=[...catalog.values()].map(x=>x.productId);
+        const unrelated=subscription?.id===subId&&resourceId(subscription.customer)===customer&&subscription.livemode===event.livemode
+          &&Array.isArray(items?.data)&&items.has_more===false&&items.data.length>0
+          &&items.data.every(x=>id(resourceId(x.price?.product),'prod'))&&!items.data.some(x=>products.includes(resourceId(x.price.product)));
+        if(unrelated&&typeof transaction.isTrackedSubscription==='function'&&!await transaction.isTrackedSubscription(subId)){ignored=true;return;}
         const invoice=subscription.status==='active'?await stripe.retrieveInvoice(resourceId(subscription.latest_invoice)):null;
         let snapshot;
         try{snapshot=businessSnapshot(subscription,invoice,catalog,{customerId:customer,livemode:event.livemode,now:now()});}
@@ -129,7 +135,7 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
         const receipt=await transaction.commitEvent({eventId:event.id,eventType:event.type,snapshot});
         reviewRequired=receipt?.reviewRequired===true;
       });
-      return reply({received:true,...(reviewRequired?{reviewRequired:true}:{})});
+      return reply({received:true,...(reviewRequired?{reviewRequired:true}:{}),...(ignored?{ignored:true}:{})});
     }catch{return reply({error:'billing_retry_or_reconciliation_required'},500);}
   };
 }

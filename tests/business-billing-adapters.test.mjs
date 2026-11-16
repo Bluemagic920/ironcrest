@@ -41,7 +41,7 @@ test('store awaits atomic commit, always releases its lease and never retries un
  assert.deepEqual(calls.map(x=>x.p_operation),['acquire','has_event','commit','release']);assert.equal(calls.filter(x=>x.p_operation==='commit').length,1);assert.ok(calls.every(x=>x.p_mode==='test'));assert.equal(calls.at(-1).p_token,token);
 });
 test('risk processing durably holds mapped customers and skips verified unrelated subscriptions',async()=>{
- const calls=[];const store=createBusinessBillingStore({mode:'test',rpc:async(name,b)=>{calls.push(b);if(b.p_operation==='mapped')return {mapped:b.p_customer_id==='cus_fixture'};if(b.p_operation==='acquire')return {token};if(b.p_operation==='has_event')return {exists:false};return {ok:true};}});
+ const calls=[];const store=createBusinessBillingStore({mode:'test',rpc:async(name,b)=>{calls.push(b);if(b.p_operation==='mapped')return {mapped:b.p_customer_id==='cus_fixture'};if(b.p_operation==='is_tracked')return {tracked:true};if(b.p_operation==='acquire')return {token};if(b.p_operation==='has_event')return {exists:false};return {ok:true};}});
  const stripe={resolveRisk:async()=>[{customerId:'cus_fixture',subscriptionId:'sub_old'},{customerId:'cus_unrelated',subscriptionId:'sub_pro'}],isRelevantSubscription:async()=>false};
  assert.equal((await store.reconcileRisk({id:'evt_refund',type:'charge.refunded'},stripe)).reviewRequired,true);
  assert.equal(calls.filter(x=>x.p_operation==='review').length,1);assert.equal(calls.find(x=>x.p_operation==='review').p_data.subscriptionId,'sub_old');
@@ -78,4 +78,9 @@ test('staging health distinguishes configured Business processing from the legac
  const flags={ENABLE_BUSINESS_BILLING:'true',ENABLE_BUSINESS_WEBHOOK_BRIDGE:'true',STRIPE_SECRET_KEY:'rk_test_fixture',STRIPE_WEBHOOK_SECRET_TEST:'whsec_fixture',SUPABASE_SERVICE_ROLE_KEY:'sb_secret_fixture',SUPABASE_URL:'https://nhiqbcevcdxfzvrprgck.supabase.co'};
  const health=await (await wrapped.fetch(new Request('https://worker.example/health'),flags)).json();assert.equal(health.businessWebhookConfigured,true);assert.equal(health.webhookProcessingEnabled,true);assert.equal(health.webhookDryRunEnabled,false);assert.equal(health.checkoutEnabled,false);assert.ok(!JSON.stringify(health).includes('fixture'));
  const wrong=await (await wrapped.fetch(new Request('https://worker.example/health'),{...flags,STRIPE_SECRET_KEY:'rk_live_fixture'})).json();assert.equal(wrong.businessWebhookConfigured,false);assert.equal(wrong.webhookProcessingEnabled,false);
+});
+test('a refund on a verified unrelated Pro subscription does not hold Business on the same customer',async()=>{
+ const calls=[];const store=createBusinessBillingStore({mode:'test',rpc:async(name,b)=>{calls.push(b);if(b.p_operation==='mapped')return {mapped:true};if(b.p_operation==='acquire')return {token};if(b.p_operation==='is_tracked')return {tracked:false};return {ok:true};}});
+ const result=await store.reconcileRisk({id:'evt_prorefund',type:'charge.refunded'},{resolveRisk:async()=>[{customerId:'cus_fixture',subscriptionId:'sub_pro'}],isRelevantSubscription:async()=>false});
+ assert.equal(result.ignored,true);assert.equal(result.reviewRequired,false);assert.ok(!calls.some(x=>x.p_operation==='review'));assert.equal(calls.at(-1).p_operation,'release');
 });

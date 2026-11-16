@@ -82,6 +82,10 @@ begin
  end if;
  if p_token is null or c.lease_token is distinct from p_token or c.lease_until is null or c.lease_until<=clock_timestamp()
  then raise exception 'Expired billing lease';end if;
+ if p_operation='is_tracked' then
+  if coalesce(p_data->>'subscriptionId','') !~ '^sub_[A-Za-z0-9]+$' then raise exception 'Invalid subscription';end if;
+  return jsonb_build_object('tracked',coalesce(c.subscription_id=p_data->>'subscriptionId',false) or coalesce(c.unlimited_subscription_id=p_data->>'subscriptionId',false));
+ end if;
  v_event:=p_data->>'eventId';v_type:=p_data->>'eventType';
  if v_event is null or v_event !~ '^evt_[A-Za-z0-9]+$' or v_type is null or length(v_type)>100 then raise exception 'Invalid event';end if;
  select * into e from public.ironcrest_billing_events where mode=p_mode and event_id=v_event;

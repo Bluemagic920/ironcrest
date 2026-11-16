@@ -57,6 +57,7 @@ export function createBusinessBillingStore({rpc,mode}={}){
   const lock=await call(customer,'acquire');if(!uuid.test(lock?.token||''))throw Error('Billing lock unavailable');
   try{
    return await callback({
+    isTrackedSubscription:async subscriptionId=>{const result=await call(customer,'is_tracked',lock.token,{subscriptionId});if(typeof result?.tracked!=='boolean')throw Error('Subscription lookup unavailable');return result.tracked;},
     hasEvent:async(eventId,eventType)=>{const result=await call(customer,'has_event',lock.token,{eventId,eventType});if(typeof result?.exists!=='boolean')throw Error('Invalid event receipt');return result.exists;},
     commitEvent:async data=>{const result=await call(customer,'commit',lock.token,data);if(result?.ok!==true)throw Error('Event commit not verified');return result;},
     markReview:async data=>{const result=await call(customer,'review',lock.token,data);if(result?.ok!==true)throw Error('Review commit not verified');return result;}
@@ -75,10 +76,11 @@ export function createBusinessBillingStore({rpc,mode}={}){
     continue;
    }
    await store.withCustomerLock(link.customerId,async transaction=>{
+    if(!await transaction.isTrackedSubscription(link.subscriptionId)&&!await stripe.isRelevantSubscription(link.subscriptionId,link.customerId))return;
     const eventId=event.id;
     if(!await transaction.hasEvent(eventId,event.type))await transaction.markReview({eventId,eventType:event.type,subscriptionId:link.subscriptionId});
+    held++;
    });
-   held++;
   }
   return {reviewRequired:held>0,ignored:held===0};
  };

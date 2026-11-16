@@ -61,9 +61,9 @@ test('signature checks raw body, timestamp tolerance, duplicate timestamps and r
 const env={ENABLE_BUSINESS_BILLING:'true',BUSINESS_STRIPE_MODE:'test',BUSINESS_STRIPE_WEBHOOK_SECRET:secret};
 const event=()=>({id:'evt_fixture',type:'invoice.paid',livemode:false,data:{object:invoice()}});
 function request(e=event(),header){const raw=typeof e==='string'?e:JSON.stringify(e);return new Request('https://worker.example/api/business/billing/webhook',{method:'POST',headers:{'Stripe-Signature':header??signed(raw)},body:raw});}
-function fixture({approved=true,failCommit=false}={}){
+function fixture({approved=true,failCommit=false,subscriptionStatus='active'}={}){
  const calls=[],events=new Set();
- const stripe={retrieveSubscription:async()=>{calls.push('subscription');return sub();},retrieveInvoice:async()=>{calls.push('invoice');return invoice();}};
+ const stripe={retrieveSubscription:async()=>{calls.push('subscription');const s=sub();s.status=subscriptionStatus;return s;},retrieveInvoice:async()=>{calls.push('invoice');return invoice();}};
  const store={withCustomerLock:async(customer,fn)=>{calls.push('lock:'+customer);await fn({hasEvent:async id=>events.has(id),commitEvent:async data=>{calls.push(data);if(failCommit)throw Error('private database error');events.add(data.eventId);}});},reconcileRisk:async()=>{calls.push('risk');}};
  return {calls,route:createBusinessBillingWebhook({releaseApproved:approved,catalog:entries,stripe,store,cryptoApi:webcrypto,now:()=>now})};
 }
@@ -99,5 +99,11 @@ test('actual Stripe sandbox monthly and annual paid responses satisfy the snapsh
  for(const row of fixture.cancellations){
   const result=businessSnapshot(row.subscription,null,approved,{customerId:row.subscription.customer,livemode:false,now:Date.parse('2026-11-15T15:00:00Z')});
   assert.equal(result.business_active,false);assert.equal(result.employee_limit,0);
+ }
+});
+test('subscription paused and resumed events reconcile current access rather than being ignored',async()=>{
+ for(const [type,status,active] of [['customer.subscription.paused','paused',false],['customer.subscription.resumed','active',true]]){
+  const f=fixture({subscriptionStatus:status}),e=event();e.type=type;e.data.object={id:'sub_fixture',customer:'cus_fixture'};
+  assert.equal((await f.route(request(e),env)).status,200);const commit=f.calls.find(x=>typeof x==='object'&&x.eventId===e.id);assert.equal(commit.snapshot.business_active,active);
  }
 });
