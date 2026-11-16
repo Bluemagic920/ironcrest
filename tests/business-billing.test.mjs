@@ -20,32 +20,40 @@ test('verified live catalog preserves ProfitHarbor Business monthly, annual and 
 });
 function item(kind='base',interval='month',quantity=1){const e=entries.find(x=>x.priceId==='price_'+kind+interval);return {price:{id:e.priceId,product:e.productId,unit_amount:e.unitAmount,livemode:false,currency:'usd',recurring:{interval,interval_count:1,usage_type:'licensed'}},quantity,current_period_end:end};}
 const sub=()=>({id:'sub_fixture',customer:'cus_fixture',livemode:false,status:'active',latest_invoice:'in_fixture',items:{has_more:false,data:[item()]},cancel_at_period_end:false});
-const invoice=()=>({id:'in_fixture',customer:'cus_fixture',livemode:false,status:'paid',paid:true,amount_remaining:0,currency:'usd',parent:{subscription_details:{subscription:'sub_fixture'}}});
+const invoice=(subscription=sub())=>({lines:{has_more:false,data:subscription.items.data.map(x=>({quantity:x.quantity,period:{start:now/1000-86400,end:x.current_period_end},pricing:{price_details:{price:x.price.id,product:x.price.product}},parent:{subscription_item_details:{subscription:subscription.id,proration:false}}}))},id:'in_fixture',customer:'cus_fixture',livemode:false,status:'paid',paid:true,amount_remaining:0,currency:'usd',parent:{subscription_details:{subscription:'sub_fixture'}}});
 const options={customerId:'cus_fixture',livemode:false,now};
 test('monthly and annual Business base, capacity add-ons and unlimited are explicitly cataloged',()=>{
  for(const interval of ['month','year']){
-  const s=sub();s.items.data=[item('base',interval),item('add',interval,3)];assert.equal(businessSnapshot(s,invoice(),catalog,options).employee_limit,35);
-  s.items.data=[item('base',interval),item('unlimited',interval)];assert.equal(businessSnapshot(s,invoice(),catalog,options).unlimited_employees,true);
+  const s=sub();s.items.data=[item('base',interval),item('add',interval,3)];assert.equal(businessSnapshot(s,invoice(s),catalog,options).employee_limit,35);
+  s.items.data=[item('base',interval),item('unlimited',interval)];assert.equal(businessSnapshot(s,invoice(s),catalog,options).unlimited_employees,true);
  }
 });
 test('a standalone paid unlimited subscription never grants Business without the base subscription',()=>{
- const s=sub();s.items.data=[item('unlimited')];const r=businessSnapshot(s,invoice(),catalog,options);
+ const s=sub();s.items.data=[item('unlimited')];const r=businessSnapshot(s,invoice(s),catalog,options);
  assert.equal(r.subscription_type,'unlimited_employees');assert.equal(r.business_active,false);assert.equal(r.unlimited_employees,true);assert.equal(r.employee_limit,0);
 });
 test('unknown Pro price, duplicate bases, add-on alone, mixed intervals and invalid quantities cannot grant Business',()=>{
  for(const items of [[item(),item()],[item('add')],[item(),item('add','year')],[item(),item('add'),item('unlimited')],[{...item(),quantity:2}],[{...item(),quantity:NaN}],[{...item(),price:{...item().price,id:'price_pro'}}]]){
-  const s=sub();s.items.data=items;assert.throws(()=>businessSnapshot(s,invoice(),catalog,options));
+  const s=sub();s.items.data=items;assert.throws(()=>businessSnapshot(s,invoice(s),catalog,options));
  }
 });
 test('customer, mode, product, currency, recurrence and truncated lists fail closed',()=>{
- for(const change of [s=>s.customer='cus_other',s=>s.livemode=true,s=>s.items.has_more=true,s=>s.items.data[0].price.unit_amount=1,s=>s.items.data[0].price.livemode=true,s=>s.items.data[0].price.product='prod_other',s=>s.items.data[0].price.currency='eur',s=>s.items.data[0].price.recurring.interval_count=2]){const s=sub();change(s);assert.throws(()=>businessSnapshot(s,invoice(),catalog,options));}
+ for(const change of [s=>s.customer='cus_other',s=>s.livemode=true,s=>s.items.has_more=true,s=>s.items.data[0].price.unit_amount=1,s=>s.items.data[0].price.livemode=true,s=>s.items.data[0].price.product='prod_other',s=>s.items.data[0].price.currency='eur',s=>s.items.data[0].price.recurring.interval_count=2]){const s=sub();change(s);assert.throws(()=>businessSnapshot(s,invoice(s),catalog,options));}
 });
 test('only paid invoices belonging to the current subscription and customer activate access',()=>{
  for(const change of [i=>i.status='open',i=>i.paid=false,i=>i.amount_remaining=100,i=>i.customer='cus_other',i=>i.parent.subscription_details.subscription='sub_other',i=>i.id='in_other',i=>i.livemode=true]){const i=invoice();change(i);assert.throws(()=>businessSnapshot(sub(),i,catalog,options));}
 });
+
+test('a prior paid monthly invoice cannot fund an annual switch or a longer unpaid period',()=>{
+ const monthly=sub(),paid=invoice(monthly),annual=sub();annual.items.data=[item('base','year')];
+ assert.throws(()=>businessSnapshot(annual,paid,catalog,options),/Paid invoice coverage required/);
+ for(const change of [i=>i.lines.has_more=true,i=>i.lines.data[0].period.end--,i=>i.lines.data[0].quantity++,i=>i.lines.data[0].parent.subscription_item_details.proration=true]){
+  const i=invoice();change(i);assert.throws(()=>businessSnapshot(sub(),i,catalog,options),/Paid invoice coverage required/);
+ }
+});
 test('trial, expired, paused, failed and canceled access is inactive; period-end cancellation preserves paid access',()=>{
  for(const status of ['trialing','past_due','unpaid','canceled','incomplete','incomplete_expired','paused']){const s=sub();s.status=status;const r=businessSnapshot(s,null,catalog,options);assert.equal(r.business_active,false);assert.equal(r.employee_limit,0);}
- const s=sub();s.cancel_at_period_end=true;assert.equal(businessSnapshot(s,invoice(),catalog,options).business_active,true);
+ const s=sub();s.cancel_at_period_end=true;assert.equal(businessSnapshot(s,invoice(s),catalog,options).business_active,true);
  s.items.data[0].current_period_end=now/1000;assert.equal(businessSnapshot(s,null,catalog,options).business_active,false);
  s.items.data[0].current_period_end=end;s.pause_collection={behavior:'void'};assert.equal(businessSnapshot(s,null,catalog,options).business_active,false);
 });
@@ -93,11 +101,11 @@ test('actual Stripe sandbox monthly and annual paid responses satisfy the snapsh
  for(const row of fixture.fixtures){
   assert.equal(row.invoice.status,'paid');
   assert.equal(Object.hasOwn(row.invoice,'paid'),false);
-  const result=businessSnapshot(row.subscription,row.invoice,approved,{customerId:row.subscription.customer,livemode:false,now:Date.parse('2026-11-15T15:00:00Z')});
+  const result=businessSnapshot(row.subscription,row.invoice,approved,{customerId:row.subscription.customer,livemode:false,now:row.invoice.lines.data[0].period.start*1000+1000});
   assert.equal(result.business_active,true);assert.equal(result.employee_limit,20);
  }
  for(const row of fixture.cancellations){
-  const result=businessSnapshot(row.subscription,null,approved,{customerId:row.subscription.customer,livemode:false,now:Date.parse('2026-11-15T15:00:00Z')});
+  const result=businessSnapshot(row.subscription,null,approved,{customerId:row.subscription.customer,livemode:false,now:Date.parse('2026-11-15T16:00:00Z')});
   assert.equal(result.business_active,false);assert.equal(result.employee_limit,0);
  }
 });

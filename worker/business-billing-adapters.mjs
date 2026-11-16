@@ -2,19 +2,21 @@ const uuid=/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const resourceId=value=>typeof value==='string'?value:value?.id;
 const valid=(value,prefix)=>typeof value==='string'&&new RegExp('^'+prefix+'_[A-Za-z0-9]+$').test(value);
 async function boundedJson(response){
- if(!response.ok)throw Error('Provider unavailable');
+ if(!response.ok)throw Error('Provider HTTP '+response.status);
  const reader=response.body?.getReader();if(!reader)throw Error('Missing provider body');
- let size=0,text='';const decoder=new TextDecoder('utf-8',{fatal:true});
+ let size=0,text='';const decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:false});
  for(;;){const r=await reader.read();if(r.done)break;size+=r.value.byteLength;if(size>1000000){await reader.cancel();throw Error('Provider response too large');}text+=decoder.decode(r.value,{stream:true});}
  return JSON.parse(text+decoder.decode());
 }
-export function createBusinessStripeAdapter({key,mode,fetcher=fetch,version='2026-10-28.endive',productIds=[]}={}){
+export function createBusinessStripeAdapter({key=null,mode=null,fetcher=fetch,version='2026-10-28.endive',productIds=[],expectedAccount=null}={}){
  if(!['test','live'].includes(mode)||typeof key!=='string'||!new RegExp('^[sr]k_'+mode+'_[A-Za-z0-9]+$').test(key))throw Error('Stripe mode/key mismatch');
  const get=async(path,params)=>{
   const url=new URL('https://api.stripe.com/v1/'+path);if(params)url.search=new URLSearchParams(params).toString();
   return boundedJson(await fetcher(url.href,{headers:{Authorization:'Bearer '+key,'Stripe-Version':version},redirect:'manual',signal:AbortSignal.timeout(15000)}));
  };
- const retrieve=async(path,id,prefix)=>{if(!valid(id,prefix))throw Error('Invalid Stripe resource');const result=await get(path+'/'+encodeURIComponent(id));if(result?.id!==id||result.livemode!==(mode==='live'))throw Error('Stripe resource mismatch');return result;};
+ let accountCheck;
+ const checkAccount=()=>accountCheck||=get('account').then(account=>{if(account?.id!==expectedAccount)throw Error('Stripe account mismatch');});
+ const retrieve=async(path,id,prefix)=>{if(!valid(id,prefix))throw Error('Invalid Stripe resource');if(expectedAccount)await checkAccount();const result=await get(path+'/'+encodeURIComponent(id));if(result?.id!==id||result.livemode!==(mode==='live'))throw Error('Stripe resource mismatch');return result;};
  const stripe={retrieveSubscription:id=>retrieve('subscriptions',id,'sub'),retrieveInvoice:id=>retrieve('invoices',id,'in')};
  stripe.isRelevantSubscription=async(subscriptionId,customerId)=>{
   const s=await stripe.retrieveSubscription(subscriptionId);
@@ -50,7 +52,7 @@ export function createBusinessStripeAdapter({key,mode,fetcher=fetch,version='202
  return stripe;
 }
 
-export function createBusinessBillingStore({rpc,mode}={}){
+export function createBusinessBillingStore({rpc=null,mode=null}={}){
  if(typeof rpc!=='function'||!['test','live'].includes(mode))throw Error('Billing store configuration required');
  const call=(customer,operation,token=null,data={})=>rpc('ironcrest_billing_event_operation',{p_mode:mode,p_customer_id:customer,p_operation:operation,p_token:token,p_data:data});
  const store={async isMapped(customer){const result=await call(customer,'mapped');if(typeof result?.mapped!=='boolean')throw Error('Mapping lookup unavailable');return result.mapped;},async withCustomerLock(customer,callback){
@@ -87,7 +89,7 @@ export function createBusinessBillingStore({rpc,mode}={}){
  return store;
 }
 
-export function createBusinessSupabaseRpc({url,key,expectedProject,fetcher=fetch}={}){
+export function createBusinessSupabaseRpc({url=null,key=null,expectedProject=null,fetcher=fetch}={}){
  if(typeof url!=='string'||url.replace(/\/$/,'')!==expectedProject||!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(expectedProject||'')||!key)throw Error('Untrusted billing database');
  return async(name,body)=>{
   if(name!=='ironcrest_billing_event_operation')throw Error('Unsupported billing RPC');

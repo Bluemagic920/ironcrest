@@ -22,7 +22,7 @@ export function businessCatalog(entries) {
 
 // Called only with a fresh Stripe snapshot, under the customer lock. Browser flags
 // and subscription metadata cannot grant access or select the application owner.
-export function businessSnapshot(subscription, invoice, catalog, {customerId,livemode,now=Date.now()}={}) {
+export function businessSnapshot(subscription, invoice, catalog, {customerId=null,livemode=null,now=Date.now()}={}) {
   if (!id(subscription?.id,'sub') || !id(customerId,'cus') || typeof livemode !== 'boolean'
     || subscription.livemode !== livemode || resourceId(subscription.customer) !== customerId
     || !statuses.has(subscription.status) || !Array.isArray(subscription.items?.data)
@@ -54,6 +54,18 @@ export function businessSnapshot(subscription, invoice, catalog, {customerId,liv
       || invoice.livemode!==livemode || resourceId(invoice.customer)!==customerId
       || resourceId(linked)!==subscription.id || invoice.status!=='paid' || ('paid' in invoice && invoice.paid!==true)
       || invoice.amount_remaining!==0 || invoice.currency!==principal.currency) throw Error('Paid invoice required');
+    // Flexible billing can change the current price/period before invoicing it.
+    // A paid invoice for the previous plan cannot fund the newly extended term.
+    if(!Array.isArray(invoice.lines?.data)||invoice.lines.has_more!==false
+      ||!subscription.items.data.every(item=>invoice.lines.data.some(line=>{
+        const details=line.parent?.subscription_item_details;
+        return resourceId(details?.subscription)===subscription.id&&details.proration===false
+          &&resourceId(line.pricing?.price_details?.price)===item.price.id
+          &&resourceId(line.pricing.price_details.product)===resourceId(item.price.product)
+          &&line.quantity===item.quantity&&Number.isSafeInteger(line.period?.start)
+          &&line.period.start*1000<=now&&Number.isSafeInteger(line.period?.end)
+          &&line.period.end>=item.current_period_end;
+      })))throw Error('Paid invoice coverage required');
   }
   const employees=base?base.employees+(addon?addon.employees*addon.quantity:0):0;
   if (!Number.isSafeInteger(employees)||employees>100000)throw Error('Employee limit exceeded');
@@ -76,7 +88,7 @@ export async function verifyBusinessSignature(raw, header, secret, {now=Date.now
   return false;
 }
 
-export function createBusinessBillingWebhook({releaseApproved=false,catalog:entries,stripe,store,cryptoApi=crypto,now=()=>Date.now()}={}) {
+export function createBusinessBillingWebhook({releaseApproved=false,catalog:entries=null,stripe=null,store=null,cryptoApi=crypto,now=()=>Date.now()}={}) {
   const reply=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
   return async(request,env)=>{
     if(new URL(request.url).pathname!=='/api/business/billing/webhook')return null;
@@ -86,7 +98,7 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
     let catalog;try{catalog=businessCatalog(entries);}catch{return reply({error:'catalog_unavailable'},503);}
     let raw,event;
     try{
-      const reader=request.body?.getReader();if(!reader)throw Error();let bytes=0;raw='';const decoder=new TextDecoder('utf-8',{fatal:true});
+      const reader=request.body?.getReader();if(!reader)throw Error();let bytes=0;raw='';const decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true});
       for(;;){const part=await reader.read();if(part.done)break;bytes+=part.value.byteLength;if(bytes>1000000){await reader.cancel();return reply({error:'event_too_large'},413);}raw+=decoder.decode(part.value,{stream:true});}raw+=decoder.decode();
       if(!await verifyBusinessSignature(raw,request.headers.get('Stripe-Signature'),env.BUSINESS_STRIPE_WEBHOOK_SECRET,{now:now(),cryptoApi}))throw Error();
       event=JSON.parse(raw);if(!id(event?.id,'evt')||event.livemode!==(env.BUSINESS_STRIPE_MODE==='live')||typeof event.type!=='string')throw Error();
@@ -94,6 +106,7 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
     const lifecycle=['customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','customer.subscription.paused','customer.subscription.resumed','invoice.paid','invoice.payment_failed','checkout.session.completed','checkout.session.async_payment_succeeded'];
     const risk=['charge.dispute.created','charge.refunded','radar.early_fraud_warning.created'];
     if(!lifecycle.includes(event.type)&&!risk.includes(event.type))return reply({received:true,ignored:true});
+    let stage='event_linkage';
     try{
       // The adapter must resolve risk events through Stripe charge/payment/invoice
       // relationships, then atomically journal and suspend access pending review.
@@ -103,6 +116,7 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
       const customer=resourceId(object?.customer);
       const subId=event.type.startsWith('customer.subscription.')?object?.id:resourceId(object?.parent?.subscription_details?.subscription ?? object?.subscription);
       if(!id(customer,'cus')||!id(subId,'sub'))throw Error();
+      stage='customer_mapping';
       if(typeof store.isMapped==='function'&&!await store.isMapped(customer)){
         if(await stripe.isRelevantSubscription(subId,customer))throw Error('Business customer mapping pending');
         return reply({received:true,ignored:true});
@@ -111,8 +125,11 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
       // owner mapping, event deduplication, subscription replacement rejection,
       // and atomic journal + entitlement update. No lifetime/legacy row updates.
       let reviewRequired=false,ignored=false;
+      stage='customer_lock';
       await store.withCustomerLock(customer,async transaction=>{
+        stage='event_receipt';
         if(await transaction.hasEvent(event.id,event.type))return;
+        stage='subscription_read';
         const subscription=await stripe.retrieveSubscription(subId);
         const items=subscription?.items;
         const products=[...catalog.values()].map(x=>x.productId);
@@ -120,13 +137,14 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
           &&Array.isArray(items?.data)&&items.has_more===false&&items.data.length>0
           &&items.data.every(x=>id(resourceId(x.price?.product),'prod'))&&!items.data.some(x=>products.includes(resourceId(x.price.product)));
         if(unrelated&&typeof transaction.isTrackedSubscription==='function'&&!await transaction.isTrackedSubscription(subId)){ignored=true;return;}
+        stage='invoice_read';
         const invoice=subscription.status==='active'?await stripe.retrieveInvoice(resourceId(subscription.latest_invoice)):null;
         let snapshot;
         try{snapshot=businessSnapshot(subscription,invoice,catalog,{customerId:customer,livemode:event.livemode,now:now()});}
         catch(error){
           if(subscription?.id!==subId||resourceId(subscription.customer)!==customer||subscription.livemode!==event.livemode||typeof transaction.markReview!=='function')throw error;
           const invoiceSubscription=resourceId(invoice?.parent?.subscription_details?.subscription??invoice?.subscription);
-          const pendingPayment=error.message==='Paid invoice required'&&invoice?.status!=='paid'&&invoice?.id===resourceId(subscription.latest_invoice)
+          const pendingPayment=(error.message==='Paid invoice required'&&invoice?.status!=='paid'||error.message==='Paid invoice coverage required')&&invoice?.id===resourceId(subscription.latest_invoice)
             &&resourceId(invoice.customer)===customer&&invoiceSubscription===subId&&invoice.livemode===event.livemode&&invoice.currency===subscription.items.data[0]?.price.currency
             &&Number.isSafeInteger(invoice.amount_remaining)&&invoice.amount_remaining>=0;
           if(pendingPayment){snapshot={...businessSnapshot({...subscription,status:'past_due'},null,catalog,{customerId:customer,livemode:event.livemode,now:now()}),status:subscription.status};}
@@ -136,6 +154,6 @@ export function createBusinessBillingWebhook({releaseApproved=false,catalog:entr
         reviewRequired=receipt?.reviewRequired===true;
       });
       return reply({received:true,...(reviewRequired?{reviewRequired:true}:{}),...(ignored?{ignored:true}:{})});
-    }catch{return reply({error:'billing_retry_or_reconciliation_required'},500);}
+    }catch(error){return reply({error:'billing_retry_or_reconciliation_required',stage,...(error.message==='Stripe account mismatch'?{reason:'stripe_account_mismatch'}:{}),...(/^Provider HTTP [1-5][0-9]{2}$/.test(error.message)?{providerStatus:Number(error.message.slice(-3))}:{})},500);}
   };
 }

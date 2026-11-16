@@ -25,6 +25,6 @@ export function withSandboxBusinessWebhook(legacy,{releaseApproved=false,fetcher
   const normalized={...env,BUSINESS_STRIPE_MODE:'test',BUSINESS_STRIPE_KEY:env.BUSINESS_STRIPE_KEY||env.STRIPE_SECRET_KEY,
    BUSINESS_DATABASE_KEY:env.BUSINESS_DATABASE_KEY||env.SUPABASE_SERVICE_ROLE_KEY,
    BUSINESS_STRIPE_WEBHOOK_SECRET:env.BUSINESS_STRIPE_WEBHOOK_SECRET||env.STRIPE_WEBHOOK_SECRET_TEST};
-  return business.fetch(new Request(url,request),normalized,context);
+  return business.fetch(new Request(url,request),normalized);
  }};
 }

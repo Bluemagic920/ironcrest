@@ -3,6 +3,23 @@ import assert from 'node:assert/strict';
 import {createBusinessStripeAdapter,createBusinessBillingStore,createBusinessSupabaseRpc} from '../worker/business-billing-adapters.mjs';
 import worker from '../worker/business-billing-entry.mjs';
 const token='11111111-1111-4111-8111-111111111111';
+
+test('Stripe account guard rejects another test account before reading any subscription',async()=>{
+ for(const account of ['acct_expected','acct_other']){
+  const calls=[];
+  const stripe=createBusinessStripeAdapter({key:'rk_test_fixture',mode:'test',expectedAccount:'acct_expected',fetcher:async url=>{
+   const path=new URL(url).pathname;calls.push(path);
+   return Response.json(path==='/v1/account'?{id:account}:{id:'sub_fixture',livemode:false});
+  }});
+  if(account==='acct_other'){
+   await assert.rejects(()=>stripe.retrieveSubscription('sub_fixture'),/Stripe account mismatch/);
+   assert.deepEqual(calls,['/v1/account']);
+  }else{
+   await stripe.retrieveSubscription('sub_fixture');await stripe.retrieveSubscription('sub_fixture');
+   assert.deepEqual(calls,['/v1/account','/v1/subscriptions/sub_fixture','/v1/subscriptions/sub_fixture']);
+  }
+ }
+});
 test('Stripe adapter pins host/version, separates modes and rejects redirect or oversized responses',async()=>{
  const calls=[];const stripe=createBusinessStripeAdapter({key:'rk_test_fixture',mode:'test',fetcher:async(url,options)=>{calls.push({url,options});return Response.json({id:'sub_fixture',livemode:false});}});
  assert.equal((await stripe.retrieveSubscription('sub_fixture')).id,'sub_fixture');assert.equal(new URL(calls[0].url).origin,'https://api.stripe.com');assert.equal(calls[0].options.redirect,'manual');assert.equal(calls[0].options.headers['Stripe-Version'],'2026-10-28.endive');

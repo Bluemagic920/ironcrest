@@ -71,6 +71,39 @@
             "subscription": "sub_1Uc5ZlAJcPWZlA8szCrzMYY0"
           },
           "type": "subscription_details"
+        },
+        "lines": {
+          "has_more": false,
+          "data": [
+            {
+              "quantity": 1,
+              "period": {
+                "end": 1797349361,
+                "start": 1794757361
+              },
+              "pricing": {
+                "price_details": {
+                  "price": "price_1Uc5Z1AJcPWZlA8sEhP4K4Mb",
+                  "product": "prod_VdMHQOCOBLAiwX"
+                },
+                "type": "price_details",
+                "unit_amount_decimal": "12999"
+              },
+              "parent": {
+                "invoice_item_details": null,
+                "subscription_item_details": {
+                  "invoice_item": null,
+                  "proration": false,
+                  "proration_details": {
+                    "credited_items": null
+                  },
+                  "subscription": "sub_1Uc5ZlAJcPWZlA8szCrzMYY0",
+                  "subscription_item": "si_VdMIZEYf20znwy"
+                },
+                "type": "subscription_item_details"
+              }
+            }
+          ]
         }
       }
     },
@@ -123,6 +156,39 @@
             "subscription": "sub_1Uc5ZoAJcPWZlA8sSRbwbyC6"
           },
           "type": "subscription_details"
+        },
+        "lines": {
+          "has_more": false,
+          "data": [
+            {
+              "quantity": 1,
+              "period": {
+                "end": 1826293364,
+                "start": 1794757364
+              },
+              "pricing": {
+                "price_details": {
+                  "price": "price_1Uc5Z2AJcPWZlA8s96n61KyL",
+                  "product": "prod_VdMHQOCOBLAiwX"
+                },
+                "type": "price_details",
+                "unit_amount_decimal": "132590"
+              },
+              "parent": {
+                "invoice_item_details": null,
+                "subscription_item_details": {
+                  "invoice_item": null,
+                  "proration": false,
+                  "proration_details": {
+                    "credited_items": null
+                  },
+                  "subscription": "sub_1Uc5ZoAJcPWZlA8sSRbwbyC6",
+                  "subscription_item": "si_VdMI8elGrcFS5S"
+                },
+                "type": "subscription_item_details"
+              }
+            }
+          ]
         }
       }
     }

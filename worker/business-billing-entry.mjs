@@ -17,7 +17,7 @@ export function createBusinessBillingWorker({productionApproved=false,fetcher=fe
   if(!enabled)return json({error:'business_billing_not_released'},503);
   try{
    const entries=mode==='live'?LIVE_BUSINESS_PRICES:SANDBOX_BUSINESS_PRICES;
-   const stripe=createBusinessStripeAdapter({key:env.BUSINESS_STRIPE_KEY,mode,fetcher,productIds:entries.map(x=>x.productId)});
+   const stripe=createBusinessStripeAdapter({key:env.BUSINESS_STRIPE_KEY,mode,fetcher,productIds:entries.map(x=>x.productId),expectedAccount:mode==='test'?'acct_1UWd69AJcPWZlA8s':'acct_1UWd63AQCOww3CbZ'});
    const rpc=createBusinessSupabaseRpc({url:env.SUPABASE_URL,key:env.BUSINESS_DATABASE_KEY,expectedProject:PROJECT,fetcher});
    const store=createBusinessBillingStore({rpc,mode});
    const route=createBusinessBillingWebhook({releaseApproved:approved,catalog:entries,stripe,store});
