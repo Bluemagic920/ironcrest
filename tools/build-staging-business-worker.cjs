@@ -1,0 +1,13 @@
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),cp=require('node:child_process');
+const [baselinePath,expectedHash,targetArg]=process.argv.slice(2);
+if(!baselinePath||!/^[a-f0-9]{64}$/i.test(expectedHash||''))throw Error('Supply inspected staging Worker and SHA256');
+const baseline=fs.readFileSync(path.resolve(baselinePath),'utf8'),hash=crypto.createHash('sha256').update(baseline).digest('hex');
+if(hash.toLowerCase()!==expectedHash.toLowerCase())throw Error('Staging baseline mismatch');
+if((baseline.match(/export default/g)||[]).length!==1||/^import |^export (?!default)/m.test(baseline)||baseline.includes('__stagingLegacyDefault'))throw Error('Staging baseline requires manual review');
+const intermediate=path.resolve(__dirname,'../work/business-webhook/worker.mjs');
+cp.execFileSync(process.execPath,[path.join(__dirname,'build-business-worker.cjs'),intermediate],{windowsHide:true});
+const business=fs.readFileSync(intermediate,'utf8').replace(/^export (?=(?:async )?function|const )/gm,'').replace('export default createBusinessBillingWorker();','');
+const bridge=fs.readFileSync(path.resolve(__dirname,'../worker/staging-business-bridge.mjs'),'utf8').replace(/^import .*;\r?\n/gm,'').replace(/^export function /gm,'function ');
+const output='// Staging-only extension; original routes/configuration remain preserved.\nconst __legacy=(()=>{\n'+baseline.replace('export default','const __stagingLegacyDefault =')+'\nreturn __stagingLegacyDefault;\n})();\n'+business+'\n'+bridge+'\nconst BUSINESS_SANDBOX_BRIDGE_APPROVED=false;\nexport default withSandboxBusinessWebhook(__legacy,{releaseApproved:BUSINESS_SANDBOX_BRIDGE_APPROVED});\n';
+const target=path.resolve(targetArg||path.join(__dirname,'../work/business-webhook/staging-candidate.mjs'));fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,output);
+console.log(JSON.stringify({path:target,baselineSha256:hash,sha256:crypto.createHash('sha256').update(output).digest('hex')}));
