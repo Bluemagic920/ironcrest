@@ -13,7 +13,7 @@
 <div id="notice" class="notice" role="status" aria-live="polite">Checking your invitation…</div>
 <div id="auth-ui" class="hidden"><label for="email">Email address</label><input id="email" type="email" autocomplete="email" maxlength="254" required placeholder="you@company.com"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" minlength="8" required placeholder="Enter your password"><button id="signin" type="button">Sign in</button><button id="signup" type="button" class="secondary">Create employee account</button><button id="resend" type="button" class="secondary">Resend verification email</button><button id="reset" type="button" class="secondary">Forgot password?</button></div>
 <div id="recovery-ui" class="hidden"><h2>Choose a new password</h2><p>This updates the ProfitHarbor account you also use for Ironcrest.</p><form id="recovery-form"><label for="new-password">New password</label><input id="new-password" type="password" autocomplete="new-password" minlength="8" required><label for="confirm-password">Confirm new password</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="8" required><button id="save-password" type="submit" disabled>Save new password</button></form><a href="./employee-portal.html">Return to employee sign in</a></div>
-<p id="recovery-done" class="hidden"><a href="./employee-portal.html">Continue to employee sign in</a> · <a href="./index.html">Owner sign in</a></p><div id="ready-ui" class="hidden"><p id="account"></p><button id="accept" type="button">Accept invitation</button><button id="signout" class="secondary" type="button">Use a different account</button></div>
+<p id="recovery-done" class="hidden"><a href="./employee-portal.html">Continue to employee sign in</a> · <a href="./index.html">Owner sign in</a></p><div id="ready-ui" class="hidden"><p id="account"></p><button id="accept" type="button">Accept invitation</button><button id="check-membership" class="secondary" type="button">Check invitation status</button><button id="signout" class="secondary" type="button">Use a different account</button></div>
 <p class="small">Invitations are private and expire. If your link is no longer valid, ask your employer for a new invitation.</p></section></main>
 <footer>© 2026 Ironcrest Workforce Operations · Powered by ProfitHarbor AI · <a href="./privacy.html">Privacy</a> · <a href="./terms.html">Terms</a> · <a href="./support.html">Support</a></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -61,18 +61,39 @@ if(!validInvitation){
 if(!window.supabase?.createClient){show('Secure sign-in is temporarily unavailable. Please try again.','error');return;}
 const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'pkce',storageKey:'ironcrest-employee-auth-v1'}});
 const redirect=location.origin+location.pathname; // Supabase allowlisted redirect; pending token stays in this tab
-let busy=false;
-const setBusy=value=>{busy=value;for(const id of ['signin','signup','resend','reset','accept','signout'])$(id).disabled=value};
-async function refresh(){if(recovery)return;if(!validInvitation){auth.classList.add('hidden');ready.classList.add('hidden');return;}const {data,error}=await client.auth.getUser();if(recovery)return;if(error||!data?.user){auth.classList.remove('hidden');ready.classList.add('hidden');show('Sign in or create an account to continue.');return;}
+let busy=false,identityVersion=0,displayedUser=null;
+const setBusy=value=>{busy=value;for(const id of ['signin','signup','resend','reset','accept','check-membership','signout'])$(id).disabled=value};
+async function refresh(){const version=identityVersion;if(recovery)return;if(!validInvitation){auth.classList.add('hidden');ready.classList.add('hidden');return;}const {data,error}=await client.auth.getUser();if(recovery||version!==identityVersion)return;if(error||!data?.user){displayedUser=null;auth.classList.remove('hidden');ready.classList.add('hidden');show('Sign in or create an account to continue.');return;}
 const u=data.user;if(!u.email_confirmed_at){auth.classList.remove('hidden');ready.classList.add('hidden');$('email').value=u.email||'';show('Check your email to verify your account before accepting the invitation.','error');return;}
-auth.classList.add('hidden');ready.classList.remove('hidden');$('account').textContent='Signed in as '+(u.email||'verified account');show('Your account is verified. Select Accept invitation to join your employer’s team.');}
-async function action(fn){if(busy)return;setBusy(true);try{await fn()}catch{show('The request could not be completed. Please try again.','error')}finally{setBusy(false)}}
+displayedUser=u.id;auth.classList.add('hidden');ready.classList.remove('hidden');$('account').textContent='Signed in as '+(u.email||'verified account');show('Your account is verified. Select Accept invitation to join your employer’s team.');}
+async function action(fn){if(busy)return;const version=identityVersion;setBusy(true);try{await fn()}catch{if(version===identityVersion)show('The request could not be completed. Please try again.','error')}finally{setBusy(false);if(version!==identityVersion&&!recovery)await refresh()}}
 $('signin').onclick=()=>action(async()=>{const {error}=await client.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){show('Sign-in failed. Check your credentials and verification status.','error');return;}await refresh()});
 $('signup').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email||!$('password').value){show('Enter an email and password.','error');return;}const {error}=await client.auth.signUp({email,password:$('password').value,options:{emailRedirectTo:redirect}});if(error){show('Registration could not be completed. Check the email and password.','error');return;}show('Check your email for a verification link. Complete verification in this browser, then return to this tab. If you switch browsers, reopen your original invitation link.','success')});
 $('resend').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email){show('Enter your email address first.','error');return;}const {error}=await client.auth.resend({type:'signup',email,options:{emailRedirectTo:redirect}});if(error){show('Verification email could not be requested. Please wait and try again.','error');return;}show('If the account is eligible, a verification email will arrive shortly.','success')});
 $('reset').onclick=()=>action(async()=>{const email=$('email').value.trim();if(!email){show('Enter your email address first.','error');return;}const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:redirect});if(error){show('Password reset email could not be requested. Please wait and try again.','error');return;}show('If the account exists, a password reset email will arrive shortly.','success')});
 $('signout').onclick=()=>action(async()=>{await client.auth.signOut();await refresh()});
-$('accept').onclick=()=>action(async()=>{const {data}=await client.auth.getSession();const access=data?.session?.access_token;if(!access){show('Please sign in again.','error');await refresh();return;}const res=await fetch(API+'/api/accept-invitation',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+access},body:JSON.stringify({token})});const payload=await res.json().catch(()=>({}));if(res.ok&&payload.invitationAccepted){try{sessionStorage.removeItem(TOKEN_KEY)}catch{}ready.classList.add('hidden');show('Invitation accepted! Opening your employee portal…','success');window.location.assign('./employee-portal.html');return;}if((res.status===403||res.status===503)&&/not enabled|disabled|unavailable/i.test(String(payload.error||''))){show('Employee invitation acceptance is not available yet. Please try again after your employer confirms activation.','error');return;}show('This invitation could not be accepted. It may be expired, already used, or assigned to a different email address. Contact your employer.','error')});
+async function invitationAction(checkOnly){
+ const version=identityVersion,user=displayedUser,current=()=>version===identityVersion&&user===displayedUser&&!recovery;
+ if(!user||!validInvitation||recovery)return;
+ const {data}=await client.auth.getSession();if(!current())return;
+ const session=data?.session,access=session?.access_token;
+ if(!access||session.user?.id!==user){show('Your sign-in changed. Verify the displayed account before continuing.','error');await refresh();return;}
+ const verified=await client.auth.getUser();if(!current())return;
+ if(verified.error||verified.data?.user?.id!==user||!verified.data.user.email_confirmed_at){show('Please verify your account and sign in again.','error');return;}
+ let res,payload;
+ try{res=await fetch(API+'/api/accept-invitation'+(checkOnly?'/status':''),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+access},body:JSON.stringify({token})});payload=await res.json();}
+ catch{if(current())show(checkOnly?'Status could not be checked. No acceptance was attempted.':'The acceptance result is unclear. Use Check invitation status before trying to accept again.','error');return;}
+ if(!current())return;
+ if(res.ok&&payload.ok===true&&payload.invitationAccepted===true&&(!checkOnly||payload.readOnly===true)&&/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(payload.organizationId||'')&&['employee','manager'].includes(payload.assignedRole)){
+  try{sessionStorage.removeItem(TOKEN_KEY)}catch{}ready.classList.add('hidden');show('Membership confirmed! Opening your employee portal…','success');window.location.assign('./employee-portal.html');return;
+ }
+ if(checkOnly){show(res.status===404||res.status===503?'Invitation status checking is unavailable. Ask your employer to verify your membership.':'No active membership was confirmed for this invitation and account. Check the invited email address or contact your employer.','error');return;}
+ if(payload.invitationAccepted===null){show('The acceptance result is unclear. Use Check invitation status before trying to accept again.','error');return;}
+ if((res.status===403||res.status===503)&&/not enabled|disabled|unavailable/i.test(String(payload.error||''))){show('Employee invitation acceptance is not available yet. Please try again after your employer confirms activation.','error');return;}
+ show('This invitation could not be accepted. It may be expired, already used, or assigned to a different email address. Check invitation status or contact your employer.','error');
+}
+$('accept').onclick=()=>action(()=>invitationAction(false));
+$('check-membership').onclick=()=>action(()=>invitationAction(true));
 async function beginRecovery(){
  const version=++recoveryVersion;recovery=true;recoveryUser=null;
  auth.classList.add('hidden');ready.classList.add('hidden');$('recovery-ui').classList.remove('hidden');$('save-password').disabled=true;
@@ -95,7 +116,10 @@ $('recovery-form').addEventListener('submit',e=>{e.preventDefault();if(busy||!re
   }finally{$('new-password').value='';$('confirm-password').value='';if(recovery&&version===recoveryVersion)$('save-password').disabled=false;}
  });
 });
-client.auth.onAuthStateChange(event=>{
+client.auth.onAuthStateChange((event,session)=>{
+ if(event==='SIGNED_OUT'||event==='USER_UPDATED'||(event==='SIGNED_IN'&&session?.user?.id!==displayedUser)){
+  identityVersion++;displayedUser=null;ready.classList.add('hidden');$('account').textContent='';
+ }
  if(event==='PASSWORD_RECOVERY'){recovery=true;setTimeout(beginRecovery,0);return;}
  if(event==='SIGNED_OUT'){recoveryVersion++;recovery=false;recoveryUser=null;$('new-password').value='';$('confirm-password').value='';$('recovery-ui').classList.add('hidden');$('save-password').disabled=true;}
  setTimeout(()=>{if(!busy&&!recovery)refresh()},0);

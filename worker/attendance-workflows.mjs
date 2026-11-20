@@ -69,7 +69,8 @@ export function createAttendanceWorkflowRoute({fetcher=fetch,releaseApproved=fal
    try{
     const result=await call('/rest/v1/rpc/ironcrest_attendance_workflow',server,{p_actor:user.id,p_operation_id:body.operationId,p_worksite_id:body.worksiteId,p_action:action,p_expected_entry_id:body.expectedEntryId,p_latitude:body.latitude,p_longitude:body.longitude,p_accuracy_m:body.accuracyMeters,p_sample_at:new Date(body.sampleTimestamp).toISOString()});
     if(!UUID.test(result?.entryId||'')||result.action!==action||result.operationId!==body.operationId||typeof result.replayed!=='boolean'||(action==='clock_out'&&result.entryId!==body.expectedEntryId)||!Number.isFinite(Date.parse(result[action==='clock_in'?'clockInAt':'clockOutAt'])))throw Error();
-    return reply({ok:true,attendanceRecorded:true,result});
+    const timestampKey=action==='clock_in'?'clockInAt':'clockOutAt';
+    return reply({ok:true,attendanceRecorded:true,result:{entryId:result.entryId,action:result.action,operationId:result.operationId,replayed:result.replayed,[timestampKey]:result[timestampKey]}});
    }catch{return reply({ok:false,attendanceRecorded:null,operationId:body.operationId,error:'Attendance was rejected or its outcome is uncertain. Check the current shift and time records before another action. Do not create a replacement request.'},409);}
   }catch{return reply({ok:false,attendanceRecorded:false,error:'Attendance checks are temporarily unavailable.'},503);}
  };

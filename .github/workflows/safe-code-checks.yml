@@ -22,7 +22,7 @@ jobs:
           while IFS= read -r -d '' file; do
             echo "Checking $file"
             node --check "$file"
-          done < <(find . -type f -name '*.js' -not -path './.git/*' -print0)
+          done < <(find . -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' \) -not -path './.git/*' -print0)
       - name: Check inline JavaScript in HTML
         shell: bash
         run: |
@@ -73,3 +73,16 @@ jobs:
 
       - name: Employee access and recovery regression tests
         run: node --test tests/*.test.cjs tests/*.test.mjs
+
+  database:
+    name: Isolated invitation and geofence database checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Locate local PostgreSQL tools
+        run: echo "IRONCREST_PG_BIN=$(pg_config --bindir)" >> "$GITHUB_ENV"
+      - name: Exercise transactions using invented local records
+        run: node --test tests/database/*.test.cjs
