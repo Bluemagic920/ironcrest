@@ -268,11 +268,11 @@ window.addEventListener('load', () => {
 </div>
 <div class="activity-demo" aria-label="Protected read-only manager activity">
 <button type="button" class="secondary-btn" id="manager-activity-check">Refresh Manager Overview</button>
-<div id="manager-activity-result" class="api-result" role="status" aria-live="polite">Not loaded. Counts are shown only when verified by the backend; unavailable metrics display —.</div>
+<div id="manager-activity-result" class="api-result" role="status" aria-live="polite">Refresh to see your company's latest activity.</div>
 <div class="manager-toolbar"><h3>Recent Completed Jobs</h3><button type="button" class="secondary-btn" id="manager-history-toggle" aria-expanded="false" aria-controls="manager-activity-history" disabled>View Job History</button></div>
 <div id="manager-activity-list" aria-live="polite"></div>
 <div id="manager-activity-history" class="manager-history" hidden></div>
-<div class="manager-actions-note">Green: completed, no issue reported · Red: flagged for attention · Amber: review pending. Reviewing and flagging jobs is not available yet.</div>
+<div class="manager-actions-note">Green: completed, no issue reported · Red: flagged for attention · Amber: review pending.</div>
 </div>
 <p class="activity-disclosure">Counts are exact for your company and read-only. Completed Today uses UTC, and recent job history is capped. Missing information is never estimated.</p>
 </section>
@@ -303,7 +303,7 @@ window.addEventListener('load', () => {
 <div class="worksite-head"><div><div class="eyebrow">Worksite management</div><h2>Worksites &amp; Geofencing</h2></div><button id="worksite-close" class="secondary-btn" type="button">Close</button></div>
 <p>Employer-defined locations only. No employee location is requested, transmitted, or stored by this screen.</p>
 <div class="worksite-fields"><div><label for="worksite-name">Worksite name</label><input id="worksite-name" maxlength="120" placeholder="Main Office"></div><div><label for="worksite-radius">Allowed radius (meters)</label><input id="worksite-radius" type="number" min="50" max="2000" value="150"></div><div><label for="worksite-lat">Latitude</label><input id="worksite-lat" type="number" step="any" min="-90" max="90" placeholder="33.45"></div><div><label for="worksite-lon">Longitude</label><input id="worksite-lon" type="number" step="any" min="-180" max="180" placeholder="-112.07"></div></div>
-<div class="worksite-actions"><button type="button" id="worksite-preview">Preview rules</button><button type="button" id="worksite-save">Save new worksite</button><button type="button" id="worksite-cancel-edit" class="secondary-btn" hidden>Cancel edit</button><button type="button" id="worksite-refresh" class="secondary-btn">Load saved worksites</button></div>
+<div class="worksite-actions"><button type="button" id="worksite-save">Save new worksite</button><button type="button" id="worksite-cancel-edit" class="secondary-btn" hidden>Cancel edit</button><button type="button" id="worksite-refresh" class="secondary-btn">Load saved worksites</button></div>
 <div id="worksite-status" class="api-result" role="status" aria-live="polite">Open this panel to review your organization's worksites.</div><div id="worksite-list"></div>
 
  <div class="assignment-overview" aria-label="Read-only employee worksite assignments">
@@ -412,7 +412,7 @@ window.addEventListener('load', () => {
       if(error||!data?.session?.access_token)throw new Error('Owner session missing. Sign in again.');
       const response=await fetch(API_BASE+'/api/manager/activity',{method:'GET',headers:{Authorization:'Bearer '+data.session.access_token},cache:'no-store',referrerPolicy:'no-referrer'});
       const payload=await response.json();
-      if(!response.ok||payload.ok!==true)throw new Error('HTTP '+response.status+': '+(payload.error||'Request failed'));
+      if(!response.ok||payload.ok!==true)throw new Error(response.status===401?'Your session expired. Please sign in again.':'Unable to load company activity. Please try again.');
       if(payload.readOnly!==true||payload.organizationScoped!==true||payload.reviewUpdatesEnabled!==false||!Array.isArray(payload.jobs))throw new Error('Unexpected activity response safeguards.');
       // exact counts; the server explicitly uses UTC for today.
       metric('manager-completed-today',safeCount(payload.completedTodayCount));
@@ -424,9 +424,9 @@ window.addEventListener('load', () => {
       if(!recent.length)activityList.textContent='No completed jobs returned.';
       for(const job of payload.jobs)activityHistory.append(renderManagerJob(job));
       historyToggle.disabled=payload.jobs.length===0;
-      activityResult.textContent='PASS — '+safeCount(payload.jobCount)+' recent completed job(s) returned; '+safeCount(payload.needsReviewCount)+' awaiting review in this list. Live counters are organization-scoped, read-only; today uses UTC.';
+      activityResult.textContent=safeCount(payload.jobCount)+' recently completed job(s). Today’s totals use UTC.';
       activityResult.className='api-result ok';
-    }catch(error){activityResult.textContent='NOT VERIFIED — '+(error?.message||'Network error');activityResult.className='api-result error';}
+    }catch(error){activityResult.textContent=error?.message||'Unable to load company activity. Please try again.';activityResult.className='api-result error';}
     finally{activityCheck.disabled=false;}
   });
 
@@ -510,7 +510,7 @@ window.addEventListener('load', () => {
       jobNotice('Invalid priority or status.','error');return;
     }
     permanentJobSaving=true;savePermanentJob.disabled=true;
-    jobNotice('Submitting job to the protected backend…');
+    jobNotice('Saving job…');
     try{
       const org=await confirmWorksiteOwner();
       const {data,error}=await client.auth.getSession();
@@ -693,10 +693,6 @@ window.addEventListener('load', () => {
     worksiteCancel.hidden = true;
   }
   worksiteCancel.addEventListener('click', () => {resetWorksiteEditor();worksiteMessage('Edit cancelled. No changes saved.');});
-  document.getElementById('worksite-preview').addEventListener('click', () => {
-    try {const site=worksiteInput();worksiteMessage('Preview valid: '+site.name+' — '+site.radius_m+' m radius, center '+site.latitude+', '+site.longitude+'. Not saved. Attendance stays disabled.','ok');}
-    catch(e){worksiteMessage(e.message,'error');}
-  });
   async function confirmWorksiteOwner() {
     if (!verifiedWorksiteOrg) throw new Error('No verified owner organization. Sign in again.');
     const {data:userData,error:userError}=await client.auth.getUser();
