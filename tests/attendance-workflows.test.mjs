@@ -6,7 +6,7 @@ const body=()=>({operationId:OP,worksiteId:SITE,expectedEntryId:null,latitude:33
 const req=(payload=body(),path='clock-in',options={})=>new Request('https://worker.example/api/attendance/workflows/'+path,{method:path==='status'?'GET':'POST',headers:{Origin:'https://ironcrest.profitharborai.com',Authorization:'Bearer fixture-session','Content-Type':'application/json'},...(path==='status'?{}:{body:JSON.stringify(payload)}),...options});
 function fixture(overrides={},approved=true){
  const data={user:{id:USER,email_confirmed_at:'confirmed'},members:[{id:MEM,organization_id:ORG,role:'employee',active:true}],organizations:[{id:ORG,created_by:OWNER}],owners:[{id:OWNER}],entitlement:[{business_active:true}],assignments:[{worksite_id:SITE,organization_id:ORG,membership_id:MEM,active:true}],sites:[{id:SITE,name:'Assigned site',organization_id:ORG,active:true}],entries:[],result:{entryId:ENTRY,action:'clock_in',operationId:OP,replayed:false,clockInAt:'2026-11-12T14:00:00Z'},...overrides};const calls=[];
- const route=createAttendanceWorkflowRoute({releaseApproved:approved,fetcher:async(url,options)=>{calls.push({url,options});assert.equal(options.redirect,'manual');assert.equal(new URL(url).origin,env.SUPABASE_URL);const u=new URL(url),p=u.pathname,key=p.endsWith('/user')?'user':p.endsWith('/ironcrest_memberships')?(u.searchParams.has('role')?'owners':'members'):p.endsWith('/ironcrest_organizations')?'organizations':p.endsWith('/ironcrest_business_entitlement')?'entitlement':p.endsWith('/ironcrest_employee_worksite_assignments')?'assignments':p.endsWith('/ironcrest_worksites')?'sites':p.endsWith('/ironcrest_attendance_entries')?'entries':p.endsWith('/ironcrest_attendance_workflow')?'result':null;if(!key)throw Error('Unexpected path');if(data.failure===key)throw Error('Private provider details');return new Response(JSON.stringify(data[key]));}});return {route,calls};
+ const route=createAttendanceWorkflowRoute({releaseApproved:approved,fetcher:async(url,options)=>{calls.push({url,options});assert.equal(options.redirect,'manual');assert.equal(new URL(url).origin,env.SUPABASE_URL);const u=new URL(url),p=u.pathname,key=p.endsWith('/user')?'user':p.endsWith('/ironcrest_memberships')?(u.searchParams.has('role')?'owners':'members'):p.endsWith('/ironcrest_organizations')?'organizations':p.endsWith('/ironcrest_business_entitlement')?'entitlement':p.endsWith('/ironcrest_employee_worksite_assignments')?'assignments':p.endsWith('/ironcrest_worksites')?'sites':p.endsWith('/ironcrest_attendance_entries')?'entries':p.endsWith('/ironcrest_attendance_workflow')?'result':null;if(!key)throw Error('Unexpected path');if(key==='result'&&data.rpcError)return new Response(JSON.stringify(data.rpcError),{status:data.rpcStatus||400});if(data.failure===key)throw Error('Private provider details');return new Response(JSON.stringify(data[key]));}});return {route,calls};
 }
 test('default source gate and environment gate independently deny all provider calls',async()=>{
  const disabled=fixture();assert.equal((await disabled.route(req(),{...env,ENABLE_ATTENDANCE_WORKFLOWS:'false'})).status,403);assert.equal(disabled.calls.length,0);
@@ -60,4 +60,24 @@ test('mutation receipts never expose extra privileged RPC fields',async()=>{
  const result={entryId:ENTRY,action:'clock_in',operationId:OP,replayed:false,clockInAt:'2026-11-12T14:00:00Z',latitude:33,longitude:-112,service_key:'private-provider-field',audit:{private:true}};
  const s=fixture({result});const answer=await (await s.route(req(),env)).json();
  assert.deepEqual(answer.result,{entryId:ENTRY,action:'clock_in',operationId:OP,replayed:false,clockInAt:'2026-11-12T14:00:00Z'});
+});
+
+test('known geofence rejections clear pending attempts without claiming success',async()=>{
+ for(const message of ['Location is outside or uncertain','Fresh accurate location required','Active company worksite required','Active worksite assignment required']){
+  const s=fixture({rpcError:{code:'P0001',message,details:'private provider details'}});
+  const response=await s.route(req(),env),data=await response.json();
+  assert.equal(response.status,422);assert.equal(data.attendanceRecorded,false);
+  assert.equal(data.operationId,undefined);assert.ok(!JSON.stringify(data).includes('private'));
+  assert.equal(s.calls.filter(c=>c.url.endsWith('/ironcrest_attendance_workflow')).length,1);
+ }
+});
+test('unknown failures retain operation identity for recovery',async()=>{
+ for(const overrides of [
+  {rpcError:{code:'P0001',message:'Unknown database failure'}},
+  {rpcError:{code:'OTHER',message:'Location is outside or uncertain'}},
+  {rpcError:{code:'P0001',message:'Location is outside or uncertain'},rpcStatus:503},
+  {rpcError:{code:'P0001',message:'Location is outside or uncertain',details:'x'.repeat(5000)}}
+ ]){const s=fixture(overrides);const response=await s.route(req(),env),data=await response.json();
+  assert.equal(response.status,409);assert.equal(data.attendanceRecorded,null);assert.equal(data.operationId,OP);
+ }
 });
