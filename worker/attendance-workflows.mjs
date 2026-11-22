@@ -1,4 +1,11 @@
 const PROJECT='https://nhiqbcevcdxfzvrprgck.supabase.co',ORIGIN='https://ironcrest.profitharborai.com';
+const LOCATION_DENIALS=new Map([
+ ['Location is outside or uncertain','Move inside the worksite boundary and try again. Your location accuracy must fit inside the boundary.'],
+ ['Fresh accurate location required','A fresh, accurate location is required. Try again when your device has a better location.'],
+ ['Active company worksite required','This worksite is no longer active. Refresh your assigned worksites.'],
+ ['Active worksite assignment required','You are no longer assigned to this worksite. Refresh your assigned worksites.']
+]);
+class AttendanceLocationDenied extends Error {}
 const UUID=/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 export function attendanceWorkflowBody(body,action,now=Date.now()){
  const keys=['operationId','worksiteId','expectedEntryId','latitude','longitude','accuracyMeters','sampleTimestamp'];
@@ -34,7 +41,15 @@ export function createAttendanceWorkflowRoute({fetcher=fetch,releaseApproved=fal
   const call=async(path,headers=server,body)=>{
    const response=await fetcher(PROJECT+path,{method:body?'POST':'GET',headers:{...headers,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),redirect:'manual',signal:AbortSignal.timeout(10000)});
    if(path==='/auth/v1/user'&&[401,403].includes(response.status))return null;
-   if(!response.ok)throw Error();const text=await response.text();if(text.length>1024*1024)throw Error();return JSON.parse(text);
+   if(!response.ok){
+    if(path==='/rest/v1/rpc/ironcrest_attendance_workflow'&&response.status===400){
+     const text=await response.text();
+     if(text.length<=4096){let error;try{error=JSON.parse(text);}catch{}
+      if(error?.code==='P0001'&&LOCATION_DENIALS.has(error.message))throw new AttendanceLocationDenied(LOCATION_DENIALS.get(error.message));
+     }
+    }
+    throw Error();
+   }const text=await response.text();if(text.length>1024*1024)throw Error();return JSON.parse(text);
   };
   const query=(table,params)=>'/rest/v1/'+table+'?'+new URLSearchParams(params);
   try{
@@ -71,7 +86,7 @@ export function createAttendanceWorkflowRoute({fetcher=fetch,releaseApproved=fal
     if(!UUID.test(result?.entryId||'')||result.action!==action||result.operationId!==body.operationId||typeof result.replayed!=='boolean'||(action==='clock_out'&&result.entryId!==body.expectedEntryId)||!Number.isFinite(Date.parse(result[action==='clock_in'?'clockInAt':'clockOutAt'])))throw Error();
     const timestampKey=action==='clock_in'?'clockInAt':'clockOutAt';
     return reply({ok:true,attendanceRecorded:true,result:{entryId:result.entryId,action:result.action,operationId:result.operationId,replayed:result.replayed,[timestampKey]:result[timestampKey]}});
-   }catch{return reply({ok:false,attendanceRecorded:null,operationId:body.operationId,error:'Attendance was rejected or its outcome is uncertain. Check the current shift and time records before another action. Do not create a replacement request.'},409);}
+   }catch(error){if(error instanceof AttendanceLocationDenied)return reply({ok:false,attendanceRecorded:false,error:error.message},422);return reply({ok:false,attendanceRecorded:null,operationId:body.operationId,error:'Attendance was rejected or its outcome is uncertain. Check the current shift and time records before another action. Do not create a replacement request.'},409);}
   }catch{return reply({ok:false,attendanceRecorded:false,error:'Attendance checks are temporarily unavailable.'},503);}
  };
 }
