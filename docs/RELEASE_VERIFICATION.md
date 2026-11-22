@@ -1,5 +1,19 @@
 # Ironcrest release verification
 
+## November 22, 2026 update (Arizona)
+
+This update supersedes the older checklist below. Live availability, automated tests and physical acceptance are separate evidence.
+
+- **Billing:** live Business checkout is open at $129.99/month or $1,325.90/year. ProfitHarbor PR #7 merged, and a signed live webhook replay returned HTTP 200. Existing monthly and annual purchase tests were retained; another purchase or account is not required.
+- **Invitations:** the authenticated owner loaded five invitation records, including accepted invitations with provider acceptance records. Two active employees occupy 2 of 20 places. Current owner and recipient routes are enabled; disabled legacy flags do not gate these routes. All 28 focused invitation and acceptance tests passed. No duplicate invitation was sent to the already enrolled employee. A new inbox delivery was not exercised today.
+- **Owner flows:** employee directory, four saved jobs and assignments, company settings, schedule, worksite assignments, attendance reports and manager overview loaded successfully. The selected week's schedule and attendance report contained no records. Two worksites and three assignment records loaded. No new production jobs or shifts were created for testing.
+- **Geofencing:** Ironcrest PR #7 merged; active deployment 65188827 reports version 0.8.56-geofence-recovery. Its inspected baseline was preserved except for the tested geofence rejection handling and version label. All 24 focused attendance tests and GitHub checks passed. Physical-device outside-boundary rejection and inside-boundary clock-in/out remain unverified.
+- **Security:** the job-assignment invoker trigger uses schema-qualified tables but has a mutable search path. `job-assignment-search-path.sql` prepares the one-line hardening fix. Production application awaits approval; check the advisor afterward.
+
+Payroll, attendance correction approval, and manager job review/flagging remain outside the current launch scope and must not be advertised as available. Attendance corrections are disabled. No GPS sample or new attendance entry was submitted by the agent during the November 22 owner checks.
+
+## Historical checkpoint (superseded where updated above)
+
 November 20, 2026 (Arizona). This records the observed deployment and supersedes older status statements in the attendance and invitation release notes.
 
 | Area | Observed in production | Remaining acceptance |

@@ -716,7 +716,7 @@ window.addEventListener('load', () => {
         .select('id,name,latitude,longitude,radius_m,active').eq('organization_id',org).order('name',{ascending:true}).limit(100);
       if(error) throw error;
       if(verifiedWorksiteOrg!==org || !worksiteSection.classList.contains('open')) return;
-      worksiteMessage((data?.length||0)+' saved worksite(s) found. Owner management available; attendance disabled.','ok');
+      worksiteMessage((data?.length||0)+' saved worksite(s) found. Employees clock in and out from their Employee Portal.','ok');
       for(const site of data||[]) {
         const item=document.createElement('div');item.className='worksite-record';
         const name=document.createElement('strong');name.textContent=site.name;
@@ -831,7 +831,7 @@ window.addEventListener('load', () => {
           site.activeEligibleEmployees+' active eligible employee(s)';
         const details = document.createElement('p'); details.className='assignment-ids';
         details.textContent = site.activeEligibleMembershipIds.length
-          ? 'Internal membership IDs: '+site.activeEligibleMembershipIds.join(', ')
+          ? 'Active assigned employees can use this worksite from their Employee Portal.'
           : 'No active eligible employees assigned.';
         card.append(heading,count,details); assignmentList.append(card);
       }
