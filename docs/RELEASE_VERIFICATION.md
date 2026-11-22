@@ -1,5 +1,16 @@
 # Ironcrest release verification
 
+## Completed acceptance and cleanup — November 22, 2026
+
+The user completed an inside-boundary phone clock-in/out and an outside-boundary rejection. Database verification confirmed one closed shift, matching operation receipts and audit records, no duplicate or open shift, and no Main Office shift from the rejected attempt. The owner report displayed the same closed shift. The approved job-assignment search-path migration was applied and its advisor warning cleared.
+
+At the user’s explicit request, the four identified test jobs, three test attendance entries, their linked job/attendance records, two Home GPS Test assignments and the Home GPS Test worksite were then deleted in a guarded transaction. Follow-up checks confirmed zero company jobs, attendance entries, attendance audit records and operations; Main Office, its two assignments and all three company memberships remain. Billing was not changed. The physical acceptance result remains valid evidence; raw test attendance is no longer retained.
+
+The release removes the worksite preview control and its unused handler, diagnostic PASS/NOT VERIFIED copy, raw provider failure messages in manager overview, and unused GPS diagnostic styling. Saving worksites still validates their inputs.
+
+These results supersede the pending physical acceptance and database approval statements below.
+
+
 ## November 22, 2026 update (Arizona)
 
 This update supersedes the older checklist below. Live availability, automated tests and physical acceptance are separate evidence.
